@@ -50,12 +50,6 @@
         <a class="btn btn-ghost" href="./qa.html">Q&Aへ</a>
         <a class="btn btn-ghost" href="./">しんじ卓トップへ</a>
       </div>
-
-      <div class="rules-actions">
-        <button class="btn btn-ghost btn-mini" type="button" data-acc-open-all>全展開</button>
-        <button class="btn btn-ghost btn-mini" type="button" data-acc-close-all>全折りたたみ</button>
-        <span class="text-muted rules-actions__hint">※リンクで飛んだ項目は自動で開きます</span>
-      </div>
     </section>
 
     <!-- 最重要 -->
@@ -71,9 +65,7 @@
       </ul>
     </section>
 
-    <!-- =========================
-         サーバールール
-    ========================== -->
+    <!-- サーバールール -->
     <section class="section-card" id="server">
       <div class="section-head">
         <h2>サーバールール</h2>
@@ -183,9 +175,7 @@
       </details>
     </section>
 
-    <!-- =========================
-         卓ルール
-    ========================== -->
+    <!-- 卓ルール -->
     <section class="section-card" id="table">
       <div class="section-head">
         <h2>卓ルール</h2>
@@ -271,9 +261,7 @@
       </details>
     </section>
 
-    <!-- =========================
-         ハウスルール（CoC6版）
-    ========================== -->
+    <!-- ハウスルール -->
     <section class="section-card" id="house">
       <div class="section-head">
         <h2>ハウスルール（CoC6版）</h2>
@@ -409,7 +397,7 @@
 
   </div>
 
-  <!-- 右：固定目次（PCでだけ効く） -->
+  <!-- 右：固定目次（PCのみ） -->
   <aside class="rules-aside" id="rulesToc">
     <section class="section-card">
       <h2>目次</h2>
@@ -473,51 +461,5 @@
 
 <a class="fab-top" href="#top" aria-label="ページ上部へ">↑</a>
 
-<script>
-(() => {
-  const accList = Array.from(document.querySelectorAll("details.acc"));
-
-  const openAll = () => accList.forEach(d => d.open = true);
-  const closeAll = () => accList.forEach(d => d.open = false);
-
-  // ボタン
-  document.querySelector("[data-acc-open-all]")?.addEventListener("click", openAll);
-  document.querySelector("[data-acc-close-all]")?.addEventListener("click", closeAll);
-
-  // アンカーで飛んできた時：該当accを開く
-  const openFromHash = () => {
-    const hash = decodeURIComponent(location.hash || "");
-    if (!hash) return;
-
-    const target = document.querySelector(hash);
-    if (!target) return;
-
-    // 1) そのものがdetailsなら開く
-    if (target.matches("details.acc")) {
-      target.open = true;
-      return;
-    }
-
-    // 2) 中にいるなら親detailsを開く
-    const parentAcc = target.closest("details.acc");
-    if (parentAcc) parentAcc.open = true;
-  };
-
-  // 初回
-  openFromHash();
-
-  // クリックでhash変化した時も対応
-  window.addEventListener("hashchange", () => {
-    openFromHash();
-  });
-
-  // 右目次/リンククリック時：少し遅らせてopenしてスクロールズレを減らす
-  document.addEventListener("click", (e) => {
-    const a = e.target.closest('a[href^="#"]');
-    if (!a) return;
-    setTimeout(openFromHash, 0);
-  });
-})();
-</script>
 </body>
 </html>

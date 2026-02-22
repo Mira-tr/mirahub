@@ -1,13 +1,17 @@
-/* ===============================
-   admin 専用
-================================= */
+/* adminだけ少し注意書きを目立たせる */
 
 .admin-warn{
   margin-top:14px;
   padding:12px 14px;
   border-radius:14px;
-  border:1px solid rgba(255, 200, 90, .25);
-  background: rgba(255, 200, 90, .06);
-  color: rgba(255, 235, 190, .95);
-  font-size:13px;
+  border:1px solid rgba(255,120,120,.25);
+  background: rgba(255,120,120,.06);
+  color: rgba(255,255,255,.80);
+}
+
+.admin-warn code{
+  padding:2px 6px;
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.25);
 }

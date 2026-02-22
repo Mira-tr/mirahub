@@ -1,19 +1,19 @@
 /* ===============================
-   しんじ卓 専用（追加・上書き）
-   - 共通(style.css)の上に読み込む前提
+   しんじ卓 専用（最終版・完全統合）
+   - rules: 右固定目次 + アコーディオン
+   - qa: 検索 + フィルタ + 右固定
+   - staff: カード -> モーダル（安定版）
 ================================= */
 
-/* --------------------------------
-   見出し（h3相当）
---------------------------------- */
+/* ===== 共通：見出し（h3相当） ===== */
 .subhead{
   margin:16px 0 8px;
   font-size:16px;
 }
 
-/* --------------------------------
+/* ===============================
    NGリスト
---------------------------------- */
+================================= */
 .ng-list{
   margin:10px 0 0;
   padding-left:18px;
@@ -21,12 +21,12 @@
 }
 .ng-list li{
   margin:6px 0;
-  list-style: "✕  ";
+  list-style:"✕  ";
 }
 
-/* --------------------------------
+/* ===============================
    リンクまとめ
---------------------------------- */
+================================= */
 .linkbox{
   margin-top:14px;
   padding-top:14px;
@@ -59,9 +59,9 @@
   color:var(--muted);
 }
 
-/* --------------------------------
+/* ===============================
    グリッド（概要）
---------------------------------- */
+================================= */
 .grid-2{
   display:grid;
   grid-template-columns: repeat(2, 1fr);
@@ -71,19 +71,16 @@
 @media (max-width: 760px){
   .grid-2{ grid-template-columns: 1fr; }
 }
-
-/* 小カード（概要の中身） */
 .mini{
   border:1px solid var(--line);
   background:rgba(255,255,255,.02);
   border-radius:14px;
   padding:14px;
-  transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+  transition: transform .2s ease, border-color .2s ease;
 }
 .mini:hover{
   transform: translateY(-3px);
   border-color: rgba(90,167,255,.3);
-  box-shadow: 0 10px 22px rgba(0,0,0,.28);
 }
 .mini h3{
   margin:0 0 8px;
@@ -91,87 +88,37 @@
 }
 .mini p{ margin:8px 0 0; }
 
-/* --------------------------------
+/* ===============================
    目次（toc）
---------------------------------- */
+================================= */
 .toc{
   display:grid;
   grid-template-columns: repeat(2, 1fr);
   gap:10px;
   margin-top:12px;
 }
-.toc-3{
-  grid-template-columns: repeat(3, 1fr);
-}
+.toc-3{ grid-template-columns: repeat(3, 1fr); }
+
 .toc-item{
   border:1px solid var(--line);
   background:rgba(255,255,255,.02);
   border-radius:12px;
   padding:10px 12px;
   color:var(--muted);
-  transition: border-color .2s ease, color .2s ease, transform .2s ease;
+  text-decoration:none;
 }
 .toc-item:hover{
   color:var(--text);
   border-color: rgba(90,167,255,.25);
-  transform: translateY(-1px);
 }
 @media (max-width: 760px){
   .toc{ grid-template-columns: 1fr; }
   .toc-3{ grid-template-columns: 1fr; }
 }
 
-/* ミニ目次（任意：index等で使用） */
-.toc-mini{
-  padding:14px 18px;
-}
-.toc-mini-grid{
-  display:grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap:10px;
-}
-.toc-mini-grid a{
-  display:block;
-  text-align:center;
-  padding:8px 10px;
-  border-radius:10px;
-  border:1px solid var(--line);
-  background:rgba(255,255,255,.02);
-  color:var(--muted);
-  text-decoration:none;
-  font-size:13px;
-  transition: all .2s ease;
-}
-.toc-mini-grid a:hover{
-  color:var(--text);
-  border-color: rgba(90,167,255,.25);
-}
-@media (max-width: 760px){
-  .toc-mini-grid{ grid-template-columns: repeat(2, 1fr); }
-}
-
-/* --------------------------------
-   rules：見出し調整（旧 rule-block を使う場合）
---------------------------------- */
-.rule-block h3{
-  margin:0 0 6px;
-  font-size:18px;
-}
-.rule-block h4{
-  margin:14px 0 4px;
-  font-size:15px;
-  color:var(--text);
-}
-
-/* --------------------------------
-   区切り線など（rules / qa 共通）
---------------------------------- */
-.hr{
-  border:0;
-  height:1px;
-  background: var(--line);
-  margin:14px 0;
-}
+/* ===============================
+   rules：補助パーツ
+================================= */
 .update-badge{
   display:inline-block;
   padding:8px 10px;
@@ -180,12 +127,74 @@
   background:rgba(255,255,255,.02);
   color:var(--muted);
   font-size:13px;
-  margin-top:10px;
+}
+.hr{
+  border:0;
+  height:1px;
+  background: var(--line);
+  margin:14px 0;
+}
+.toc-label{ margin:0 0 10px; }
+
+/* ===============================
+   アコーディオン（details）
+================================= */
+.acc{
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.02);
+  border-radius:14px;
+  margin-top:12px;
+  overflow:hidden;
+}
+.acc__sum{
+  list-style:none;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:12px 14px;
+  user-select:none;
+}
+.acc__sum::-webkit-details-marker{ display:none; }
+.acc__title{ font-weight:700; }
+
+.acc__sum::after{
+  content:"＋";
+  margin-left:auto;
+  color:var(--muted);
+  font-weight:700;
+}
+.acc[open] .acc__sum::after{
+  content:"－";
+  color:var(--text);
 }
 
-/* --------------------------------
-   上に戻る（固定ボタン）
---------------------------------- */
+.acc__body{ padding:0 14px 14px; }
+.acc__body ul{
+  margin:10px 0 0;
+  padding-left:18px;
+  color:var(--muted);
+}
+.acc__body li{ margin:6px 0; }
+
+.acc__body h4{
+  margin:14px 0 6px;
+  font-size:15px;
+  color:var(--text);
+}
+
+.acc[open]{
+  border-color: rgba(90,167,255,.22);
+  background: rgba(90,167,255,.04);
+}
+.acc__sum:focus{
+  outline:2px solid rgba(90,167,255,.25);
+  outline-offset:2px;
+}
+
+/* ===============================
+   上へボタン
+================================= */
 .fab-top{
   position: fixed;
   right: 18px;
@@ -202,15 +211,185 @@
   backdrop-filter: blur(8px);
   z-index: 50;
 }
-.fab-top:hover{
-  border-color: rgba(90,167,255,.25);
+.fab-top:hover{ border-color: rgba(90,167,255,.25); }
+
+/* ===============================
+   rules：右固定目次（PCのみ）
+================================= */
+.rules-layout{ display:block; }
+.rules-aside{ display:none; }
+
+@media (min-width: 980px){
+  .rules-layout{
+    display:grid;
+    grid-template-columns: 1fr 320px;
+    gap: 18px;
+    align-items:start;
+  }
+  .rules-aside{
+    display:block;
+    position: sticky;
+    top: 86px;
+    height: max-content;
+  }
+  .rules-aside .toc-item{
+    font-size:13px;
+    padding:9px 10px;
+  }
 }
 
 /* ===============================
-   STAFF（管理人・運営） - ICON ULTIMATE
+   Q&A：右固定（PCのみ）
 ================================= */
+.qa-layout{ display:block; }
+.qa-aside{ display:none; }
 
-/* 役職カラー（リング色） */
+@media (min-width: 980px){
+  .qa-layout{
+    display:grid;
+    grid-template-columns: 1fr 320px;
+    gap: 18px;
+    align-items:start;
+  }
+  .qa-aside{
+    display:block;
+    position: sticky;
+    top: 86px;
+    height: max-content;
+  }
+}
+
+/* ===============================
+   Q&A：検索・フィルタ（見やすさ最優先）
+================================= */
+.qa-controls{
+  display:grid;
+  gap:12px;
+}
+
+.qa-search{
+  display:grid;
+  gap:6px;
+}
+.qa-search__label{
+  font-size:12px;
+  letter-spacing:.12em;
+  color:var(--muted);
+}
+
+/* ここが「白くて見づらい」対策：背景/文字/枠を強め */
+.qa-search__input{
+  width:100%;
+  padding:12px 12px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.14);
+  background: rgba(0,0,0,.22);
+  color: var(--text);
+  outline:none;
+}
+.qa-search__input::placeholder{
+  color: rgba(255,255,255,.45);
+}
+.qa-search__input:focus{
+  border-color: rgba(90,167,255,.35);
+  box-shadow: 0 0 0 4px rgba(90,167,255,.10);
+}
+
+.qa-filters{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+.qa-filter{
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.18);
+  color: rgba(255,255,255,.70);
+  border-radius:999px;
+  padding:7px 10px;
+  font-size:12px;
+  cursor:pointer;
+}
+.qa-filter:hover{
+  color:var(--text);
+  border-color: rgba(90,167,255,.22);
+}
+.qa-filter.is-active{
+  color:var(--text);
+  border-color: rgba(90,167,255,.35);
+  background: rgba(90,167,255,.10);
+}
+
+.qa-utils{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.btn-mini{
+  padding:10px 12px;
+  font-size:13px;
+}
+.qa-hint{
+  margin-top:10px;
+  font-size:13px;
+}
+
+/* ===============================
+   Q&A：details（qa-item）強化
+================================= */
+.qa-item{
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:0;
+  margin-top:12px;
+  background:rgba(255,255,255,.02);
+  overflow:hidden;
+}
+.qa-item summary{
+  cursor:pointer;
+  padding:12px 14px;
+  list-style:none;
+  user-select:none;
+}
+.qa-item summary::-webkit-details-marker{ display:none; }
+.qa-item summary::after{
+  content:"＋";
+  float:right;
+  color:var(--muted);
+  font-weight:700;
+}
+.qa-item[open] summary::after{
+  content:"－";
+  color:var(--text);
+}
+.qa-item p{
+  margin:0;
+  padding:0 14px 14px;
+  color:var(--muted);
+  line-height:1.7;
+}
+.qa-item[open]{
+  border-color: rgba(90,167,255,.22);
+  background: rgba(90,167,255,.04);
+}
+
+/* 管理者テンプレは控えめ */
+.qa-admin{
+  border-style:dashed;
+}
+.qa-template{
+  margin:10px 0 0;
+  padding:12px;
+  border-radius:12px;
+  border:1px solid var(--line);
+  background:rgba(0,0,0,.25);
+  overflow:auto;
+  font-size:12px;
+  line-height:1.6;
+}
+
+/* ===============================
+   STAFF：ICON ULTIMATE + モーダル
+================================= */
 :root{
   --ring-owner: rgba(255, 200, 90, .85);
   --ring-admin: rgba( 90, 167,255, .85);
@@ -238,6 +417,13 @@
   cursor:pointer;
   transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
 }
+.staff-card:hover{
+  transform: translateY(-3px);
+  border-color: rgba(255,255,255,.14);
+  box-shadow: 0 14px 30px rgba(0,0,0,.35);
+}
+
+/* 右下ヒント */
 .staff-card::after{
   content:"クリックで詳細";
   position:absolute;
@@ -245,14 +431,12 @@
   right:14px;
   font-size:10px;
   letter-spacing:.1em;
-  opacity:.5;
+  opacity:.55;
+}
+@media (max-width: 760px){
+  .staff-card::after{ opacity:.35; }
 }
 .staff-card:hover::after{ opacity:.9; }
-.staff-card:hover{
-  transform: translateY(-3px);
-  border-color: rgba(255,255,255,.14);
-  box-shadow: 0 14px 30px rgba(0,0,0,.35);
-}
 
 .staff-top{
   display:flex;
@@ -277,18 +461,20 @@
   color:var(--muted);
 }
 
-/* アイコン（丸＋リング＋グロー） */
+/* アイコン */
 .staff-avatar{
   width:46px;
   height:46px;
   border-radius:999px;
   overflow:hidden;
-  position:relative;
   flex:0 0 auto;
-
   border:2px solid rgba(255,255,255,.10);
   background: rgba(255,255,255,.02);
   box-shadow: 0 0 0 6px rgba(255,255,255,.02);
+  display:grid;
+  place-items:center;
+  color:var(--text);
+  font-weight:800;
 }
 .staff-avatar img{
   width:100%;
@@ -316,17 +502,6 @@
   box-shadow: 0 0 0 6px rgba(165, 255,210, .07);
 }
 
-/* ホバー時の発光 */
-.staff-owner:hover .staff-avatar{
-  box-shadow: 0 0 0 6px rgba(255, 200, 90, .12), 0 0 26px rgba(255, 200, 90, .18);
-}
-.staff-admin:hover .staff-avatar{
-  box-shadow: 0 0 0 6px rgba( 90, 167,255, .12), 0 0 26px rgba( 90, 167,255, .18);
-}
-.staff-sub:hover .staff-avatar{
-  box-shadow: 0 0 0 6px rgba(165, 255,210, .10), 0 0 26px rgba(165, 255,210, .16);
-}
-
 /* バッジ色 */
 .staff-owner .staff-roleBadge{
   border-color: rgba(255, 200, 90, .28);
@@ -341,7 +516,6 @@
   color: rgba(205, 255,235, .95);
 }
 
-/* タグ（控えめ） */
 .staff-tags{
   list-style:none;
   padding:0;
@@ -359,7 +533,6 @@
   border-radius:999px;
 }
 
-/* 説明 */
 .staff-note{
   margin:8px 0 0;
   color:var(--muted);
@@ -367,7 +540,6 @@
   line-height:1.6;
 }
 
-/* セリフ */
 .staff-quote{
   margin-top:10px;
   padding:9px 11px;
@@ -378,13 +550,9 @@
   color:var(--text);
 }
 
-/* 補佐官は少し控えめ */
 .staff-sub{ opacity:.96; }
 
-/* ===============================
-   MODAL（スタッフ詳細ポップアップ）
-================================= */
-
+/* ===== モーダル ===== */
 .modal{
   position: fixed;
   inset: 0;
@@ -504,236 +672,6 @@
 }
 
 @media (max-width: 760px){
-  .modal__panel{ margin: 8vh auto; }
+  .modal__panel{ margin: 7vh auto; }
   .modal__meta{ grid-template-columns: 1fr; }
-}
-
-/* ===============================
-   rules.html：レイアウト（右固定）
-   ※ HTML側で <main class="layout-wrap rules-layout"> にして使う
-================================= */
-.rules-layout{ display:block; }
-.rules-aside{ display:none; }
-
-@media (min-width: 980px){
-  .rules-layout{
-    display:grid;
-    grid-template-columns: 1fr 320px;
-    gap: 18px;
-    align-items:start;
-  }
-  .rules-aside{
-    display:block;
-    position: sticky;
-    top: 86px;
-    height: max-content;
-  }
-  .rules-aside .toc-item{
-    font-size:13px;
-    padding:9px 10px;
-  }
-}
-
-/* ===============================
-   折りたたみ（details）= 追加しやすさ最強
-   ※ rules を “acc” 構造にした時用
-================================= */
-.acc{
-  border:1px solid var(--line);
-  background:rgba(255,255,255,.02);
-  border-radius:14px;
-  margin-top:12px;
-  overflow:hidden;
-}
-.acc__sum{
-  list-style:none;
-  cursor:pointer;
-  display:flex;
-  align-items:center;
-  gap:10px;
-  padding:12px 14px;
-  user-select:none;
-}
-.acc__sum::-webkit-details-marker{ display:none; }
-.acc__title{ font-weight:700; }
-
-.acc__sum::after{
-  content:"＋";
-  margin-left:auto;
-  color:var(--muted);
-  font-weight:700;
-}
-.acc[open] .acc__sum::after{
-  content:"－";
-  color:var(--text);
-}
-.acc__body{ padding:0 14px 14px; }
-
-.acc__body ul{
-  margin:10px 0 0;
-  padding-left:18px;
-  color:var(--muted);
-}
-.acc__body li{ margin:6px 0; }
-
-.acc__body h4{
-  margin:14px 0 6px;
-  font-size:15px;
-  color:var(--text);
-}
-.acc[open]{
-  border-color: rgba(90,167,255,.22);
-  background: rgba(90,167,255,.04);
-}
-.acc__sum:focus{
-  outline:2px solid rgba(90,167,255,.25);
-  outline-offset:2px;
-}
-
-/* ===============================
-   Q&A：レイアウト（右固定）
-   ※ HTML側で <main class="layout-wrap qa-layout"> にして使う
-================================= */
-.qa-layout{ display:block; }
-.qa-aside{ display:none; }
-
-@media (min-width: 980px){
-  .qa-layout{
-    display:grid;
-    grid-template-columns: 1fr 320px;
-    gap: 18px;
-    align-items:start;
-  }
-  .qa-aside{
-    display:block;
-    position: sticky;
-    top: 86px;
-    height: max-content;
-  }
-}
-
-/* Q&A：検索・フィルタ */
-.qa-controls{ display:grid; gap:12px; }
-
-.qa-search{ display:grid; gap:6px; }
-.qa-search__label{
-  font-size:12px;
-  letter-spacing:.12em;
-  color:var(--muted);
-}
-.qa-search__input{
-  width:100%;
-  padding:12px 12px;
-  border-radius:12px;
-  border:1px solid var(--line);
-  background:rgba(255,255,255,.02);
-  color:var(--text);
-  outline:none;
-}
-.qa-search__input:focus{
-  border-color: rgba(90,167,255,.25);
-  box-shadow: 0 0 0 4px rgba(90,167,255,.08);
-}
-
-.qa-filters{
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-}
-.qa-filter{
-  border:1px solid var(--line);
-  background:rgba(255,255,255,.02);
-  color:var(--muted);
-  border-radius:999px;
-  padding:7px 10px;
-  font-size:12px;
-  cursor:pointer;
-}
-.qa-filter:hover{
-  color:var(--text);
-  border-color: rgba(90,167,255,.22);
-}
-.qa-filter.is-active{
-  color:var(--text);
-  border-color: rgba(90,167,255,.35);
-  background: rgba(90,167,255,.08);
-}
-
-.qa-utils{ display:flex; gap:10px; flex-wrap:wrap; }
-.btn-mini{ padding:10px 12px; font-size:13px; }
-
-.qa-hint{ margin-top:10px; font-size:13px; }
-
-/* Q&A：details（qa-item） */
-.qa-item{
-  border:1px solid var(--line);
-  border-radius:14px;
-  padding:0;
-  margin-top:12px;
-  background:rgba(255,255,255,.02);
-  overflow:hidden;
-}
-.qa-item summary{
-  cursor:pointer;
-  padding:12px 14px;
-  list-style:none;
-  user-select:none;
-  font-weight:600;
-}
-.qa-item summary::-webkit-details-marker{ display:none; }
-
-.qa-item summary::after{
-  content:"＋";
-  float:right;
-  color:var(--muted);
-  font-weight:700;
-}
-.qa-item[open] summary::after{
-  content:"－";
-  color:var(--text);
-}
-
-.qa-item p{
-  margin:0;
-  padding:0 14px 14px;
-  color:var(--muted);
-  line-height:1.7;
-}
-.qa-item[open]{
-  border-color: rgba(90,167,255,.22);
-  background: rgba(90,167,255,.04);
-}
-
-/* 管理者テンプレ */
-.qa-template{
-  margin:10px 0 0;
-  padding:12px;
-  border-radius:12px;
-  border:1px solid var(--line);
-  background:rgba(0,0,0,.25);
-  overflow:auto;
-  font-size:12px;
-  line-height:1.6;
-}
-.qa-admin{ border-style:dashed; }
-.qa-admin .qa-template{ margin-top:10px; }
-
-/* ===============================
-   rules.html：操作ボタン
-================================= */
-.rules-actions{
-  display:flex;
-  flex-wrap:wrap;
-  align-items:center;
-  gap:10px;
-  margin-top:12px;
-}
-.rules-actions__hint{
-  font-size:13px;
-}
-
-/* 見出しアンカーでヘッダーに隠れない */
-.section-card,
-details.acc{
-  scroll-margin-top: 96px; /* ヘッダー分 + 少し余裕 */
 }
