@@ -1,304 +1,381 @@
-// ====== ここに Apps Script の Web App URL を貼る ======
-const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbxXucWg9ATHVEM8jm45pD8gCxkyA5Q1wWeG6ruoR3ujyJ4LV8JZwJCFh7tHeLZEfHzfuQ/exec";
+/* ===============================
+   MIRAHUB Scenarios (Full)
+   - Fetch from GAS JSON
+   - Fallback to /data/scenarios.json
+   - Search + filters
+   - Copy buttons
+================================= */
+
+const GAS_URL = "https://script.google.com/macros/s/AKfycbxXucWg9ATHVEM8jm45pD8gCxkyA5Q1wWeG6ruoR3ujyJ4LV8JZwJCFh7tHeLZEfHzfuQ/exec";
+const FALLBACK_JSON = "../data/scenarios.json";
 
 const $ = (id) => document.getElementById(id);
 
 const state = {
-  rows: [],
+  items: [],
   filtered: [],
+  source: "loading", // gas | fallback | error
 };
 
-function norm(v){
-  return String(v ?? "").trim();
+function norm(s){
+  return (s ?? "").toString().trim();
 }
 
-function toHoursRange(v){
-  // "10~40" / "10-40" / "10〜40" / "10" など雑に吸収して [min,max] を返す
-  const s = norm(v).replace(/[〜～]/g, "~").replace(/-/g, "~");
-  if (!s) return null;
-  const parts = s.split("~").map(x => parseFloat(x)).filter(x => !Number.isNaN(x));
-  if (parts.length === 1) return [parts[0], parts[0]];
-  if (parts.length >= 2) return [Math.min(parts[0], parts[1]), Math.max(parts[0], parts[1])];
-  return null;
+function timeBucket(text){
+  // 例: "ボイセ10時間~40時間" "テキセ10~35時間" "20-30" 等をざっくり分類
+  const t = norm(text);
+  if (!t) return "";
+  const nums = t.match(/\d+/g)?.map(n => parseInt(n,10)) ?? [];
+  const max = nums.length ? Math.max(...nums) : null;
+
+  if (max === null) return "";
+  if (max <= 10) return "~10h";
+  if (max <= 20) return "10-20h";
+  if (max <= 30) return "20-30h";
+  if (max <= 40) return "30-40h";
+  return "40h+";
 }
 
-function matchHours(range, min, max){
-  if (!min && !max) return true;
-  if (!range) return false;
-  const [rmin, rmax] = range;
-  const a = (min === "" || min === null) ? null : Number(min);
-  const b = (max === "" || max === null) ? null : Number(max);
-  if (a !== null && rmax < a) return false;
-  if (b !== null && rmin > b) return false;
-  return true;
+function playersNormalize(p){
+  const v = norm(p);
+  if (!v) return "";
+  // 表記ゆれ吸収（好きに増やせる）
+  if (/kp\s*レス/i.test(v) || v.includes("KPレス")) return "KPレス";
+  if (v.includes("KPC+1") || v.includes("KPC＋1") || v.includes("KPC+1PL")) return "KPC+1PL";
+  if (v.includes("1PL") || v === "1") return "1PL";
+  if (v.includes("2PL") || v === "2") return "2PL";
+  if (v.includes("3PL") || v === "3") return "3PL";
+  if (v.includes("4PL") || v === "4") return "4PL";
+  if (v.includes("何人") || v.includes("自由") || v.includes("無制限")) return "PL何人でも";
+  return v; // そのまま（その他扱いでもOK）
 }
 
-function buildSearchText(row){
-  // 想定列：Title, System, Players, Format, VoiceHours, TextHours, Tags, Notes, Author
-  // 列名が違ってたらここを直す or シート側のヘッダーを合わせる
-  const keys = ["ID","Title","System","Players","Format","VoiceHours","TextHours","Tags","Notes","Author","UpdatedAt"];
-  return keys.map(k => norm(row[k])).join(" ").toLowerCase();
+function formatNormalize(f){
+  const v = norm(f);
+  if (!v) return "";
+  if (v.includes("ボイ")) return "ボイセ";
+  if (v.includes("テキ")) return "テキセ";
+  if (v.includes("どちら")) return "どちらでも";
+  return v;
 }
 
-function classifySystem(v){
-  const s = norm(v).toLowerCase();
-  if (!s) return "";
-  if (s.includes("coc6") || s.includes("6版") || s === "coc6") return "CoC6";
-  if (s.includes("coc7") || s.includes("7版") || s === "coc7") return "CoC7";
-  return "Other";
+function buildIndex(item){
+  return [
+    item.id,
+    item.name,
+    item.system,
+    item.author,
+    item.players,
+    item.format,
+    item.time_text,
+    item.tags?.join(" "),
+    item.memo,
+    item.url
+  ].filter(Boolean).join(" ").toLowerCase();
 }
 
-function playersKey(v){
-  const s = norm(v);
-  // 例: "1~4", "1-4", "1〜4", "KPレス", "1PL", "KPC+1PL", "2PL", "PL何人でも"
-  if (!s) return "";
-  if (s.includes("KPレス")) return "KPレス";
-  if (s.includes("PL何人でも")) return "Any";
-  if (s.includes("KPC") && s.includes("1")) return "KPC+1PL";
-  if (s.includes("2PL")) return "2PL";
-  if (s.includes("1PL")) return "1PL";
-  if (s.match(/1\s*[〜～\-]\s*4|1~4|1-4/)) return "1-4";
-  return s;
+async function fetchJson(url){
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return await res.json();
 }
 
-function formatKey(v){
-  const s = norm(v);
-  if (s.includes("ボイ")) return "ボイセ";
-  if (s.includes("テキ")) return "テキセ";
-  return s;
-}
+async function loadData(){
+  $("status").textContent = "読み込み中…";
+  $("srcMode").textContent = "source: loading";
 
-function applyFilters(){
-  const q = norm($("q").value).toLowerCase();
-  const system = $("system").value;
-  const format = $("format").value;
-  const players = $("players").value;
-  const voiceMin = $("voiceMin").value;
-  const voiceMax = $("voiceMax").value;
-  const textMin = $("textMin").value;
-  const textMax = $("textMax").value;
-
-  const sort = $("sort").value;
-
-  const out = state.rows.filter(row => {
-    const st = classifySystem(row["System"]);
-    const ft = formatKey(row["Format"]);
-    const pk = playersKey(row["Players"]);
-
-    if (system && st !== system) return false;
-    if (format && ft !== format) return false;
-    if (players && pk !== players) return false;
-
-    const voiceRange = toHoursRange(row["VoiceHours"]);
-    const textRange  = toHoursRange(row["TextHours"]);
-    if (!matchHours(voiceRange, voiceMin, voiceMax)) return false;
-    if (!matchHours(textRange,  textMin,  textMax)) return false;
-
-    if (q){
-      const hay = buildSearchText(row);
-      if (!hay.includes(q)) return false;
-    }
-    return true;
-  });
-
-  // sort
-  out.sort((a,b) => {
-    const ta = norm(a["Title"]).toLowerCase();
-    const tb = norm(b["Title"]).toLowerCase();
-    const ua = new Date(a["UpdatedAt"] || 0).getTime();
-    const ub = new Date(b["UpdatedAt"] || 0).getTime();
-
-    switch(sort){
-      case "titleDesc": return tb.localeCompare(ta, "ja");
-      case "updatedAsc": return ua - ub;
-      case "updatedDesc": return ub - ua;
-      case "titleAsc":
-      default: return ta.localeCompare(tb, "ja");
-    }
-  });
-
-  state.filtered = out;
-  render();
-}
-
-function cardHTML(row){
-  const id = norm(row["ID"]);
-  const title = norm(row["Title"]) || "(無題)";
-  const system = classifySystem(row["System"]) || norm(row["System"]);
-  const players = norm(row["Players"]);
-  const format = norm(row["Format"]);
-  const voice = norm(row["VoiceHours"]);
-  const text = norm(row["TextHours"]);
-  const author = norm(row["Author"]);
-  const tags = norm(row["Tags"]);
-  const notes = norm(row["Notes"]);
-
-  const meta = [];
-  if (id) meta.push(`ID:${id}`);
-  if (system) meta.push(system);
-  if (players) meta.push(players);
-  if (format) meta.push(format);
-  if (voice) meta.push(`ボイセ:${voice}h`);
-  if (text) meta.push(`テキセ:${text}h`);
-  if (author) meta.push(`作者:${author}`);
-
-  const tagArr = tags ? tags.split(/[,、]/).map(s => s.trim()).filter(Boolean) : [];
-
-  // 募集テンプレ（必要ならここを君好みに変える）
-  const recruit = [
-    `【募集】${title}`,
-    system ? `【システム】${system}` : "",
-    players ? `【人数】${players}` : "",
-    format ? `【形式】${format}` : "",
-    voice ? `【ボイセ】${voice}h` : "",
-    text ? `【テキセ】${text}h` : "",
-    tagArr.length ? `【タグ】${tagArr.join(" / ")}` : "",
-    notes ? `【補足】${notes}` : "",
-  ].filter(Boolean).join("\n");
-
-  return `
-  <article class="sc-card">
-    <h3 class="sc-title">${escapeHtml(title)}</h3>
-
-    ${notes ? `<p class="sc-desc">${escapeHtml(notes)}</p>` : ""}
-
-    <ul class="sc-meta">
-      ${meta.map(m => `<li>${escapeHtml(m)}</li>`).join("")}
-      ${tagArr.slice(0,6).map(t => `<li>${escapeHtml(t)}</li>`).join("")}
-    </ul>
-
-    <div class="sc-actions">
-      <button class="btn-copy" data-copy="${encodeAttr(title)}">タイトルをコピー</button>
-      <button class="btn-copy" data-copy="${encodeAttr(recruit)}">募集テンプレをコピー</button>
-      ${id ? `<button class="btn-copy" data-copy="${encodeAttr(id)}">IDをコピー</button>` : ""}
-    </div>
-  </article>`;
-}
-
-function render(){
-  $("count").textContent = String(state.filtered.length);
-  const el = $("cards");
-  el.innerHTML = state.filtered.map(cardHTML).join("");
-
-  // copy buttons
-  el.querySelectorAll("[data-copy]").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      const text = btn.getAttribute("data-copy") || "";
-      try{
-        await navigator.clipboard.writeText(text);
-        const old = btn.textContent;
-        btn.textContent = "コピーした";
-        setTimeout(() => btn.textContent = old, 900);
-      }catch{
-        // fallback
-        const ta = document.createElement("textarea");
-        ta.value = text;
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand("copy");
-        ta.remove();
-      }
-    });
-  });
-
-  $("status").textContent = `表示中：${state.filtered.length}件`;
-}
-
-function escapeHtml(s){
-  return String(s).replace(/[&<>"']/g, c => ({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-  }[c]));
-}
-function encodeAttr(s){
-  return escapeHtml(String(s)).replace(/\n/g, "&#10;");
-}
-
-async function load(){
-  $("status").textContent = "Google Sheetsから読み込み中…";
   try{
-    const res = await fetch(SHEETS_API_URL, { cache: "no-store" });
-    const json = await res.json();
-    if (!json.ok) throw new Error(json.error || "API error");
-
-    // rows = [{header:value...}]
-    const rows = json.rows || [];
-
-    // ここで “列名の揺れ” を吸収する（シートが違っても動かす）
-    // 例：タイトル列が「シナリオ名」なら Title に詰め直す
-    const normalized = rows.map(r => mapColumns(r));
-
-    state.rows = normalized;
-    state.filtered = normalized;
-
-    $("status").textContent = `読み込み完了：${normalized.length}件`;
+    const data = await fetchJson(GAS_URL);
+    const items = normalizeData(data);
+    state.items = items;
+    state.source = "gas";
+    $("srcMode").textContent = "source: GAS";
+    $("status").textContent = `取得OK（${items.length}件）`;
+    initUI();
     applyFilters();
+    return;
+  }catch(e){
+    console.warn("GAS failed:", e);
+  }
 
-  }catch(err){
-    $("status").textContent = `読み込み失敗：${err.message}`;
+  try{
+    const data = await fetchJson(FALLBACK_JSON);
+    const items = normalizeData(data);
+    state.items = items;
+    state.source = "fallback";
+    $("srcMode").textContent = "source: fallback JSON";
+    $("status").textContent = `GAS取得失敗 → 予備データで表示（${items.length}件）`;
+    initUI();
+    applyFilters();
+    return;
+  }catch(e){
+    console.error("Fallback failed:", e);
+    state.source = "error";
+    $("srcMode").textContent = "source: error";
+    $("status").textContent = "データ取得に失敗。GAS/予備JSONのどちらも読めません。";
   }
 }
 
-function mapColumns(r){
-  // ===== ここが “君のシート” に合わせる唯一の場所 =====
-  // 左：このサイトが欲しいキー / 右：シート側にありがちな候補列名
-  const pick = (keys) => {
-    for (const k of keys){
-      if (r[k] !== undefined && String(r[k]).trim() !== "") return r[k];
-    }
-    return r[keys[0]]; // なくても返す
-  };
+function normalizeData(raw){
+  // GASの戻りが {items:[...]} でも [...] でも対応
+  const arr = Array.isArray(raw) ? raw : (raw.items ?? []);
+  return arr.map((r, idx) => {
+    const id = norm(r.id) || `S${String(idx+1).padStart(4,"0")}`;
+    const name = norm(r.name || r.title);
+    const system = norm(r.system || r.sys) || "未設定";
+    const author = norm(r.author);
+    const playersRaw = norm(r.players);
+    const players = playersNormalize(playersRaw);
+    const format = formatNormalize(r.format);
+    const timeText = norm(r.time || r.time_text);
+    const tags = (norm(r.tags).split(",").map(s=>s.trim()).filter(Boolean));
+    const memo = norm(r.memo || r.note);
+    const url = norm(r.url);
 
+    const item = {
+      id,
+      name,
+      system,
+      author,
+      players,
+      format,
+      time_text: timeText,
+      time_bucket: timeBucket(timeText),
+      tags,
+      memo,
+      url,
+    };
+    item.__index = buildIndex(item);
+    return item;
+  }).filter(x => x.name); // 名前なしは除外
+}
+
+function initUI(){
+  // system select populate
+  const systems = [...new Set(state.items.map(x => x.system))].sort((a,b)=>a.localeCompare(b,"ja"));
+  const sel = $("system");
+  // 初期化
+  while(sel.options.length > 1) sel.remove(1);
+  systems.forEach(s => {
+    const opt = document.createElement("option");
+    opt.value = s;
+    opt.textContent = s;
+    sel.appendChild(opt);
+  });
+}
+
+function getQuery(){
   return {
-    ID:        pick(["ID","Id","id"]),
-    Title:     pick(["Title","タイトル","シナリオ名","Name"]),
-    System:    pick(["System","システム","TRPG","Game"]),
-    Players:   pick(["Players","人数","PL人数","PlayerCount"]),
-    Format:    pick(["Format","形式","ボイセ/テキセ","SessionType"]),
-    VoiceHours:pick(["VoiceHours","ボイセ時間","ボイス時間","Voice"]),
-    TextHours: pick(["TextHours","テキセ時間","テキスト時間","Text"]),
-    Author:    pick(["Author","作者","制作","Writer"]),
-    Tags:      pick(["Tags","タグ","傾向","Genre"]),
-    Notes:     pick(["Notes","備考","メモ","補足"]),
-    UpdatedAt: pick(["UpdatedAt","更新日","Updated","LastUpdate"]),
+    q: norm($("q").value).toLowerCase(),
+    system: $("system").value,
+    format: $("format").value,
+    players: $("players").value,
+    time: $("time").value,
   };
 }
 
-function bind(){
-  ["q","system","format","players","voiceMin","voiceMax","textMin","textMax","sort"].forEach(id => {
-    $(id).addEventListener("input", applyFilters);
-    $(id).addEventListener("change", applyFilters);
+function match(item, query){
+  if (query.system && item.system !== query.system) return false;
+  if (query.format && item.format !== query.format) return false;
+
+  if (query.players){
+    if (query.players === "その他"){
+      // 定義済み以外をざっくり
+      const known = ["KPレス","1PL","KPC+1PL","2PL","3PL","4PL","PL何人でも"];
+      if (known.includes(item.players)) return false;
+    }else{
+      if (item.players !== query.players) return false;
+    }
+  }
+
+  if (query.time && item.time_bucket !== query.time) return false;
+
+  if (query.q){
+    if (!item.__index.includes(query.q)) return false;
+  }
+  return true;
+}
+
+function applyFilters(){
+  const query = getQuery();
+  const list = state.items.filter(x => match(x, query));
+  state.filtered = list;
+
+  render(list);
+  $("count").textContent = `${list.length}件`;
+}
+
+function badge(text){
+  const span = document.createElement("span");
+  span.className = "sc-badge";
+  span.textContent = text;
+  return span;
+}
+
+function btn(label, onClick){
+  const b = document.createElement("button");
+  b.className = "sc-btn";
+  b.type = "button";
+  b.textContent = label;
+  b.addEventListener("click", onClick);
+  return b;
+}
+
+async function copyText(text){
+  try{
+    await navigator.clipboard.writeText(text);
+    toast("コピーしました");
+  }catch(e){
+    // fallback
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    ta.remove();
+    toast("コピーしました");
+  }
+}
+
+let toastTimer = null;
+function toast(msg){
+  let el = document.getElementById("toast");
+  if (!el){
+    el = document.createElement("div");
+    el.id = "toast";
+    el.style.position = "fixed";
+    el.style.left = "50%";
+    el.style.bottom = "18px";
+    el.style.transform = "translateX(-50%)";
+    el.style.padding = "10px 12px";
+    el.style.borderRadius = "12px";
+    el.style.border = "1px solid rgba(255,255,255,.12)";
+    el.style.background = "rgba(17,24,38,.95)";
+    el.style.color = "white";
+    el.style.fontSize = "13px";
+    el.style.zIndex = "9999";
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.style.opacity = "1";
+
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    el.style.opacity = "0";
+  }, 1200);
+}
+
+function render(items){
+  const root = $("list");
+  root.innerHTML = "";
+
+  if (!items.length){
+    const empty = document.createElement("div");
+    empty.className = "text-muted";
+    empty.style.padding = "10px 0";
+    empty.textContent = "該当なし。条件を変えてみて。";
+    root.appendChild(empty);
+    return;
+  }
+
+  items.forEach(item => {
+    const card = document.createElement("div");
+    card.className = "sc-card";
+
+    const top = document.createElement("div");
+    top.className = "sc-top";
+
+    const left = document.createElement("div");
+
+    const title = document.createElement("div");
+    title.className = "sc-title";
+    title.textContent = item.name;
+
+    const sub = document.createElement("div");
+    sub.className = "sc-sub";
+    sub.textContent = [
+      item.system,
+      item.author ? `作者: ${item.author}` : null,
+      item.players ? `人数: ${item.players}` : null,
+      item.format ? `形式: ${item.format}` : null,
+      item.time_text ? `時間: ${item.time_text}` : null
+    ].filter(Boolean).join(" / ");
+
+    left.appendChild(title);
+    left.appendChild(sub);
+
+    const actions = document.createElement("div");
+    actions.className = "sc-actions";
+
+    actions.appendChild(btn("IDコピー", () => copyText(item.id)));
+    actions.appendChild(btn("名前コピー", () => copyText(item.name)));
+
+    if (item.url){
+      actions.appendChild(btn("URLコピー", () => copyText(item.url)));
+      actions.appendChild(btn("開く", () => window.open(item.url, "_blank", "noreferrer")));
+    }
+
+    top.appendChild(left);
+    top.appendChild(actions);
+
+    const badges = document.createElement("div");
+    badges.className = "sc-badges";
+    badges.appendChild(badge(item.id));
+    badges.appendChild(badge(item.system));
+    if (item.players) badges.appendChild(badge(item.players));
+    if (item.format) badges.appendChild(badge(item.format));
+    if (item.time_bucket) badges.appendChild(badge(item.time_bucket));
+    (item.tags ?? []).slice(0, 8).forEach(t => badges.appendChild(badge(t)));
+
+    card.appendChild(top);
+    card.appendChild(badges);
+
+    if (item.memo){
+      const note = document.createElement("div");
+      note.className = "sc-note";
+      note.textContent = item.memo;
+      card.appendChild(note);
+    }
+
+    root.appendChild(card);
+  });
+}
+
+function buildQueryText(){
+  const q = getQuery();
+  const parts = [];
+  if (q.q) parts.push(`q=${q.q}`);
+  if (q.system) parts.push(`system=${q.system}`);
+  if (q.format) parts.push(`format=${q.format}`);
+  if (q.players) parts.push(`players=${q.players}`);
+  if (q.time) parts.push(`time=${q.time}`);
+  return parts.join(" / ") || "条件なし";
+}
+
+function wire(){
+  ["q","system","format","players","time"].forEach(id => {
+    $(id).addEventListener(id==="q" ? "input" : "change", applyFilters);
   });
 
-  $("reset").addEventListener("click", () => {
+  $("btnClear").addEventListener("click", () => {
     $("q").value = "";
     $("system").value = "";
     $("format").value = "";
     $("players").value = "";
-    $("voiceMin").value = "";
-    $("voiceMax").value = "";
-    $("textMin").value = "";
-    $("textMax").value = "";
-    $("sort").value = "titleAsc";
+    $("time").value = "";
     applyFilters();
   });
 
-  $("copySearch").addEventListener("click", async () => {
-    const text =
-`【検索条件】
-キーワード: ${$("q").value || "(なし)"}
-システム: ${$("system").value || "(すべて)"}
-形式: ${$("format").value || "(すべて)"}
-人数: ${$("players").value || "(すべて)"}
-ボイセ: ${$("voiceMin").value || "-"} ~ ${$("voiceMax").value || "-"} h
-テキセ: ${$("textMin").value || "-"} ~ ${$("textMax").value || "-"} h
-ソート: ${$("sort").value}`;
-    try{
-      await navigator.clipboard.writeText(text);
-      $("status").textContent = "検索条件をコピーした";
-      setTimeout(() => applyFilters(), 600);
-    }catch{}
+  $("btnReload").addEventListener("click", loadData);
+
+  $("btnCopyQuery").addEventListener("click", () => {
+    copyText(buildQueryText());
+  });
+
+  $("btnCopyShare").addEventListener("click", () => {
+    copyText(location.href);
   });
 }
 
-bind();
-load();
+wire();
+loadData();

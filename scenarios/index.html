@@ -5,9 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>シナリオ一覧 | MIRAHUB</title>
 
-  <link rel="stylesheet" href="../style.css">
-  <link rel="stylesheet" href="./scenarios.css">
+  <link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="./scenarios.css" />
 </head>
+
 <body>
 
 <header class="layout-header">
@@ -20,120 +21,143 @@
     </div>
 
     <nav>
-      <a class="nav-link" href="../">トップ</a>
-      <a class="nav-link nav-link-active" href="./">シナリオ</a>
+      <a class="nav-link" href="../">HUB</a>
       <a class="nav-link nav-cta" href="../shinji/">しんじ卓</a>
     </nav>
   </div>
 </header>
 
-<main class="layout-wrap" id="top">
+<main class="layout-wrap scenarios-layout" id="top">
 
-  <section class="section-hero">
-    <p class="text-tag">SCENARIO LIST</p>
-    <h1 class="text-hero">所持シナリオ<span>検索</span>・<span>絞り込み</span></h1>
-    <p class="text-lead text-muted">
-      Google Sheetsの内容を自動同期して表示します。<br>
-      タイトル・システム・人数・形式・時間・KPレス対応などで探せます。
-    </p>
+  <!-- 左：メイン -->
+  <div class="sc-main">
+    <section class="section-hero">
+      <p class="text-tag">SCENARIO LIBRARY</p>
+      <h1 class="text-hero">所持シナリオ一覧</h1>
+      <p class="text-lead text-muted">
+        Google Sheets から取得して表示します。<br>
+        キーワード検索 + フィルタで100本以上でも即見つかる。
+      </p>
 
-    <div class="btn-row">
-      <a class="btn btn-ghost" href="../">MIRAHUBトップへ</a>
-      <a class="btn btn-ghost" href="#list">一覧へ</a>
-    </div>
-  </section>
-
-  <section class="section-card" id="controls">
-    <h2>検索・絞り込み</h2>
-
-    <div class="ctl-grid">
-      <div class="ctl">
-        <label class="ctl-label" for="q">キーワード</label>
-        <input id="q" class="ctl-input" type="search" placeholder="例：CoC6 / 1PL / クローズド / 近未来 / 作者名 …">
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btnReload" type="button">最新を取得</button>
+        <button class="btn btn-ghost" id="btnCopyShare" type="button">このページURLをコピー</button>
       </div>
 
-      <div class="ctl">
-        <label class="ctl-label" for="system">システム</label>
-        <select id="system" class="ctl-select">
-          <option value="">すべて</option>
-          <option value="CoC6">CoC6</option>
-          <option value="CoC7">CoC7</option>
-          <option value="Other">その他</option>
-        </select>
-      </div>
+      <div class="sc-status text-muted" id="status">読み込み中…</div>
+    </section>
 
-      <div class="ctl">
-        <label class="ctl-label" for="format">形式</label>
-        <select id="format" class="ctl-select">
-          <option value="">すべて</option>
-          <option value="ボイセ">ボイセ</option>
-          <option value="テキセ">テキセ</option>
-        </select>
-      </div>
+    <!-- controls -->
+    <section class="section-card">
+      <h2>検索・絞り込み</h2>
 
-      <div class="ctl">
-        <label class="ctl-label" for="players">人数</label>
-        <select id="players" class="ctl-select">
-          <option value="">すべて</option>
-          <option value="1-4">1〜4人</option>
-          <option value="Any">PL何人でも</option>
-          <option value="KPレス">KPレス</option>
-          <option value="1PL">1PL</option>
-          <option value="KPC+1PL">KPC+1PL</option>
-          <option value="2PL">2PL</option>
-        </select>
-      </div>
+      <div class="sc-controls">
+        <div class="sc-search">
+          <label class="sc-label" for="q">キーワード</label>
+          <input id="q" class="sc-input" type="search" placeholder="シナリオ名 / 作者 / メモ / システム など" autocomplete="off">
+          <div class="sc-hint text-muted">例：CoC6 / 1〜4人 / ボイセ / 20時間 / KPレス / KPC</div>
+        </div>
 
-      <div class="ctl">
-        <label class="ctl-label" for="voiceMin">ボイセ時間（h）</label>
-        <div class="ctl-range">
-          <input id="voiceMin" class="ctl-input" type="number" min="0" step="1" placeholder="min">
-          <span class="text-muted">〜</span>
-          <input id="voiceMax" class="ctl-input" type="number" min="0" step="1" placeholder="max">
+        <div class="sc-filters">
+          <div class="sc-field">
+            <label class="sc-label" for="system">システム</label>
+            <select id="system" class="sc-select">
+              <option value="">すべて</option>
+            </select>
+          </div>
+
+          <div class="sc-field">
+            <label class="sc-label" for="format">形式</label>
+            <select id="format" class="sc-select">
+              <option value="">すべて</option>
+              <option value="ボイセ">ボイセ</option>
+              <option value="テキセ">テキセ</option>
+              <option value="どちらでも">どちらでも</option>
+            </select>
+          </div>
+
+          <div class="sc-field">
+            <label class="sc-label" for="players">人数</label>
+            <select id="players" class="sc-select">
+              <option value="">すべて</option>
+              <option value="KPレス">KPレス</option>
+              <option value="1PL">1PL</option>
+              <option value="KPC+1PL">KPC+1PL</option>
+              <option value="2PL">2PL</option>
+              <option value="3PL">3PL</option>
+              <option value="4PL">4PL</option>
+              <option value="PL何人でも">PL何人でも</option>
+              <option value="その他">その他</option>
+            </select>
+          </div>
+
+          <div class="sc-field">
+            <label class="sc-label" for="time">時間（目安）</label>
+            <select id="time" class="sc-select">
+              <option value="">すべて</option>
+              <option value="~10h">〜10時間</option>
+              <option value="10-20h">10〜20時間</option>
+              <option value="20-30h">20〜30時間</option>
+              <option value="30-40h">30〜40時間</option>
+              <option value="40h+">40時間以上</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="sc-utils">
+          <button class="btn btn-ghost btn-mini" id="btnClear" type="button">条件クリア</button>
+          <button class="btn btn-ghost btn-mini" id="btnCopyQuery" type="button">検索条件をコピー</button>
         </div>
       </div>
+    </section>
 
-      <div class="ctl">
-        <label class="ctl-label" for="textMin">テキセ時間（h）</label>
-        <div class="ctl-range">
-          <input id="textMin" class="ctl-input" type="number" min="0" step="1" placeholder="min">
-          <span class="text-muted">〜</span>
-          <input id="textMax" class="ctl-input" type="number" min="0" step="1" placeholder="max">
-        </div>
+    <!-- list -->
+    <section class="section-card">
+      <div class="sc-headrow">
+        <h2>一覧</h2>
+        <div class="text-muted" id="count">0件</div>
       </div>
 
-      <div class="ctl">
-        <label class="ctl-label" for="sort">並び替え</label>
-        <select id="sort" class="ctl-select">
-          <option value="titleAsc">タイトル（A→Z）</option>
-          <option value="titleDesc">タイトル（Z→A）</option>
-          <option value="updatedDesc">更新日（新しい順）</option>
-          <option value="updatedAsc">更新日（古い順）</option>
-        </select>
+      <div class="sc-list" id="list"></div>
+    </section>
+
+    <section class="section-card">
+      <div class="btn-row">
+        <a class="btn btn-ghost" href="#top" onclick="window.scrollTo({top:0, behavior:'smooth'}); return false;">上に戻る</a>
+        <a class="btn btn-ghost" href="../">HUBへ</a>
       </div>
+    </section>
 
-      <div class="ctl ctl-wide">
-        <div class="ctl-actions">
-          <button class="btn btn-primary" id="reset" type="button">条件リセット</button>
-          <button class="btn btn-ghost" id="copySearch" type="button">検索条件をコピー</button>
-          <a class="btn btn-ghost" href="#top">上へ</a>
-        </div>
-        <p class="text-muted" id="status" style="margin:8px 0 0;">読み込み中…</p>
+  </div>
+
+  <!-- 右：固定ヘルプ -->
+  <aside class="sc-aside">
+    <section class="section-card">
+      <h2>使い方</h2>
+      <ul class="text-muted">
+        <li>キーワードは “部分一致” で探せる</li>
+        <li>条件は複数組み合わせOK</li>
+        <li>カード右上のボタンでIDやURLをコピー</li>
+        <li>Sheets側を更新したら「最新を取得」</li>
+      </ul>
+
+      <hr class="hr">
+
+      <h2>データ元</h2>
+      <p class="text-muted">
+        Google Apps Script(JSON)から取得。<br>
+        取れない時は /data/scenarios.json を読む（保険）。
+      </p>
+
+      <div class="sc-pillrow">
+        <span class="sc-pill" id="srcMode">source: loading</span>
       </div>
-    </div>
-  </section>
+    </section>
+  </aside>
 
-  <section class="section-card" id="list">
-    <div class="list-head">
-      <h2>一覧</h2>
-      <div class="text-muted"><span id="count">0</span> 件</div>
-    </div>
-
-    <div class="cards" id="cards"></div>
-  </section>
-
-  <footer class="layout-footer">© MIRAHUB</footer>
 </main>
+
+<footer class="layout-footer">© MIRAHUB</footer>
 
 <script src="./scenarios.js"></script>
 </body>

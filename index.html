@@ -4,7 +4,6 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>MIRAHUB</title>
-  <meta name="description" content="MIRAHUB：TRPGの案内とまとめの拠点。シナリオ一覧はGoogle Sheetsと自動同期。" />
   <link rel="stylesheet" href="./style.css" />
 </head>
 
@@ -12,75 +11,93 @@
 
 <header class="layout-header">
   <div class="layout-wrap layout-header-inner">
+
     <div class="brand">
-      <span class="brand-dot" aria-hidden="true"></span>
-      <a href="./" class="brand-title">MIRAHUB</a>
+      <span class="brand-dot"></span>
+      <a href="./">MIRAHUB</a>
     </div>
 
-    <nav class="nav">
-      <a class="nav-link" href="./scenarios.html">シナリオ一覧</a>
+    <nav>
+      <a class="nav-link" href="./scenarios/">シナリオ一覧</a>
       <a class="nav-link nav-cta" href="./shinji/">しんじ卓</a>
     </nav>
+
   </div>
 </header>
 
 <main class="layout-wrap">
 
+  <!-- HERO -->
   <section class="section-hero">
     <p class="text-tag">OFFICIAL / PERSONAL HUB</p>
 
     <h1 class="text-hero">
       ここは<span>MIRAHUB</span>。<br>
-      TRPGの情報をまとめる拠点。
+      案内とまとめの拠点。
     </h1>
 
     <p class="text-lead">
-      しんじ卓の案内と、ミラ所持シナリオの管理・検索をここに集約する。
+      しんじ卓の案内・運営まとめと、<br>
+      自分が所持しているシナリオの一覧を“検索できる形”で管理する。
     </p>
 
     <div class="btn-row">
-      <a class="btn btn-primary" href="./scenarios.html">シナリオ一覧へ</a>
+      <a class="btn btn-primary" href="./scenarios/">シナリオ一覧へ</a>
       <a class="btn btn-ghost" href="./shinji/">しんじ卓へ</a>
     </div>
 
-    <div class="hero-mini">
-      <div class="hero-mini-card">
-        <div class="hero-mini-title">シナリオ管理</div>
-        <div class="text-muted">Google Sheets と同期。編集＝即反映。</div>
+    <div class="hero-kv">
+      <div class="kv-card">
+        <div class="kv-title">できること</div>
+        <ul class="kv-list text-muted">
+          <li>Sheets → 自動同期 → シナリオ一覧に反映</li>
+          <li>人数/形式/時間/システムで即フィルタ</li>
+          <li>シナリオID・URLなどをワンクリでコピー</li>
+          <li>100本超でも軽い（検索はローカルで高速）</li>
+        </ul>
       </div>
-      <div class="hero-mini-card">
-        <div class="hero-mini-title">検索</div>
-        <div class="text-muted">人数 / 形式 / 時間 / システム で絞れる。</div>
-      </div>
-      <div class="hero-mini-card">
-        <div class="hero-mini-title">拡張</div>
-        <div class="text-muted">100本超を前提に高速化・URL共有も対応。</div>
+
+      <div class="kv-card">
+        <div class="kv-title">運用の流れ</div>
+        <ol class="kv-list text-muted">
+          <li>Google Sheetsに追加</li>
+          <li>GASがJSONを返す</li>
+          <li>MIRAHUBが読み込み</li>
+          <li>検索/フィルタで探す</li>
+        </ol>
       </div>
     </div>
   </section>
 
-  <section class="section-card card-compact">
-    <h2>メニュー</h2>
+  <!-- QUICK LINKS -->
+  <section class="section-card">
+    <h2>クイック</h2>
     <div class="hub-grid">
-      <a class="hub-card" href="./scenarios.html">
-        <div class="hub-card-title">シナリオ一覧</div>
-        <div class="text-muted">所持シナリオを検索・絞り込み</div>
+      <a class="hub-tile" href="./scenarios/">
+        <div class="hub-tile__title">シナリオ一覧</div>
+        <div class="hub-tile__desc text-muted">検索・フィルタ・コピー対応</div>
       </a>
 
-      <a class="hub-card" href="./shinji/">
-        <div class="hub-card-title">しんじ卓</div>
-        <div class="text-muted">案内 / ルール / Q&A</div>
+      <a class="hub-tile" href="./shinji/">
+        <div class="hub-tile__title">しんじ卓</div>
+        <div class="hub-tile__desc text-muted">案内 / ルール / Q&A / 運営</div>
       </a>
 
-      <div class="hub-card hub-card-muted">
-        <div class="hub-card-title">今後の拡張</div>
-        <ul class="text-muted hub-list">
-          <li>シナリオ詳細ページ化</li>
-          <li>配信・予定・募集テンプレ</li>
-          <li>タグ体系の強化</li>
-        </ul>
-      </div>
+      <a class="hub-tile" href="./shinji/admin/">
+        <div class="hub-tile__title">運営ノート</div>
+        <div class="hub-tile__desc text-muted">テンプレ・編集手順（公開しない）</div>
+      </a>
     </div>
+  </section>
+
+  <!-- NOTE -->
+  <section class="section-card card-compact">
+    <h2>メモ</h2>
+    <ul class="text-muted">
+      <li>しんじ卓のルールへ直接飛ばさない（HUBはハブとして中立）</li>
+      <li>将来、卓が増えても “タイル追加” だけで拡張できる</li>
+      <li>シナリオは個人管理（外部向けの公開・転載には注意）</li>
+    </ul>
   </section>
 
 </main>
