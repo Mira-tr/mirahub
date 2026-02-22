@@ -118,7 +118,7 @@ async function loadData(){
 
 function normalizeData(raw){
   // GASの戻りが {items:[...]} でも [...] でも対応
-  const arr = Array.isArray(raw) ? raw : (raw.items ?? []);
+  const arr = Array.isArray(raw) ? raw : (raw.rows ?? raw.items ?? []);
   return arr.map((r, idx) => {
     const id = norm(r.id) || `S${String(idx+1).padStart(4,"0")}`;
     const name = norm(r.name || r.title);
