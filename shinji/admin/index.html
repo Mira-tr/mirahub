@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>運営ノート | しんじ卓</title>
+
+  <link rel="stylesheet" href="../../style.css">
+  <link rel="stylesheet" href="../shinji.css">
+  <link rel="stylesheet" href="./admin.css">
+</head>
+
+<body>
+
+<header class="layout-header">
+  <div class="layout-wrap layout-header-inner">
+    <div class="brand">
+      <span class="brand-dot"></span>
+      <a href="../../">MIRAHUB</a>
+      <span class="text-muted">/</span>
+      <a href="../">しんじ卓</a>
+      <span class="text-muted">/</span>
+      <span>運営ノート</span>
+    </div>
+    <nav>
+      <a class="nav-link" href="../">トップ</a>
+      <a class="nav-link" href="../rules.html">ルール</a>
+      <a class="nav-link" href="../qa.html">Q&A</a>
+    </nav>
+  </div>
+</header>
+
+<main class="layout-wrap">
+
+  <section class="section-hero">
+    <p class="text-tag">ADMIN NOTE</p>
+    <h1 class="text-hero">運営ノート</h1>
+    <p class="text-lead text-muted">
+      ここは管理用（テンプレ・編集手順・原本置き場）。外部公開前提ではありません。
+    </p>
+  </section>
+
+  <section class="section-card">
+    <h2>Q&A追加テンプレ</h2>
+    <details class="qa-item" open>
+      <summary>テンプレ（コピペ用）</summary>
+      <pre class="qa-template">&lt;details class="qa-item"&gt;
+  &lt;summary&gt;Q. ここに質問を書く&lt;/summary&gt;
+  &lt;p&gt;A. ここに回答を書く。必要なら&lt;a class="link" href="./rules.html"&gt;ルール&lt;/a&gt;へ誘導。&lt;/p&gt;
+&lt;/details&gt;</pre>
+    </details>
+  </section>
+
+  <section class="section-card">
+    <h2>ルール追加テンプレ</h2>
+    <details class="qa-item">
+      <summary>rule-block（コピペ用）</summary>
+      <pre class="qa-template">&lt;div class="rule-block" id="xxx"&gt;
+  &lt;h3&gt;■ 見出し&lt;/h3&gt;
+  &lt;p class="text-muted"&gt;短い説明（任意）&lt;/p&gt;
+  &lt;ul&gt;
+    &lt;li&gt;項目1&lt;/li&gt;
+    &lt;li&gt;項目2&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/div&gt;</pre>
+    </details>
+  </section>
+
+  <section class="section-card">
+    <h2>編集手順メモ</h2>
+    <ol class="text-muted">
+      <li>追加したい場所を決める（rules / qa / top）</li>
+      <li>テンプレをコピペして文章を置換</li>
+      <li>見出し（h2/h3）とidを付ける</li>
+      <li>表示崩れチェック（スマホ幅も）</li>
+      <li>公開する場合はURL差し替え</li>
+    </ol>
+  </section>
+
+</main>
+
+<footer class="layout-footer">© MIRAHUB / しんじ卓</footer>
+
+</body>
+</html>

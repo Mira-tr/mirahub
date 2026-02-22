@@ -7,7 +7,10 @@
   font-size:16px;
 }
 
-/* NGリスト（✕表示） */
+/* ===============================
+   NGリスト
+================================= */
+
 .ng-list{
   margin:10px 0 0;
   padding-left:18px;
@@ -18,7 +21,10 @@
   list-style: "✕  ";
 }
 
-/* リンクまとめ */
+/* ===============================
+   リンクまとめ
+================================= */
+
 .linkbox{
   margin-top:14px;
   padding-top:14px;
@@ -27,37 +33,44 @@
   flex-direction:column;
   gap:10px;
 }
+
 .linkrow{
   display:flex;
   align-items:center;
   flex-wrap:wrap;
   gap:10px;
 }
+
 .pill{
   font-size:12px;
   letter-spacing:.08em;
-  color:var(--text);
   border:1px solid var(--line);
   background:rgba(255,255,255,.02);
   padding:4px 10px;
   border-radius:999px;
 }
+
 .link{
   color:var(--accent);
 }
 .link:hover{
   text-decoration:underline;
 }
+
 .sep{
   color:var(--muted);
 }
-.note{
+
+.notice{
   margin-top:14px;
-  color:var(--muted);
   font-size:13px;
+  color:var(--muted);
 }
 
-/* 2カラムのグリッド（スマホは1カラム） */
+/* ===============================
+   グリッド（概要）
+================================= */
+
 .grid-2{
   display:grid;
   grid-template-columns: repeat(2, 1fr);
@@ -65,13 +78,25 @@
   margin-top:12px;
 }
 
-/* 小さめカード */
+@media (max-width: 760px){
+  .grid-2{
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 小カード */
+
 .mini{
   border:1px solid var(--line);
   background:rgba(255,255,255,.02);
   border-radius:14px;
   padding:14px;
   transition: all .25s ease;
+}
+
+.mini:hover{
+  transform: translateY(-3px);
+  border-color: rgba(90,167,255,.3);
 }
 
 .mini h3{
@@ -83,34 +108,17 @@
   margin:8px 0 0;
 }
 
-@media (max-width: 760px){
-  .grid-2{
-    grid-template-columns: 1fr;
-  }
-}
+/* ===============================
+   目次（rules）
+================================= */
 
-.mini:hober{
-    transform: translateY(-3px);
-    border-color: rgba(90,167,255,.3);
-}
-
-/* 最重要リスト（最初に読ませる） */
-.key-list{
-  margin:10px 0 0;
-  padding-left:18px;
-  color:var(--muted);
-}
-.key-list b{
-  color:var(--text);
-}
-
-/* 目次 */
 .toc{
   display:grid;
   grid-template-columns: repeat(2, 1fr);
   gap:10px;
   margin-top:12px;
 }
+
 .toc-item{
   border:1px solid var(--line);
   background:rgba(255,255,255,.02);
@@ -118,6 +126,7 @@
   padding:10px 12px;
   color:var(--muted);
 }
+
 .toc-item:hover{
   color:var(--text);
   border-color: rgba(90,167,255,.25);
@@ -127,21 +136,325 @@
   .toc{ grid-template-columns: 1fr; }
 }
 
-/* rules.html の見出しを少しだけ締める */
+/* ===============================
+   rules見出し調整
+================================= */
+
 .rule-block h3{
   margin:0 0 6px;
   font-size:18px;
 }
 
-/* Q&Aテンプレ（pre）を見やすく */
+.rule-block h4{
+  margin:14px 0 4px;
+  font-size:15px;
+  color:var(--text);
+}
+
+/* ===============================
+   Q&A
+================================= */
+
+.qa-item[open]{
+  border-color: rgba(90,167,255,.25);
+  background: rgba(90,167,255,.05);
+}
+
+.qa-item summary{
+  font-weight:600;
+}
+
 .qa-template{
   margin:10px 0 0;
   padding:12px;
   border-radius:12px;
   border:1px solid var(--line);
   background:rgba(0,0,0,.25);
-  color:var(--text);
   overflow:auto;
   font-size:12px;
   line-height:1.6;
+}
+
+/* ===============================
+   STAFF（管理人）
+================================= */
+
+.staff-grid{
+  display:grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap:14px;
+  margin-top:12px;
+}
+
+@media (max-width: 760px){
+  .staff-grid{ grid-template-columns: 1fr; }
+}
+
+.staff-card{
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.02);
+  border-radius:14px;
+  padding:14px;
+}
+
+.staff-top{
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+
+.staff-avatar{
+  width:42px;
+  height:42px;
+  border-radius:12px;
+  display:grid;
+  place-items:center;
+  border:1px solid var(--line);
+  background:rgba(90,167,255,.10);
+  font-weight:700;
+}
+
+.staff-name{
+  font-weight:700;
+}
+
+.staff-tags{
+  list-style:none;
+  padding:0;
+  margin:12px 0 0;
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+
+.staff-tags li{
+  font-size:12px;
+  color:var(--muted);
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.02);
+  padding:4px 10px;
+  border-radius:999px;
+}
+
+.staff-note{
+  margin:10px 0 0;
+  color:var(--muted);
+}
+
+.staff-quote{
+  margin:10px 0 0;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.02);
+  font-size:13px;
+}
+
+.staff-card-sub{
+  opacity:.95;
+}
+
+/* ===============================
+   STAFF 微調整（クール寄せ）
+================================= */
+
+.staff-card{
+  padding:16px 18px;
+  transition: all .2s ease;
+}
+
+.staff-card:hover{
+  transform: translateY(-2px);
+  border-color: rgba(90,167,255,.25);
+}
+
+.staff-top{
+  margin-bottom:8px;
+}
+
+.staff-avatar{
+  width:38px;
+  height:38px;
+  font-size:14px;
+}
+
+.staff-tags{
+  margin:8px 0 6px;
+}
+
+.staff-tags li{
+  font-size:11px;
+  padding:3px 9px;
+  background:rgba(255,255,255,.015);
+  border-color: rgba(255,255,255,.06);
+}
+
+.staff-note{
+  font-size:13px;
+  line-height:1.6;
+}
+
+.staff-quote{
+  margin-top:8px;
+  padding:8px 10px;
+  font-size:12px;
+  background:rgba(90,167,255,.06);
+  border:1px solid rgba(90,167,255,.15);
+}
+
+.staff-grid{
+  gap:18px;
+}
+
+.staff-avatar{
+  width:48px;
+  height:48px;
+  border-radius:50%;
+  overflow:hidden;
+  border:1px solid var(--line);
+}
+
+.staff-avatar img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+
+/* =========================================
+   STAFF ICON ULTIMATE（アイコン最高版）
+========================================= */
+
+/* 役職カラー（リング色） */
+:root{
+  --ring-owner: rgba(255, 200, 90, .85);
+  --ring-admin: rgba( 90, 167,255, .85);
+  --ring-sub  : rgba(165, 255,210, .75);
+}
+
+/* カードを少し締めて、ホバーで浮かせる */
+.staff-card{
+  position: relative;
+  border-radius:16px;
+  padding:16px 18px;
+  transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+  overflow:hidden;
+}
+
+.staff-card:hover{
+  transform: translateY(-3px);
+  border-color: rgba(255,255,255,.14);
+  box-shadow: 0 14px 30px rgba(0,0,0,.35);
+}
+
+/* ROLEバッジ（右上） */
+.staff-roleBadge{
+  position:absolute;
+  top:12px;
+  right:12px;
+  font-size:10px;
+  letter-spacing:.18em;
+  padding:4px 8px;
+  border-radius:999px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.02);
+  color:var(--muted);
+}
+
+/* アイコン：丸＋リング＋グロー */
+.staff-avatar{
+  width:46px;
+  height:46px;
+  border-radius:999px;
+  overflow:hidden;
+  position:relative;
+  flex:0 0 auto;
+
+  /* 外周リング */
+  border:2px solid rgba(255,255,255,.10);
+
+  /* 内側の暗め背景（画像が薄い時用） */
+  background: rgba(255,255,255,.02);
+
+  /* グロー */
+  box-shadow: 0 0 0 6px rgba(255,255,255,.02);
+}
+
+.staff-avatar img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+  transition: transform .35s ease, filter .35s ease;
+}
+
+.staff-card:hover .staff-avatar img{
+  transform: scale(1.06);
+  filter: brightness(1.05);
+}
+
+/* 役職別リング色 */
+.staff-owner .staff-avatar{
+  border-color: var(--ring-owner);
+  box-shadow: 0 0 0 6px rgba(255, 200, 90, .08);
+}
+.staff-admin .staff-avatar{
+  border-color: var(--ring-admin);
+  box-shadow: 0 0 0 6px rgba( 90, 167,255, .08);
+}
+.staff-sub .staff-avatar{
+  border-color: var(--ring-sub);
+  box-shadow: 0 0 0 6px rgba(165, 255,210, .07);
+}
+
+/* ホバー時のリング発光 */
+.staff-owner:hover .staff-avatar{
+  box-shadow: 0 0 0 6px rgba(255, 200, 90, .12), 0 0 26px rgba(255, 200, 90, .18);
+}
+.staff-admin:hover .staff-avatar{
+  box-shadow: 0 0 0 6px rgba( 90, 167,255, .12), 0 0 26px rgba( 90, 167,255, .18);
+}
+.staff-sub:hover .staff-avatar{
+  box-shadow: 0 0 0 6px rgba(165, 255,210, .10), 0 0 26px rgba(165, 255,210, .16);
+}
+
+/* バッジも役職色に寄せる */
+.staff-owner .staff-roleBadge{
+  border-color: rgba(255, 200, 90, .28);
+  color: rgba(255, 220, 140, .95);
+}
+.staff-admin .staff-roleBadge{
+  border-color: rgba( 90, 167,255, .28);
+  color: rgba(150, 205, 255, .95);
+}
+.staff-sub .staff-roleBadge{
+  border-color: rgba(165, 255,210, .24);
+  color: rgba(205, 255,235, .95);
+}
+
+/* タグは控えめにして“クール”に */
+.staff-tags{
+  margin:10px 0 6px;
+  gap:6px;
+}
+.staff-tags li{
+  font-size:11px;
+  padding:3px 9px;
+  background:rgba(255,255,255,.015);
+  border-color: rgba(255,255,255,.06);
+}
+
+/* セリフ枠を少し軽く、読みやすく */
+.staff-quote{
+  margin-top:10px;
+  padding:9px 11px;
+  border-radius:12px;
+  font-size:12px;
+  background:rgba(255,255,255,.02);
+  border:1px solid rgba(255,255,255,.08);
+}
+
+/* 補佐官カードは少し控えめ */
+.staff-sub{
+  opacity:.96;
 }

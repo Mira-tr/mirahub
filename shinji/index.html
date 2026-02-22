@@ -5,9 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>しんじ卓 | MIRAHUB</title>
 
-  <!-- 共通 -->
   <link rel="stylesheet" href="../style.css">
-  <!-- しんじ卓専用（上書き・追加） -->
   <link rel="stylesheet" href="./shinji.css">
 </head>
 
@@ -47,6 +45,7 @@
     </p>
 
     <div class="btn-row">
+      <!-- ✅ 招待URLはここを差し替え -->
       <a class="btn btn-primary" href="https://discord.gg/XXXXXXXX" target="_blank" rel="noreferrer">Discordへ</a>
       <a class="btn btn-ghost" href="./rules.html">ルールを見る</a>
       <a class="btn btn-ghost" href="./qa.html">Q&Aを見る</a>
@@ -54,7 +53,7 @@
   </section>
 
   <!-- ルール概要 -->
-  <section class="section-card">
+  <section class="section-card" id="summary">
     <h2>しんじ卓 ルール概要</h2>
 
     <p>
@@ -79,6 +78,7 @@
     <div class="linkbox">
       <div class="linkrow">
         <span class="pill">詳細ルール</span>
+        <!-- ✅ 後でURL差し替え -->
         <a class="link" href="#">ルールチャンネル（後でURL差し替え）</a>
         <span class="sep">・</span>
         <a class="link" href="#">卓ルールチャンネル（後でURL差し替え）</a>
@@ -86,6 +86,7 @@
 
       <div class="linkrow">
         <span class="pill">疑問点</span>
+        <!-- ✅ 後でURL差し替え -->
         <a class="link" href="#">質問チャンネル（後でURL差し替え）</a>
       </div>
     </div>
@@ -96,75 +97,245 @@
     </div>
   </section>
 
-  <section class="section-card">
-  <h2>概要</h2>
+  <!-- 概要（使い方） -->
+  <section class="section-card" id="guide">
+    <h2>はじめに（ざっくり案内）</h2>
 
-  <div class="grid-2">
-    <div class="mini">
-      <h3>使用ツール</h3>
-      <ul class="text-muted">
-        <li>Discord（連絡/募集/通話）</li>
-        <li>ココフォリア（盤面）</li>
-        <li>いあきゃら等（キャラ管理）</li>
-      </ul>
-    </div>
+    <div class="grid-2">
+      <div class="mini">
+        <h3>使用ツール</h3>
+        <ul class="text-muted">
+          <li>Discord（連絡/募集/通話）</li>
+          <li>ココフォリア（盤面）</li>
+          <li>いあきゃら等（キャラ管理）</li>
+        </ul>
+      </div>
 
-    <div class="mini">
-      <h3>セッション形式</h3>
-      <ul class="text-muted">
-        <li>基本：ボイスセッション</li>
-        <li>日程調整：伝助など（必要に応じて）</li>
-      </ul>
-    </div>
+      <div class="mini">
+        <h3>セッション形式</h3>
+        <ul class="text-muted">
+          <li>基本：ボイスセッション</li>
+          <li>日程調整：伝助など（必要に応じて）</li>
+        </ul>
+      </div>
 
-    <div class="mini">
-      <h3>ルールまとめ</h3>
-      <ul class="text-muted">
-        <li>ハウスルール / サーバールール / 卓ルール</li>
-        <li>参加前に確認必須</li>
-      </ul>
-      <div class="btn-row">
-        <a class="btn btn-ghost" href="./rules.html">ルールページへ</a>
-        <a class="btn btn-ghost" href="./qa.html">Q&Aへ</a>
+      <div class="mini">
+        <h3>ルールまとめ</h3>
+        <ul class="text-muted">
+          <li>ハウスルール / サーバールール / 卓ルール</li>
+          <li>参加前に確認必須</li>
+        </ul>
+        <div class="btn-row">
+          <a class="btn btn-ghost" href="./rules.html">ルールページへ</a>
+          <a class="btn btn-ghost" href="./qa.html">Q&Aへ</a>
+        </div>
+      </div>
+
+      <div class="mini">
+        <h3>フォーラムについて</h3>
+        <p class="text-muted">
+          募集・連絡・共有を整理して見やすくするための場所。<br>
+          迷ったら「募集」「お知らせ」から見ればOK。
+        </p>
+        <a class="link" href="#">フォーラムの見方（準備中）</a>
+      </div>
+
+      <div class="mini">
+        <h3>雑談について</h3>
+        <p class="text-muted">
+          TRPGに関係なく仲良く話してるよ〜！<br>
+          相談・質問も気軽にどうぞ。
+        </p>
+      </div>
+
+      <div class="mini">
+        <h3>困ったときは</h3>
+        <p class="text-muted">
+          管理人ロール持ちが対応します。トラブル・相談・困りごとは遠慮なく連絡してね。
+        </p>
+        <ul class="text-muted">
+          <li>連絡先：管理人ロール持ち（サーバー内）</li>
+        </ul>
       </div>
     </div>
+  </section>
 
-    <div class="mini">
-      <h3>フォーラムについて</h3>
-      <p class="text-muted">
-        募集・連絡・共有を整理して見やすくするための場所。
-        迷ったら「募集」「お知らせ」から見ればOK。
-      </p>
-      <!-- 後でフォーラム説明ページを作るならリンクを差し替え -->
-      <a class="link" href="#">フォーラムの見方（準備中）</a>
-    </div>
+  <!-- 運営（管理人） -->
+  <section class="section-card" id="staff">
+  <h2>管理人・運営</h2>
+  <p class="text-muted">
+    困ったら「管理人ロール」へメンションでもOK。対応できる人が拾います。
+  </p>
 
-    <div class="mini">
-      <h3>雑談について</h3>
-      <p class="text-muted">
-        TRPGに関係なく仲良く話してるよ〜！<br>
-        相談・質問も気軽にどうぞ。
-      </p>
-    </div>
+  <h3 class="subhead">管理人</h3>
+  <div class="staff-grid">
 
-    <div class="mini">
-      <h3>困ったときは</h3>
-      <p class="text-muted">
-        管理人ロール持ちが対応します。トラブル・相談・困りごとは遠慮なく連絡してね。
-      </p>
-      <ul class="text-muted">
-        <li>連絡先：管理人ロール持ち（サーバー内）</li>
+    <div class="staff-card staff-owner">
+      <div class="staff-roleBadge">OWNER</div>
+
+      <div class="staff-top">
+        <div class="staff-avatar">
+          <img src="./images/shinji.png" alt="しんじ"></div>
+        <div>
+          <div class="staff-name">しんじ</div>
+          <div class="staff-role text-muted">鯖主 / 管理人</div>
+        </div>
+      </div>
+      <ul class="staff-tags">
+        <li>整備・整理</li>
+        <li>初心者歓迎</li>
+        <li>全体管理</li>
       </ul>
+      <p class="text-muted staff-note">
+        親しみやすい鯖主。サーバーを見やすく整えてくれた人。
+      </p>
+      <p class="staff-quote">みんな少しは優しくするように。</p>
     </div>
+
+    <div class="staff-card staff-admin">
+      <div class="staff-roleBadge">ADMIN</div>
+      <div class="staff-top">
+        <div class="staff-avatar">
+          <img src="./images/mira.png" alt="MIRA"></div>
+        <div>
+          <div class="staff-name">MIRA</div>
+          <div class="staff-role text-muted">管理人 / MIRAHUB運営</div>
+        </div>
+      </div>
+      <ul class="staff-tags">
+        <li>サイト運営</li>
+        <li>サーバー整備</li>
+        <li>即対応</li>
+      </ul>
+      <p class="text-muted staff-note">
+        鯖を弄りまわしてる人。困ったら言ってください。すぐ対応します。
+      </p>
+    </div>
+
+    <div class="staff-card staff-admin">
+      <div class="staff-roleBadge">ADMIN</div>
+      <div class="staff-top">
+        <div class="staff-avatar">
+          <img src="./images/kai.png" alt="カイ"></div>
+        <div>
+          <div class="staff-name">カイ</div>
+          <div class="staff-role text-muted">管理人</div>
+        </div>
+      </div>
+      <ul class="staff-tags">
+        <li>相談窓口</li>
+        <li>雰囲気ケア</li>
+        <li>ママ（？）</li>
+      </ul>
+      <p class="text-muted staff-note">
+        みんなのママ（？）。管理人の中でも相談しやすいはず。
+      </p>
+      <p class="staff-quote">ビジュがいいNPCと秘匿HOを与えないでください。喜びます。</p>
+    </div>
+
+    <div class="staff-card staff-admin">
+      <div class="staff-roleBadge">ADMIN</div>
+      <div class="staff-top">
+        <div class="staff-avatar">D</div>
+        <div>
+          <div class="staff-name">D15</div>
+          <div class="staff-role text-muted">管理人</div>
+        </div>
+      </div>
+      <ul class="staff-tags">
+        <li>相談しやすい</li>
+        <li>見守り</li>
+        <li>サポート</li>
+      </ul>
+      <p class="text-muted staff-note">
+        大体カイママの近くに居ます。ほら、後ろをご覧？いるでしょ？
+      </p>
+      <p class="staff-quote">何気に相談しやすい人だと思うよ。</p>
+    </div>
+
+    <div class="staff-card staff-admin">
+      <div class="staff-roleBadge">ADMIN</div>
+      <div class="staff-top">
+        <div class="staff-avatar">R</div>
+        <div>
+          <div class="staff-name">Rou</div>
+          <div class="staff-role text-muted">管理人</div>
+        </div>
+      </div>
+      <ul class="staff-tags">
+        <li>冷静</li>
+        <li>判断役</li>
+        <li>治安</li>
+      </ul>
+      <p class="text-muted staff-note">
+        悪即斬担当（？）。冷静に物事を見てくれます。
+      </p>
+      <p class="staff-quote">やばい人が来たら言ってみて。多分斬ってくれます。</p>
+    </div>
+
   </div>
+
+  <h3 class="subhead" style="margin-top:18px;">補佐官</h3>
+  <p class="text-muted" style="margin-top:6px;">
+    補佐官はメンバーと大きく権限は変わりませんが、管理人のサポート役です。
+  </p>
+
+  <div class="staff-grid">
+
+    <div class="staff-card staff-card-sub">
+      <div class="staff-roleBadge">SUPPORT</div>
+      <div class="staff-top">
+        <div class="staff-avatar">
+          <img src="./images/asagiri.png" alt="朝霧"></div>
+        <div>
+          <div class="staff-name">朝霧</div>
+          <div class="staff-role text-muted">補佐官</div>
+        </div>
+      </div>
+      <ul class="staff-tags">
+        <li>マスコット</li>
+        <li>相談役</li>
+        <li>親身</li>
+      </ul>
+      <p class="text-muted staff-note">
+        マスコット担当。相談を受けたら親身に聞いてくれるタイプ。
+      </p>
+      <p class="staff-quote">なお、よくモルモットになる。</p>
+    </div>
+
+    <div class="staff-card staff-card-sub">
+      <div class="staff-roleBadge">SUPPORT</div>
+      <div class="staff-top">
+        <div class="staff-avatar">
+          <img src="./images/amabe.jpg" alt="天辺"></div>
+        <div>
+          <div class="staff-name">天辺</div>
+          <div class="staff-role text-muted">補佐官</div>
+        </div>
+      </div>
+      <ul class="staff-tags">
+        <li>マスコット？</li>
+        <li>賑やかし</li>
+        <li>自由枠</li>
+      </ul>
+      <p class="text-muted staff-note">
+        マスコット担当その2。マスコットでいいのかは少し疑問。
+      </p>
+      <p class="staff-quote">変態担当の方が似合うと思います。</p>
+    </div>
+
+  </div>
+
+  <!-- ✅ ここに運営メンバーを追加（staff-cardをコピペで増やす） -->
+
 </section>
 
   <!-- 参加の流れ -->
-  <section class="section-card">
-    <h2>参加の流れ（例）</h2>
+  <section class="section-card" id="flow">
+    <h2>参加の流れ</h2>
     <ol class="text-muted">
-      <li>Discord参加 → 自己紹介</li>
-      <li>（必要なら）ロール付与</li>
+      <li>Discord参加 → ルール確認</li>
+      <li>ロール付与 → 自己紹介</li>
       <li>募集を見て参加宣言 → キャラ提出</li>
       <li>当日集合</li>
     </ol>
