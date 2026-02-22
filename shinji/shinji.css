@@ -183,7 +183,22 @@
   border-radius:16px;
   padding:16px 18px;
   overflow:hidden;
+  cursor:pointer;
+  position:relative;
   transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+.staff-card::after{
+  content:"クリックで詳細";
+  position:absolute;
+  bottom:10px;
+  right:14px;
+  font-size:10px;
+  letter-spacing:.1em;
+  opacity:.5;
+}
+
+.staff-card:hover::after{
+  opacity:.9;
 }
 .staff-card:hover{
   transform: translateY(-3px);
@@ -448,4 +463,186 @@
 @media (max-width: 760px){
   .modal__panel{ margin: 8vh auto; }
   .modal__meta{ grid-template-columns: 1fr; }
+}
+
+/* ===============================
+   ミニ目次
+================================= */
+
+.toc-mini{
+  padding:14px 18px;
+}
+
+.toc-mini-grid{
+  display:grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap:10px;
+}
+
+.toc-mini-grid a{
+  display:block;
+  text-align:center;
+  padding:8px 10px;
+  border-radius:10px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.02);
+  color:var(--muted);
+  text-decoration:none;
+  font-size:13px;
+  transition:all .2s ease;
+}
+
+.toc-mini-grid a:hover{
+  color:var(--text);
+  border-color: rgba(90,167,255,.25);
+}
+
+@media (max-width: 760px){
+  .toc-mini-grid{
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ===============================
+   rules.html：レイアウト（右固定目次）
+================================= */
+
+.rules-layout{
+  display:block;
+}
+
+.rules-aside{
+  display:none; /* スマホでは非表示（本文の方が読みやすい） */
+}
+
+@media (min-width: 980px){
+  .rules-layout{
+    display:grid;
+    grid-template-columns: 1fr 320px;
+    gap: 18px;
+    align-items:start;
+  }
+
+  .rules-aside{
+    display:block;
+    position: sticky;
+    top: 86px; /* ヘッダー分 */
+    height: max-content;
+  }
+}
+
+/* ===============================
+   rules.html：補助パーツ
+================================= */
+
+.update-badge{
+  display:inline-block;
+  padding:8px 10px;
+  border-radius:12px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.02);
+  color:var(--muted);
+  font-size:13px;
+  margin-top:10px;
+}
+
+.hr{
+  border:0;
+  height:1px;
+  background: var(--line);
+  margin:14px 0;
+}
+
+.toc-label{
+  margin:0 0 10px;
+}
+
+/* ===============================
+   折りたたみ（details）= 追加しやすさ最強
+================================= */
+
+.acc{
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.02);
+  border-radius:14px;
+  margin-top:12px;
+  overflow:hidden;
+}
+
+.acc__sum{
+  list-style:none;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:12px 14px;
+  user-select:none;
+}
+
+.acc__sum::-webkit-details-marker{
+  display:none;
+}
+
+.acc__title{
+  font-weight:700;
+}
+
+.acc__sum::after{
+  content:"＋";
+  margin-left:auto;
+  color:var(--muted);
+  font-weight:700;
+}
+
+.acc[open] .acc__sum::after{
+  content:"－";
+  color:var(--text);
+}
+
+.acc__body{
+  padding:0 14px 14px;
+}
+
+.acc__body ul{
+  margin:10px 0 0;
+  padding-left:18px;
+  color:var(--muted);
+}
+
+.acc__body li{
+  margin:6px 0;
+}
+
+.acc__body h4{
+  margin:14px 0 6px;
+  font-size:15px;
+  color:var(--text);
+}
+
+/* open時に少しだけ強調 */
+.acc[open]{
+  border-color: rgba(90,167,255,.22);
+  background: rgba(90,167,255,.04);
+}
+
+/* セクション見出しの詰め */
+.section-head p{
+  margin-top:6px;
+}
+
+/* 右目次：項目を少し小さく（密度UP） */
+.rules-aside .toc-item{
+  font-size:13px;
+  padding:9px 10px;
+}
+
+/* 右目次：3列は詰める */
+.rules-aside .toc-3{
+  grid-template-columns: repeat(3, 1fr);
+}
+
+/* キーボード操作の見た目 */
+.acc__sum:focus{
+  outline:2px solid rgba(90,167,255,.25);
+  outline-offset:2px;
 }
