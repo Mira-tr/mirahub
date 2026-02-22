@@ -1,0 +1,238 @@
+/* ===================================
+   テーマカラー定義（サイト全体の色）
+   ここを変えると雰囲気が一気に変わる
+=================================== */
+
+:root{
+  --bg:#0b0f14;                 /* 背景色（ほぼ黒） */
+  --panel:#111826;              /* カード背景色 */
+  --text:#e6eaf0;               /* メイン文字色 */
+  --muted:#9aa6b2;              /* 薄い文字色（説明文など） */
+  --line:rgba(230,234,240,.08); /* 枠線色 */
+  --accent:#5aa7ff;             /* 強調色（青） */
+}
+
+
+/* ===================================
+   ベース設定（全体の基本）
+=================================== */
+
+*{
+  box-sizing:border-box; 
+  /* paddingやborderを含めたサイズ計算にする
+     レイアウト崩れ防止の超重要設定 */
+}
+
+body{
+  margin:0;                     /* デフォルト余白削除 */
+  font-family:system-ui,-apple-system,"Segoe UI","Noto Sans JP",sans-serif;
+  /* 使用フォント指定 */
+  background:var(--bg);         /* 背景色 */
+  color:var(--text);            /* 文字色 */
+  line-height:1.7;              /* 行間 */
+}
+
+a{
+  color:inherit;                /* リンクも通常文字色と同じ */
+  text-decoration:none;         /* 下線削除 */
+}
+
+
+/* ===================================
+   レイアウト（全体構造）
+=================================== */
+
+.layout-wrap{
+  width:min(1000px, calc(100% - 40px));
+  /* 最大幅1000px、左右20px余白 */
+  margin:0 auto;                /* 中央寄せ */
+}
+
+.layout-header{
+  position:sticky;              /* スクロールしても上に固定 */
+  top:0;
+  background:rgba(11,15,20,.85); /* 半透明背景 */
+  backdrop-filter:blur(10px);   /* 背景ぼかし（ガラス風） */
+  border-bottom:1px solid var(--line);
+}
+
+.layout-header-inner{
+  display:flex;                 /* 横並び */
+  justify-content:space-between;/* 左右に分離 */
+  align-items:center;           /* 縦中央揃え */
+  padding:16px 0;
+}
+
+.layout-footer{
+  padding:32px 0 50px;
+  text-align:center;
+  color:var(--muted);
+}
+
+
+/* ===================================
+   ナビゲーション
+=================================== */
+
+.nav-link{
+  margin-left:18px;
+  color:var(--muted);
+  padding:6px 10px;
+  border-radius:8px;
+}
+
+.nav-link:hover{
+  color:var(--accent);          /* ホバー時は青 */
+  background:rgba(255,255,255,.04);
+}
+
+.nav-link-active{
+  color:var(--text);
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.02);
+}
+
+
+/* ===================================
+   ヒーローセクション（トップの大見出し部分）
+=================================== */
+
+.section-hero{
+  padding:60px 0 30px;
+}
+
+.text-tag{
+  font-size:12px;
+  letter-spacing:.25em;         /* 文字間隔広め */
+  color:var(--muted);
+  margin-bottom:12px;
+}
+
+.text-hero{
+  font-size:clamp(28px, 4vw, 44px);
+  /* 画面サイズに応じて文字サイズ変化 */
+  margin:0;
+  line-height:1.2;
+}
+
+.text-hero span{
+  color:var(--accent);          /* 強調部分を青に */
+}
+
+.text-muted{
+  color:var(--muted);
+}
+
+
+/* ===================================
+   ボタン
+=================================== */
+
+.btn{
+  display:inline-block;
+  border:1px solid var(--line);
+  padding:12px 16px;
+  border-radius:12px;
+  font-size:14px;
+  margin-right:10px;
+  margin-top:10px;
+}
+
+.btn-primary{
+  border-color:rgba(90,167,255,.35);
+  background:rgba(90,167,255,.12);
+}
+
+.btn-primary:hover{
+  background:rgba(90,167,255,.2);
+}
+
+.btn-ghost{
+  background:rgba(255,255,255,.03);
+}
+
+.btn-ghost:hover{
+  background:rgba(255,255,255,.06);
+}
+
+
+/* ===================================
+   カード（情報ブロック）
+=================================== */
+
+.section-card{
+  box-shadow: 0 10px 25px rgba(0,0,0,.25);
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:20px;
+  margin:20px 0;
+}
+
+.section-card h1,
+.section-card h2{
+  margin-top:0;  /* 上の余白を消す */
+}
+
+
+/* ===================================
+   ルールページ専用スタイル
+=================================== */
+
+.rule-block{
+  margin-top:20px;
+  padding-top:20px;
+  border-top:1px solid var(--line);
+}
+
+.rule-block:first-child{
+  border-top:0;
+  padding-top:0;
+}
+
+.rule-block h2{
+  font-size:18px;
+  margin:0 0 8px;
+}
+
+.rule-block ul{
+  margin:10px 0 0;
+  padding-left:18px;
+  color:var(--muted);
+}
+
+.rule-block li{
+  margin:6px 0;
+}
+
+
+/* ===================================
+   Q&A（detailsタグ用）
+=================================== */
+
+.qa-item{
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:12px 14px;
+  margin-top:12px;
+  background:rgba(255,255,255,.02);
+}
+
+.qa-item summary{
+  cursor:pointer;  /* クリック可能表示 */
+}
+
+.qa-item p{
+  margin-top:10px;
+  color:var(--muted);
+}
+
+.notice{
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.02);
+  border-radius:14px;
+  padding:12px 16px;
+  margin:16px 0;
+  font-size:13px;
+  color:var(--muted);
+}
