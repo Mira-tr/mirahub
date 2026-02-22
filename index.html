@@ -4,63 +4,83 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>MIRAHUB</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta name="description" content="MIRAHUB：TRPGの案内とまとめの拠点。シナリオ一覧はGoogle Sheetsと自動同期。" />
+  <link rel="stylesheet" href="./style.css" />
 </head>
 
 <body>
 
 <header class="layout-header">
   <div class="layout-wrap layout-header-inner">
-
     <div class="brand">
-      <span class="brand-dot"></span>
-      <span>MIRAHUB</span>
+      <span class="brand-dot" aria-hidden="true"></span>
+      <a href="./" class="brand-title">MIRAHUB</a>
     </div>
 
-    <nav>
+    <nav class="nav">
+      <a class="nav-link" href="./scenarios.html">シナリオ一覧</a>
       <a class="nav-link nav-cta" href="./shinji/">しんじ卓</a>
     </nav>
-
   </div>
 </header>
 
 <main class="layout-wrap">
 
-  <!-- HERO -->
   <section class="section-hero">
-
-    <p class="text-tag">OFFICIAL / COMMUNITY</p>
+    <p class="text-tag">OFFICIAL / PERSONAL HUB</p>
 
     <h1 class="text-hero">
       ここは<span>MIRAHUB</span>。<br>
-      案内とまとめの拠点。
+      TRPGの情報をまとめる拠点。
     </h1>
 
     <p class="text-lead">
-      自己紹介は後で追加。まずは「しんじ卓」の完成。
+      しんじ卓の案内と、ミラ所持シナリオの管理・検索をここに集約する。
     </p>
 
     <div class="btn-row">
-      <a class="btn btn-primary" href="./shinji/">
-        しんじ卓ページへ
-      </a>
-
-      <a class="btn btn-ghost" href="./shinji/rules.html">
-        ルールを見る
-      </a>
+      <a class="btn btn-primary" href="./scenarios.html">シナリオ一覧へ</a>
+      <a class="btn btn-ghost" href="./shinji/">しんじ卓へ</a>
     </div>
 
+    <div class="hero-mini">
+      <div class="hero-mini-card">
+        <div class="hero-mini-title">シナリオ管理</div>
+        <div class="text-muted">Google Sheets と同期。編集＝即反映。</div>
+      </div>
+      <div class="hero-mini-card">
+        <div class="hero-mini-title">検索</div>
+        <div class="text-muted">人数 / 形式 / 時間 / システム で絞れる。</div>
+      </div>
+      <div class="hero-mini-card">
+        <div class="hero-mini-title">拡張</div>
+        <div class="text-muted">100本超を前提に高速化・URL共有も対応。</div>
+      </div>
+    </div>
   </section>
 
-  <!-- UPDATE CARD -->
   <section class="section-card card-compact">
-    <h2>更新予定</h2>
+    <h2>メニュー</h2>
+    <div class="hub-grid">
+      <a class="hub-card" href="./scenarios.html">
+        <div class="hub-card-title">シナリオ一覧</div>
+        <div class="text-muted">所持シナリオを検索・絞り込み</div>
+      </a>
 
-    <ul>
-      <li>プロフィール（あとで）</li>
-      <li>しんじ卓：卓ルール / ハウスルール</li>
-      <li>しんじ卓：Q&A</li>
-    </ul>
+      <a class="hub-card" href="./shinji/">
+        <div class="hub-card-title">しんじ卓</div>
+        <div class="text-muted">案内 / ルール / Q&A</div>
+      </a>
+
+      <div class="hub-card hub-card-muted">
+        <div class="hub-card-title">今後の拡張</div>
+        <ul class="text-muted hub-list">
+          <li>シナリオ詳細ページ化</li>
+          <li>配信・予定・募集テンプレ</li>
+          <li>タグ体系の強化</li>
+        </ul>
+      </div>
+    </div>
   </section>
 
 </main>

@@ -1,0 +1,153 @@
+/* シナリオページ専用 */
+
+.ctl-grid{
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap:12px;
+  margin-top:12px;
+}
+@media (max-width: 900px){
+  .ctl-grid{ grid-template-columns: 1fr; }
+}
+
+.ctl{ display:grid; gap:6px; }
+.ctl-wide{ grid-column: 1 / -1; }
+
+.ctl-label{
+  font-size:12px;
+  letter-spacing:.12em;
+  color:var(--muted);
+}
+
+.ctl-input,
+.ctl-select{
+  width:100%;
+  padding:12px 12px;
+  border-radius:12px;
+  border:1px solid var(--line);
+  background: rgba(255,255,255,.02);
+  color: var(--text);
+  outline:none;
+}
+
+/* ✅ select の白さ対策（選択肢が見づらい問題） */
+.ctl-select{
+  appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+    linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) calc(50% - 3px),
+    calc(100% - 12px) calc(50% - 3px);
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+  padding-right: 34px;
+}
+
+/* optionの背景（ブラウザ差はあるけど効く所は効く） */
+.ctl-select option{
+  background: #0b0f14;
+  color: #e6eaf0;
+}
+
+.ctl-input:focus,
+.ctl-select:focus{
+  border-color: rgba(90,167,255,.25);
+  box-shadow: 0 0 0 4px rgba(90,167,255,.08);
+}
+
+.ctl-range{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.ctl-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  align-items:center;
+}
+
+.list-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  gap:12px;
+}
+
+/* カード一覧 */
+.cards{
+  display:grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap:14px;
+  margin-top:12px;
+}
+@media (max-width: 900px){
+  .cards{ grid-template-columns: 1fr; }
+}
+
+.sc-card{
+  border:1px solid var(--line);
+  background: rgba(255,255,255,.02);
+  border-radius:16px;
+  padding:14px;
+  overflow:hidden;
+  transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+.sc-card:hover{
+  transform: translateY(-2px);
+  border-color: rgba(255,255,255,.14);
+  box-shadow: 0 14px 28px rgba(0,0,0,.30);
+}
+
+.sc-title{
+  font-size:16px;
+  font-weight:800;
+  margin:0 0 6px;
+}
+
+.sc-meta{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin:10px 0 0;
+  list-style:none;
+  padding:0;
+}
+.sc-meta li{
+  font-size:11px;
+  color:var(--muted);
+  border:1px solid rgba(255,255,255,.06);
+  background: rgba(255,255,255,.015);
+  padding:3px 9px;
+  border-radius:999px;
+}
+
+.sc-desc{
+  margin:8px 0 0;
+  color:var(--muted);
+  line-height:1.7;
+  font-size:13px;
+}
+
+.sc-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:12px;
+}
+
+.btn-copy{
+  display:inline-block;
+  border:1px solid var(--line);
+  background: rgba(255,255,255,.03);
+  color: var(--text);
+  border-radius:12px;
+  padding:10px 12px;
+  font-size:13px;
+  cursor:pointer;
+}
+.btn-copy:hover{
+  border-color: rgba(90,167,255,.25);
+}

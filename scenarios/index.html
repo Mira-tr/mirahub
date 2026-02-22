@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>シナリオ一覧 | MIRAHUB</title>
+
+  <link rel="stylesheet" href="../style.css">
+  <link rel="stylesheet" href="./scenarios.css">
+</head>
+<body>
+
+<header class="layout-header">
+  <div class="layout-wrap layout-header-inner">
+    <div class="brand">
+      <span class="brand-dot"></span>
+      <a href="../">MIRAHUB</a>
+      <span class="text-muted">/</span>
+      <span>シナリオ一覧</span>
+    </div>
+
+    <nav>
+      <a class="nav-link" href="../">トップ</a>
+      <a class="nav-link nav-link-active" href="./">シナリオ</a>
+      <a class="nav-link nav-cta" href="../shinji/">しんじ卓</a>
+    </nav>
+  </div>
+</header>
+
+<main class="layout-wrap" id="top">
+
+  <section class="section-hero">
+    <p class="text-tag">SCENARIO LIST</p>
+    <h1 class="text-hero">所持シナリオ<span>検索</span>・<span>絞り込み</span></h1>
+    <p class="text-lead text-muted">
+      Google Sheetsの内容を自動同期して表示します。<br>
+      タイトル・システム・人数・形式・時間・KPレス対応などで探せます。
+    </p>
+
+    <div class="btn-row">
+      <a class="btn btn-ghost" href="../">MIRAHUBトップへ</a>
+      <a class="btn btn-ghost" href="#list">一覧へ</a>
+    </div>
+  </section>
+
+  <section class="section-card" id="controls">
+    <h2>検索・絞り込み</h2>
+
+    <div class="ctl-grid">
+      <div class="ctl">
+        <label class="ctl-label" for="q">キーワード</label>
+        <input id="q" class="ctl-input" type="search" placeholder="例：CoC6 / 1PL / クローズド / 近未来 / 作者名 …">
+      </div>
+
+      <div class="ctl">
+        <label class="ctl-label" for="system">システム</label>
+        <select id="system" class="ctl-select">
+          <option value="">すべて</option>
+          <option value="CoC6">CoC6</option>
+          <option value="CoC7">CoC7</option>
+          <option value="Other">その他</option>
+        </select>
+      </div>
+
+      <div class="ctl">
+        <label class="ctl-label" for="format">形式</label>
+        <select id="format" class="ctl-select">
+          <option value="">すべて</option>
+          <option value="ボイセ">ボイセ</option>
+          <option value="テキセ">テキセ</option>
+        </select>
+      </div>
+
+      <div class="ctl">
+        <label class="ctl-label" for="players">人数</label>
+        <select id="players" class="ctl-select">
+          <option value="">すべて</option>
+          <option value="1-4">1〜4人</option>
+          <option value="Any">PL何人でも</option>
+          <option value="KPレス">KPレス</option>
+          <option value="1PL">1PL</option>
+          <option value="KPC+1PL">KPC+1PL</option>
+          <option value="2PL">2PL</option>
+        </select>
+      </div>
+
+      <div class="ctl">
+        <label class="ctl-label" for="voiceMin">ボイセ時間（h）</label>
+        <div class="ctl-range">
+          <input id="voiceMin" class="ctl-input" type="number" min="0" step="1" placeholder="min">
+          <span class="text-muted">〜</span>
+          <input id="voiceMax" class="ctl-input" type="number" min="0" step="1" placeholder="max">
+        </div>
+      </div>
+
+      <div class="ctl">
+        <label class="ctl-label" for="textMin">テキセ時間（h）</label>
+        <div class="ctl-range">
+          <input id="textMin" class="ctl-input" type="number" min="0" step="1" placeholder="min">
+          <span class="text-muted">〜</span>
+          <input id="textMax" class="ctl-input" type="number" min="0" step="1" placeholder="max">
+        </div>
+      </div>
+
+      <div class="ctl">
+        <label class="ctl-label" for="sort">並び替え</label>
+        <select id="sort" class="ctl-select">
+          <option value="titleAsc">タイトル（A→Z）</option>
+          <option value="titleDesc">タイトル（Z→A）</option>
+          <option value="updatedDesc">更新日（新しい順）</option>
+          <option value="updatedAsc">更新日（古い順）</option>
+        </select>
+      </div>
+
+      <div class="ctl ctl-wide">
+        <div class="ctl-actions">
+          <button class="btn btn-primary" id="reset" type="button">条件リセット</button>
+          <button class="btn btn-ghost" id="copySearch" type="button">検索条件をコピー</button>
+          <a class="btn btn-ghost" href="#top">上へ</a>
+        </div>
+        <p class="text-muted" id="status" style="margin:8px 0 0;">読み込み中…</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-card" id="list">
+    <div class="list-head">
+      <h2>一覧</h2>
+      <div class="text-muted"><span id="count">0</span> 件</div>
+    </div>
+
+    <div class="cards" id="cards"></div>
+  </section>
+
+  <footer class="layout-footer">© MIRAHUB</footer>
+</main>
+
+<script src="./scenarios.js"></script>
+</body>
+</html>
