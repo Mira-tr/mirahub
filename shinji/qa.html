@@ -32,136 +32,309 @@
   </div>
 </header>
 
-<main class="layout-wrap" id="top">
+<main class="layout-wrap qa-layout" id="top">
 
-  <section class="section-hero">
-    <p class="text-tag">Q&A</p>
-    <h1 class="text-hero">よくある質問</h1>
-    <p class="text-lead text-muted">
-      困ったらまずここ。<br>
-      ブラウザの検索（Ctrl + F）でキーワード検索もできます。
-    </p>
+  <!-- 左：本文 -->
+  <div class="qa-main">
 
-    <div class="btn-row">
-      <a class="btn btn-ghost" href="./rules.html">ルールへ</a>
-      <a class="btn btn-ghost" href="./">しんじ卓トップへ</a>
-    </div>
-  </section>
+    <section class="section-hero">
+      <p class="text-tag">Q&A</p>
+      <h1 class="text-hero">よくある質問</h1>
+      <p class="text-lead text-muted">
+        困ったらまずここ。<br>
+        下の検索で絞り込みできます（Ctrl + F でもOK）。
+      </p>
 
+      <div class="btn-row">
+        <a class="btn btn-ghost" href="./rules.html">ルールへ</a>
+        <a class="btn btn-ghost" href="./">しんじ卓トップへ</a>
+      </div>
+    </section>
 
-  <!-- 目次（カテゴリ） -->
-  <section class="section-card">
-    <h2>カテゴリ</h2>
-    <div class="toc toc-3">
-      <a class="toc-item" href="#join">参加・初心者</a>
-      <a class="toc-item" href="#session">卓・セッション</a>
-      <a class="toc-item" href="#tools">ツール</a>
-      <a class="toc-item" href="#rules">ルール</a>
-      <a class="toc-item" href="#trouble">トラブル</a>
-      <a class="toc-item" href="#other">その他</a>
-    </div>
+    <!-- 検索 / 絞り込み -->
+    <section class="section-card" id="qaControls">
+      <h2>検索・絞り込み</h2>
 
-  </section>
+      <div class="qa-controls">
+        <label class="qa-search">
+          <span class="qa-search__label">検索</span>
+          <input id="qaSearch" class="qa-search__input" type="search" placeholder="例：遅刻 / 7版 / ココフォリア / 録画…" />
+        </label>
 
-  <!-- 参加・初心者 -->
-  <section class="section-card" id="join">
-    <h2>参加・初心者</h2>
+        <div class="qa-filters" id="qaFilters" aria-label="カテゴリ絞り込み">
+          <button class="qa-filter is-active" type="button" data-filter="all">全部</button>
+          <button class="qa-filter" type="button" data-filter="join">参加・初心者</button>
+          <button class="qa-filter" type="button" data-filter="session">卓・セッション</button>
+          <button class="qa-filter" type="button" data-filter="tools">ツール</button>
+          <button class="qa-filter" type="button" data-filter="rules">ルール</button>
+          <button class="qa-filter" type="button" data-filter="trouble">トラブル</button>
+          <button class="qa-filter" type="button" data-filter="other">その他</button>
+        </div>
 
-    <details class="qa-item">
-      <summary>Q. 初心者でも参加していい？</summary>
-      <p>A. OK。分からないところはKPや周りがサポートします。</p>
-    </details>
+        <div class="qa-utils">
+          <button class="btn btn-ghost btn-mini" type="button" id="qaOpenAll">全部開く</button>
+          <button class="btn btn-ghost btn-mini" type="button" id="qaCloseAll">全部閉じる</button>
+        </div>
+      </div>
 
-    <details class="qa-item">
-      <summary>Q. 参加の流れは？</summary>
-      <p>A. 募集を見る → 参加宣言 → キャラ提出 → 当日集合、の流れです。</p>
-    </details>
+      <p class="text-muted qa-hint">
+        ※ 検索は「質問・回答の全文」に効きます。<br>
+        ※ 「カテゴリ」ボタンで該当セクションだけ表示できます。
+      </p>
+    </section>
 
-    <!-- ✅ ここにQ&Aを追加（qa-itemをコピペして増やす） -->
-  </section>
+    <!-- 目次（カテゴリ） -->
+    <section class="section-card" id="qaToc">
+      <h2>カテゴリ</h2>
+      <div class="toc toc-3">
+        <a class="toc-item" href="#join">参加・初心者</a>
+        <a class="toc-item" href="#session">卓・セッション</a>
+        <a class="toc-item" href="#tools">ツール</a>
+        <a class="toc-item" href="#rules">ルール</a>
+        <a class="toc-item" href="#trouble">トラブル</a>
+        <a class="toc-item" href="#other">その他</a>
+      </div>
+    </section>
 
-  <!-- 卓・セッション -->
-  <section class="section-card" id="session">
-    <h2>卓・セッション</h2>
+    <!-- 参加・初心者 -->
+    <section class="section-card qa-section" id="join" data-section="join">
+      <h2>参加・初心者</h2>
 
-    <details class="qa-item">
-      <summary>Q. 遅刻しそう / 欠席になりそう</summary>
-      <p>A. 分かった時点で連絡してください。目安は<a class="link" href="./rules.html#t1">卓ルール（無断遅刻・無断欠席）</a>を確認。</p>
-    </details>
+      <details class="qa-item" data-qa>
+        <summary>Q. 初心者でも参加していい？</summary>
+        <p>A. OK。分からないところはKPや周りがサポートします。</p>
+      </details>
 
-    <details class="qa-item">
-      <summary>Q. 観戦や録画、配信はしていい？</summary>
-      <p>A. 参加者全員の許可が必須です。詳細は<a class="link" href="./rules.html#t4">卓ルール（観戦・録画・配信）</a>へ。</p>
-    </details>
+      <details class="qa-item" data-qa>
+        <summary>Q. 参加の流れは？</summary>
+        <p>A. 募集を見る → 参加宣言 → キャラ提出 → 当日集合、の流れです。</p>
+      </details>
 
-    <!-- ✅ ここにQ&Aを追加（qa-itemをコピペして増やす） -->
-  </section>
+      <!-- ✅ 追加はここに（qa-itemをコピペ） -->
+    </section>
 
-  <!-- ツール -->
-  <section class="section-card" id="tools">
-    <h2>ツール</h2>
+    <!-- 卓・セッション -->
+    <section class="section-card qa-section" id="session" data-section="session">
+      <h2>卓・セッション</h2>
 
-    <details class="qa-item">
-      <summary>Q. 使用ツールは？</summary>
-      <p>A. Discord（連絡/通話）、ココフォリア（盤面）、いあきゃら等（キャラ管理）を使います。</p>
-    </details>
+      <details class="qa-item" data-qa>
+        <summary>Q. 遅刻しそう / 欠席になりそう</summary>
+        <p>A. 分かった時点で連絡してください。目安は<a class="link" href="./rules.html#t1">卓ルール（無断遅刻・無断欠席）</a>を確認。</p>
+      </details>
 
-    <!-- ✅ ここにQ&Aを追加（qa-itemをコピペして増やす） -->
-  </section>
+      <details class="qa-item" data-qa>
+        <summary>Q. 観戦や録画、配信はしていい？</summary>
+        <p>A. 参加者全員の許可が必須です。詳細は<a class="link" href="./rules.html#t4">卓ルール（観戦・録画・配信）</a>へ。</p>
+      </details>
 
-  <!-- ルール -->
-  <section class="section-card" id="rules">
-    <h2>ルール</h2>
+      <!-- ✅ 追加はここに（qa-itemをコピペ） -->
+    </section>
 
-    <details class="qa-item">
-      <summary>Q. 7版のルールや技能は使える？</summary>
-      <p>A. 基本は6版準拠です。7版持ち込みは不可で、コンバートはKP判断です（<a class="link" href="./rules.html#h1">ハウスルール</a>）。</p>
-    </details>
+    <!-- ツール -->
+    <section class="section-card qa-section" id="tools" data-section="tools">
+      <h2>ツール</h2>
 
-    <details class="qa-item">
-      <summary>Q. 技能上限はいくつ？</summary>
-      <p>A. 90です（<a class="link" href="./rules.html#h2">ハウスルール（キャラ作成）</a>）。</p>
-    </details>
+      <details class="qa-item" data-qa>
+        <summary>Q. 使用ツールは？</summary>
+        <p>A. Discord（連絡/通話）、ココフォリア（盤面）、いあきゃら等（キャラ管理）を使います。</p>
+      </details>
 
-    <!-- ✅ ここにQ&Aを追加（qa-itemをコピペして増やす） -->
-  </section>
+      <!-- ✅ 追加はここに（qa-itemをコピペ） -->
+    </section>
 
-  <!-- トラブル -->
-  <section class="section-card" id="trouble">
-    <h2>トラブル</h2>
+    <!-- ルール -->
+    <section class="section-card qa-section" id="rules" data-section="rules">
+      <h2>ルール</h2>
 
-    <details class="qa-item">
-      <summary>Q. 困ったときはどこに相談すればいい？</summary>
-      <p>A. まずは運営（管理人ロール）へ相談してください。金銭・個人情報のトラブルは対応不可です（<a class="link" href="./rules.html#r3">サーバールール</a>）。</p>
-    </details>
+      <details class="qa-item" data-qa>
+        <summary>Q. 7版のルールや技能は使える？</summary>
+        <p>A. 基本は6版準拠です。7版持ち込みは不可で、コンバートはKP判断です（<a class="link" href="./rules.html#h1">ハウスルール</a>）。</p>
+      </details>
 
-    <!-- ✅ ここにQ&Aを追加（qa-itemをコピペして増やす） -->
-  </section>
+      <details class="qa-item" data-qa>
+        <summary>Q. 技能上限はいくつ？</summary>
+        <p>A. 90です（<a class="link" href="./rules.html#h2">ハウスルール（キャラ作成）</a>）。</p>
+      </details>
 
-  <!-- その他 -->
-  <section class="section-card" id="other">
-    <h2>その他</h2>
+      <!-- ✅ 追加はここに（qa-itemをコピペ） -->
+    </section>
 
-    <details class="qa-item">
-      <summary>Q. ネタバレの扱いは？</summary>
-      <p>A. 未通過/通過中の人がいる可能性があるので注意してください（<a class="link" href="./rules.html#t5">卓ルール</a>）。</p>
-    </details>
+    <!-- トラブル -->
+    <section class="section-card qa-section" id="trouble" data-section="trouble">
+      <h2>トラブル</h2>
 
-    <!-- ✅ ここにQ&Aを追加（qa-itemをコピペして増やす） -->
-  </section>
+      <details class="qa-item" data-qa>
+        <summary>Q. 困ったときはどこに相談すればいい？</summary>
+        <p>A. まずは運営（管理人ロール）へ相談してください。金銭・個人情報のトラブルは対応不可です（<a class="link" href="./rules.html#r3">サーバールール</a>）。</p>
+      </details>
 
-  <section class="section-card">
-    <div class="btn-row">
-      <a class="btn btn-ghost" href="#top" onclick="window.scrollTo({top:0, behavior:'smooth'}); return false;">上に戻る</a>
-      <a class="btn btn-ghost" href="./">しんじ卓トップへ</a>
-    </div>
-  </section>
+      <!-- ✅ 追加はここに（qa-itemをコピペ） -->
+    </section>
+
+    <!-- その他 -->
+    <section class="section-card qa-section" id="other" data-section="other">
+      <h2>その他</h2>
+
+      <details class="qa-item" data-qa>
+        <summary>Q. ネタバレの扱いは？</summary>
+        <p>A. 未通過/通過中の人がいる可能性があるので注意してください（<a class="link" href="./rules.html#t5">卓ルール</a>）。</p>
+      </details>
+
+      <!-- ✅ 追加はここに（qa-itemをコピペ） -->
+    </section>
+
+    <!-- 管理者用：テンプレ（URLに ?admin=1 の時だけ見える） -->
+    <section class="section-card qa-admin" id="adminTemplates" hidden>
+      <h2>管理者用テンプレ（追加用）</h2>
+      <p class="text-muted">
+        この欄は <b>?admin=1</b> を付けた時だけ表示されます。<br>
+        例：<span class="text-muted">.../qa.html?admin=1</span>
+      </p>
+
+      <h3 class="subhead">Q&A 追加テンプレ</h3>
+      <pre class="qa-template">&lt;details class="qa-item" data-qa&gt;
+  &lt;summary&gt;Q. ここに質問&lt;/summary&gt;
+  &lt;p&gt;A. ここに回答。必要なら &lt;a class="link" href="./rules.html#t1"&gt;リンク&lt;/a&gt;。&lt;/p&gt;
+&lt;/details&gt;</pre>
+
+      <h3 class="subhead">カテゴリ新設テンプレ（増やす時）</h3>
+      <pre class="qa-template">&lt;!-- 新しいカテゴリを作る場合 --&gt;
+&lt;section class="section-card qa-section" id="newcat" data-section="newcat"&gt;
+  &lt;h2&gt;新カテゴリ名&lt;/h2&gt;
+
+  &lt;details class="qa-item" data-qa&gt;
+    &lt;summary&gt;Q. 質問&lt;/summary&gt;
+    &lt;p&gt;A. 回答&lt;/p&gt;
+  &lt;/details&gt;
+&lt;/section&gt;</pre>
+
+      <p class="text-muted">
+        ※ カテゴリ増やしたら、上の「カテゴリ」や「フィルタボタン」も追加してね。
+      </p>
+    </section>
+
+    <section class="section-card">
+      <div class="btn-row">
+        <a class="btn btn-ghost" href="#top" onclick="window.scrollTo({top:0, behavior:'smooth'}); return false;">上に戻る</a>
+        <a class="btn btn-ghost" href="./">しんじ卓トップへ</a>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- 右：固定ナビ（PCのみ） -->
+  <aside class="qa-aside">
+    <section class="section-card">
+      <h2>ショートカット</h2>
+
+      <div class="toc toc-3">
+        <a class="toc-item" href="#join">参加</a>
+        <a class="toc-item" href="#session">卓</a>
+        <a class="toc-item" href="#tools">ツール</a>
+        <a class="toc-item" href="#rules">ルール</a>
+        <a class="toc-item" href="#trouble">トラブル</a>
+        <a class="toc-item" href="#other">その他</a>
+      </div>
+
+      <hr class="hr">
+
+      <div class="btn-row">
+        <a class="btn btn-ghost" href="#qaControls">検索へ</a>
+        <a class="btn btn-ghost" href="#top" onclick="window.scrollTo({top:0, behavior:'smooth'}); return false;">上へ</a>
+      </div>
+      
+    </section>
+  </aside>
 
 </main>
 
 <footer class="layout-footer">
   © MIRAHUB / しんじ卓
 </footer>
+
+<a class="fab-top" href="#top" aria-label="ページ上部へ">↑</a>
+
+<script>
+(() => {
+  const $ = (s, p=document) => p.querySelector(s);
+  const $$ = (s, p=document) => Array.from(p.querySelectorAll(s));
+
+  const search = $("#qaSearch");
+  const filters = $$("#qaFilters .qa-filter");
+  const sections = $$(".qa-section");
+  const items = $$("[data-qa]");
+  const openAll = $("#qaOpenAll");
+  const closeAll = $("#qaCloseAll");
+
+  let activeFilter = "all";
+
+  // 管理者テンプレ表示：?admin=1
+  const params = new URLSearchParams(location.search);
+  const isAdmin = params.get("admin") === "1";
+  const adminBox = $("#adminTemplates");
+  if (isAdmin && adminBox) adminBox.hidden = false;
+
+  const apply = () => {
+    const q = (search.value || "").trim().toLowerCase();
+
+    // セクション表示（カテゴリ）
+    sections.forEach(sec => {
+      const key = sec.dataset.section;
+      const showByFilter = (activeFilter === "all" || activeFilter === key);
+      sec.style.display = showByFilter ? "" : "none";
+    });
+
+    // Q&A item 表示（検索）
+    items.forEach(d => {
+      // 親セクションが非表示なら問答無用で隠す
+      const parent = d.closest(".qa-section");
+      if (parent && parent.style.display === "none") {
+        d.style.display = "none";
+        return;
+      }
+
+      if (!q) {
+        d.style.display = "";
+        return;
+      }
+
+      const text = d.innerText.toLowerCase();
+      d.style.display = text.includes(q) ? "" : "none";
+    });
+
+    // セクション内が全部非表示なら、セクション自体も畳む（見た目が綺麗）
+    sections.forEach(sec => {
+      if (sec.style.display === "none") return;
+      const visible = $$("[data-qa]", sec).some(d => d.style.display !== "none");
+      sec.style.display = visible ? "" : "none";
+    });
+  };
+
+  // フィルタボタン
+  filters.forEach(btn => {
+    btn.addEventListener("click", () => {
+      filters.forEach(b => b.classList.remove("is-active"));
+      btn.classList.add("is-active");
+      activeFilter = btn.dataset.filter || "all";
+      apply();
+    });
+  });
+
+  // 検索
+  search.addEventListener("input", apply);
+
+  // 全部開く / 閉じる
+  openAll.addEventListener("click", () => {
+    items.forEach(d => { if (d.style.display !== "none") d.open = true; });
+  });
+  closeAll.addEventListener("click", () => {
+    items.forEach(d => d.open = false);
+  });
+
+  // 初期反映
+  apply();
+})();
+</script>
 
 </body>
 </html>
