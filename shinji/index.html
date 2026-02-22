@@ -162,173 +162,230 @@
 
   <!-- 運営（管理人） -->
   <section class="section-card" id="staff">
-  <h2>管理人・運営</h2>
-  <p class="text-muted">
-    困ったら「管理人ロール」へメンションでもOK。対応できる人が拾います。
-  </p>
+    <h2>管理人・運営</h2>
+    <p class="text-muted">
+      困ったら「管理人ロール」へメンションでもOK。対応できる人が拾います。<br>
+      <span class="text-muted">（カードをクリックすると詳細が開きます）</span>
+    </p>
 
-  <h3 class="subhead">管理人</h3>
-  <div class="staff-grid">
+    <h3 class="subhead">管理人</h3>
+    <div class="staff-grid">
 
-    <div class="staff-card staff-owner">
-      <div class="staff-roleBadge">OWNER</div>
+      <div class="staff-card staff-owner js-staff"
+        data-name="しんじ"
+        data-role="鯖主 / 管理人"
+        data-tags="整備・整理,初心者歓迎,全体管理"
+        data-bio="親しみやすい鯖主。サーバーを見やすく整えてくれた人。"
+        data-quote="みんな少しは優しくするように。"
+        data-image="./images/shinji.png"
+        data-contact="管理人ロールへメンション（またはDM）"
+        data-notes="サーバー全般 / ルール案内 / 整備・整理">
+        <div class="staff-roleBadge">OWNER</div>
 
-      <div class="staff-top">
-        <div class="staff-avatar">
-          <img src="./images/shinji.png" alt="しんじ"></div>
-        <div>
-          <div class="staff-name">しんじ</div>
-          <div class="staff-role text-muted">鯖主 / 管理人</div>
+        <div class="staff-top">
+          <div class="staff-avatar"><img src="./images/shinji.png" alt="しんじ"></div>
+          <div>
+            <div class="staff-name">しんじ</div>
+            <div class="staff-role text-muted">鯖主 / 管理人</div>
+          </div>
         </div>
+        <ul class="staff-tags">
+          <li>整備・整理</li>
+          <li>初心者歓迎</li>
+          <li>全体管理</li>
+        </ul>
+        <p class="text-muted staff-note">
+          親しみやすい鯖主。サーバーを見やすく整えてくれた人。
+        </p>
+        <p class="staff-quote">みんな少しは優しくするように。</p>
       </div>
-      <ul class="staff-tags">
-        <li>整備・整理</li>
-        <li>初心者歓迎</li>
-        <li>全体管理</li>
-      </ul>
-      <p class="text-muted staff-note">
-        親しみやすい鯖主。サーバーを見やすく整えてくれた人。
-      </p>
-      <p class="staff-quote">みんな少しは優しくするように。</p>
+
+      <div class="staff-card staff-admin js-staff"
+        data-name="MIRA"
+        data-role="管理人 / MIRAHUB運営"
+        data-tags="サイト運営,サーバー整備,即対応"
+        data-bio="鯖を弄りまわしてる人。何かあれば言ってください。すぐに対応します。"
+        data-quote=""
+        data-image="./images/mira.png"
+        data-contact="管理人ロールへメンション（優先） / 必要ならDM"
+        data-notes="サイト（MIRAHUB）/ サーバー設定 / ルールページ整備">
+        <div class="staff-roleBadge">ADMIN</div>
+
+        <div class="staff-top">
+          <div class="staff-avatar"><img src="./images/mira.png" alt="MIRA"></div>
+          <div>
+            <div class="staff-name">MIRA</div>
+            <div class="staff-role text-muted">管理人 / MIRAHUB運営</div>
+          </div>
+        </div>
+        <ul class="staff-tags">
+          <li>サイト運営</li>
+          <li>サーバー整備</li>
+          <li>即対応</li>
+        </ul>
+        <p class="text-muted staff-note">
+          鯖を弄りまわしてる人。何かあれば言ってください。すぐに対応します。
+        </p>
+        <p class="staff-quote">森羅万象は俺のもの</p>
+      </div>
+
+      <div class="staff-card staff-admin js-staff"
+        data-name="カイ"
+        data-role="管理人"
+        data-tags="相談窓口,雰囲気ケア,ママ（？）"
+        data-bio="みんなのママ（？）。管理人の中でも相談しやすいはず。"
+        data-quote="ビジュがいいNPCと秘匿HOを与えないでください。喜びます。"
+        data-image="./images/kai.png"
+        data-contact="管理人ロールへメンション / もしくはカイへDM"
+        data-notes="相談対応 / 雰囲気ケア / 初心者フォロー">
+        <div class="staff-roleBadge">ADMIN</div>
+
+        <div class="staff-top">
+          <div class="staff-avatar"><img src="./images/kai.png" alt="カイ"></div>
+          <div>
+            <div class="staff-name">カイ</div>
+            <div class="staff-role text-muted">管理人</div>
+          </div>
+        </div>
+        <ul class="staff-tags">
+          <li>相談窓口</li>
+          <li>雰囲気ケア</li>
+          <li>ママ（？）</li>
+        </ul>
+        <p class="text-muted staff-note">
+          みんなのママ（？）。管理人の中でも相談しやすいはず。
+        </p>
+        <p class="staff-quote">ビジュがいいNPCと秘匿HOを与えないでください。喜びます。</p>
+      </div>
+
+      <div class="staff-card staff-admin js-staff"
+        data-name="D15"
+        data-role="管理人"
+        data-tags="相談しやすい,見守り,サポート"
+        data-bio="大体カイママの近くに居ます。ほら、後ろをご覧？いるでしょ？"
+        data-quote="何気に相談しやすい人だと思うよ。"
+        data-image="./images/d15.png"
+        data-contact="管理人ロールへメンション / もしくはD15へDM"
+        data-notes="相談対応 / 見守り / サポート全般">
+        <div class="staff-roleBadge">ADMIN</div>
+
+        <div class="staff-top">
+          <div class="staff-avatar"><img src="./images/d15.png" alt="D15"></div>
+          <div>
+            <div class="staff-name">D15</div>
+            <div class="staff-role text-muted">管理人</div>
+          </div>
+        </div>
+        <ul class="staff-tags">
+          <li>相談しやすい</li>
+          <li>見守り</li>
+          <li>サポート</li>
+        </ul>
+        <p class="text-muted staff-note">
+          大体カイママの近くに居ます。ほら、後ろをご覧？いるでしょ？
+        </p>
+        <p class="staff-quote">何気に相談しやすい人だと思うよ。</p>
+      </div>
+
+      <div class="staff-card staff-admin js-staff"
+        data-name="Rou"
+        data-role="管理人"
+        data-tags="冷静,判断役,治安"
+        data-bio="悪即斬担当（？）。冷静に物事を見てくれます。"
+        data-quote="やばい人が来たら言ってみて。多分斬ってくれます。"
+        data-image="./images/rou.png"
+        data-contact="管理人ロールへメンション / もしくはRouへDM"
+        data-notes="トラブル判断 / 治安 / 冷静な整理">
+        <div class="staff-roleBadge">ADMIN</div>
+
+        <div class="staff-top">
+          <div class="staff-avatar"><img src="./images/rou.png" alt="Rou"></div>
+          <div>
+            <div class="staff-name">Rou</div>
+            <div class="staff-role text-muted">管理人</div>
+          </div>
+        </div>
+        <ul class="staff-tags">
+          <li>冷静</li>
+          <li>判断役</li>
+          <li>治安</li>
+        </ul>
+        <p class="text-muted staff-note">
+          悪即斬担当（？）。冷静に物事を見てくれます。
+        </p>
+        <p class="staff-quote">やばい人が来たら言ってみて。多分斬ってくれます。</p>
+      </div>
+
     </div>
 
-    <div class="staff-card staff-admin">
-      <div class="staff-roleBadge">ADMIN</div>
-      <div class="staff-top">
-        <div class="staff-avatar">
-          <img src="./images/mira.png" alt="MIRA"></div>
-        <div>
-          <div class="staff-name">MIRA</div>
-          <div class="staff-role text-muted">管理人 / MIRAHUB運営</div>
+    <h3 class="subhead" style="margin-top:18px;">補佐官</h3>
+    <p class="text-muted" style="margin-top:6px;">
+      補佐官はメンバーと大きく権限は変わりませんが、管理人のサポート役です。
+    </p>
+
+    <div class="staff-grid">
+
+      <div class="staff-card staff-sub js-staff"
+        data-name="朝霧"
+        data-role="補佐官"
+        data-tags="マスコット,相談役,親身"
+        data-bio="マスコット担当。相談を受けたら親身に聞いてくれるタイプ。"
+        data-quote="なお、よくモルモットになる。"
+        data-image="./images/asagiri.png"
+        data-contact="管理人ロールへメンション / もしくは朝霧へDM"
+        data-notes="相談の聞き役 / 雰囲気作り / サポート">
+        <div class="staff-roleBadge">SUPPORT</div>
+
+        <div class="staff-top">
+          <div class="staff-avatar"><img src="./images/asagiri.png" alt="朝霧"></div>
+          <div>
+            <div class="staff-name">朝霧</div>
+            <div class="staff-role text-muted">補佐官</div>
+          </div>
         </div>
+        <ul class="staff-tags">
+          <li>マスコット</li>
+          <li>相談役</li>
+          <li>親身</li>
+        </ul>
+        <p class="text-muted staff-note">
+          マスコット担当。相談を受けたら親身に聞いてくれるタイプ。
+        </p>
+        <p class="staff-quote">なお、よくモルモットになる。</p>
       </div>
-      <ul class="staff-tags">
-        <li>サイト運営</li>
-        <li>サーバー整備</li>
-        <li>即対応</li>
-      </ul>
-      <p class="text-muted staff-note">
-        鯖を弄りまわしてる人。困ったら言ってください。すぐ対応します。
-      </p>
+
+      <div class="staff-card staff-sub js-staff"
+        data-name="天辺"
+        data-role="補佐官"
+        data-tags="マスコット？,賑やかし,自由枠"
+        data-bio="マスコット担当その2。マスコットにしていいのかは少し疑問。"
+        data-quote="変態担当の方が似合うと思います。"
+        data-image="./images/amabe.jpg"
+        data-contact="管理人ロールへメンション / もしくは天辺へDM"
+        data-notes="場を明るく / 賑やかし / サポート">
+        <div class="staff-roleBadge">SUPPORT</div>
+
+        <div class="staff-top">
+          <div class="staff-avatar"><img src="./images/amabe.jpg" alt="天辺"></div>
+          <div>
+            <div class="staff-name">天辺</div>
+            <div class="staff-role text-muted">補佐官</div>
+          </div>
+        </div>
+        <ul class="staff-tags">
+          <li>マスコット？</li>
+          <li>賑やかし</li>
+          <li>自由枠</li>
+        </ul>
+        <p class="text-muted staff-note">
+          マスコット担当その2。マスコットにしていいのかは少し疑問。
+        </p>
+        <p class="staff-quote">変態担当の方が似合うと思います。</p>
+      </div>
+
     </div>
 
-    <div class="staff-card staff-admin">
-      <div class="staff-roleBadge">ADMIN</div>
-      <div class="staff-top">
-        <div class="staff-avatar">
-          <img src="./images/kai.png" alt="カイ"></div>
-        <div>
-          <div class="staff-name">カイ</div>
-          <div class="staff-role text-muted">管理人</div>
-        </div>
-      </div>
-      <ul class="staff-tags">
-        <li>相談窓口</li>
-        <li>雰囲気ケア</li>
-        <li>ママ（？）</li>
-      </ul>
-      <p class="text-muted staff-note">
-        みんなのママ（？）。管理人の中でも相談しやすいはず。
-      </p>
-      <p class="staff-quote">ビジュがいいNPCと秘匿HOを与えないでください。喜びます。</p>
-    </div>
-
-    <div class="staff-card staff-admin">
-      <div class="staff-roleBadge">ADMIN</div>
-      <div class="staff-top">
-        <div class="staff-avatar">D</div>
-        <div>
-          <div class="staff-name">D15</div>
-          <div class="staff-role text-muted">管理人</div>
-        </div>
-      </div>
-      <ul class="staff-tags">
-        <li>相談しやすい</li>
-        <li>見守り</li>
-        <li>サポート</li>
-      </ul>
-      <p class="text-muted staff-note">
-        大体カイママの近くに居ます。ほら、後ろをご覧？いるでしょ？
-      </p>
-      <p class="staff-quote">何気に相談しやすい人だと思うよ。</p>
-    </div>
-
-    <div class="staff-card staff-admin">
-      <div class="staff-roleBadge">ADMIN</div>
-      <div class="staff-top">
-        <div class="staff-avatar">R</div>
-        <div>
-          <div class="staff-name">Rou</div>
-          <div class="staff-role text-muted">管理人</div>
-        </div>
-      </div>
-      <ul class="staff-tags">
-        <li>冷静</li>
-        <li>判断役</li>
-        <li>治安</li>
-      </ul>
-      <p class="text-muted staff-note">
-        悪即斬担当（？）。冷静に物事を見てくれます。
-      </p>
-      <p class="staff-quote">やばい人が来たら言ってみて。多分斬ってくれます。</p>
-    </div>
-
-  </div>
-
-  <h3 class="subhead" style="margin-top:18px;">補佐官</h3>
-  <p class="text-muted" style="margin-top:6px;">
-    補佐官はメンバーと大きく権限は変わりませんが、管理人のサポート役です。
-  </p>
-
-  <div class="staff-grid">
-
-    <div class="staff-card staff-card-sub">
-      <div class="staff-roleBadge">SUPPORT</div>
-      <div class="staff-top">
-        <div class="staff-avatar">
-          <img src="./images/asagiri.png" alt="朝霧"></div>
-        <div>
-          <div class="staff-name">朝霧</div>
-          <div class="staff-role text-muted">補佐官</div>
-        </div>
-      </div>
-      <ul class="staff-tags">
-        <li>マスコット</li>
-        <li>相談役</li>
-        <li>親身</li>
-      </ul>
-      <p class="text-muted staff-note">
-        マスコット担当。相談を受けたら親身に聞いてくれるタイプ。
-      </p>
-      <p class="staff-quote">なお、よくモルモットになる。</p>
-    </div>
-
-    <div class="staff-card staff-card-sub">
-      <div class="staff-roleBadge">SUPPORT</div>
-      <div class="staff-top">
-        <div class="staff-avatar">
-          <img src="./images/amabe.jpg" alt="天辺"></div>
-        <div>
-          <div class="staff-name">天辺</div>
-          <div class="staff-role text-muted">補佐官</div>
-        </div>
-      </div>
-      <ul class="staff-tags">
-        <li>マスコット？</li>
-        <li>賑やかし</li>
-        <li>自由枠</li>
-      </ul>
-      <p class="text-muted staff-note">
-        マスコット担当その2。マスコットでいいのかは少し疑問。
-      </p>
-      <p class="staff-quote">変態担当の方が似合うと思います。</p>
-    </div>
-
-  </div>
-
-  <!-- ✅ ここに運営メンバーを追加（staff-cardをコピペで増やす） -->
-
-</section>
+  </section>
 
   <!-- 参加の流れ -->
   <section class="section-card" id="flow">
@@ -346,6 +403,128 @@
 <footer class="layout-footer">
   © MIRAHUB / しんじ卓
 </footer>
+
+<!-- =========================
+     STAFF MODAL（ポップアップ）
+========================== -->
+<div class="modal" id="staffModal" aria-hidden="true">
+  <div class="modal__backdrop" data-close></div>
+
+  <div class="modal__panel" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <button class="modal__close" type="button" aria-label="閉じる" data-close>×</button>
+
+    <div class="modal__header">
+      <div class="modal__avatar">
+        <img id="modalImg" src="" alt="">
+      </div>
+      <div>
+        <div class="modal__name" id="modalTitle">NAME</div>
+        <div class="modal__role text-muted" id="modalRole">ROLE</div>
+        <div class="modal__tags" id="modalTags"></div>
+      </div>
+    </div>
+
+    <div class="modal__body">
+      <p class="text-muted" id="modalBio"></p>
+
+      <div class="modal__quote" id="modalQuote" style="display:none;"></div>
+
+      <div class="modal__meta">
+        <div class="modal__metaItem">
+          <div class="modal__metaLabel">連絡</div>
+          <div class="text-muted" id="modalContact"></div>
+        </div>
+        <div class="modal__metaItem">
+          <div class="modal__metaLabel">対応</div>
+          <div class="text-muted" id="modalNotes"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const modal = document.getElementById("staffModal");
+  const img = document.getElementById("modalImg");
+  const title = document.getElementById("modalTitle");
+  const role = document.getElementById("modalRole");
+  const tags = document.getElementById("modalTags");
+  const bio = document.getElementById("modalBio");
+  const quote = document.getElementById("modalQuote");
+  const contact = document.getElementById("modalContact");
+  const notes = document.getElementById("modalNotes");
+
+  const openModal = (card) => {
+    const d = card.dataset;
+
+    title.textContent = d.name || "";
+    role.textContent = d.role || "";
+    bio.textContent = d.bio || "";
+    contact.textContent = d.contact || "";
+    notes.textContent = d.notes || "";
+
+    // quote（空なら非表示）
+    const q = (d.quote || "").trim();
+    if (q) {
+      quote.style.display = "";
+      quote.textContent = q;
+    } else {
+      quote.style.display = "none";
+      quote.textContent = "";
+    }
+
+    // image
+    img.src = d.image || "";
+    img.alt = d.name || "staff";
+
+    // tags
+    tags.innerHTML = "";
+    (d.tags || "")
+      .split(",")
+      .map(s => s.trim())
+      .filter(Boolean)
+      .forEach(t => {
+        const el = document.createElement("span");
+        el.textContent = t;
+        tags.appendChild(el);
+      });
+
+    modal.classList.add("is-open");
+    modal.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+  };
+
+  const closeModal = () => {
+    modal.classList.remove("is-open");
+    modal.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+  };
+
+  // open
+  document.querySelectorAll(".js-staff").forEach(card => {
+    card.style.cursor = "pointer";
+    card.setAttribute("tabindex", "0");
+    card.addEventListener("click", () => openModal(card));
+    card.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        openModal(card);
+      }
+    });
+  });
+
+  // close (× / backdrop)
+  modal.addEventListener("click", (e) => {
+    if (e.target.matches("[data-close]")) closeModal();
+  });
+
+  // ESC
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && modal.classList.contains("is-open")) closeModal();
+  });
+})();
+</script>
 
 </body>
 </html>

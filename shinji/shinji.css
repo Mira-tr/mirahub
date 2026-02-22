@@ -2,6 +2,7 @@
    しんじ卓 専用（追加・上書き）
 ================================= */
 
+/* 見出し（h3相当） */
 .subhead{
   margin:16px 0 8px;
   font-size:16px;
@@ -33,14 +34,12 @@
   flex-direction:column;
   gap:10px;
 }
-
 .linkrow{
   display:flex;
   align-items:center;
   flex-wrap:wrap;
   gap:10px;
 }
-
 .pill{
   font-size:12px;
   letter-spacing:.08em;
@@ -49,17 +48,9 @@
   padding:4px 10px;
   border-radius:999px;
 }
-
-.link{
-  color:var(--accent);
-}
-.link:hover{
-  text-decoration:underline;
-}
-
-.sep{
-  color:var(--muted);
-}
+.link{ color:var(--accent); }
+.link:hover{ text-decoration:underline; }
+.sep{ color:var(--muted); }
 
 .notice{
   margin-top:14px;
@@ -77,36 +68,27 @@
   gap:14px;
   margin-top:12px;
 }
-
 @media (max-width: 760px){
-  .grid-2{
-    grid-template-columns: 1fr;
-  }
+  .grid-2{ grid-template-columns: 1fr; }
 }
 
-/* 小カード */
-
+/* 小カード（概要の中身） */
 .mini{
   border:1px solid var(--line);
   background:rgba(255,255,255,.02);
   border-radius:14px;
   padding:14px;
-  transition: all .25s ease;
+  transition: transform .2s ease, border-color .2s ease;
 }
-
 .mini:hover{
   transform: translateY(-3px);
   border-color: rgba(90,167,255,.3);
 }
-
 .mini h3{
   margin:0 0 8px;
   font-size:16px;
 }
-
-.mini p{
-  margin:8px 0 0;
-}
+.mini p{ margin:8px 0 0; }
 
 /* ===============================
    目次（rules）
@@ -118,7 +100,9 @@
   gap:10px;
   margin-top:12px;
 }
-
+.toc-3{
+  grid-template-columns: repeat(3, 1fr);
+}
 .toc-item{
   border:1px solid var(--line);
   background:rgba(255,255,255,.02);
@@ -126,25 +110,23 @@
   padding:10px 12px;
   color:var(--muted);
 }
-
 .toc-item:hover{
   color:var(--text);
   border-color: rgba(90,167,255,.25);
 }
-
 @media (max-width: 760px){
   .toc{ grid-template-columns: 1fr; }
+  .toc-3{ grid-template-columns: 1fr; }
 }
 
 /* ===============================
-   rules見出し調整
+   rules 見出し調整
 ================================= */
 
 .rule-block h3{
   margin:0 0 6px;
   font-size:18px;
 }
-
 .rule-block h4{
   margin:14px 0 4px;
   font-size:15px;
@@ -159,10 +141,7 @@
   border-color: rgba(90,167,255,.25);
   background: rgba(90,167,255,.05);
 }
-
-.qa-item summary{
-  font-weight:600;
-}
+.qa-item summary{ font-weight:600; }
 
 .qa-template{
   margin:10px 0 0;
@@ -176,154 +155,8 @@
 }
 
 /* ===============================
-   STAFF（管理人）
+   STAFF（管理人・運営） - ICON ULTIMATE
 ================================= */
-
-.staff-grid{
-  display:grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap:14px;
-  margin-top:12px;
-}
-
-@media (max-width: 760px){
-  .staff-grid{ grid-template-columns: 1fr; }
-}
-
-.staff-card{
-  border:1px solid var(--line);
-  background:rgba(255,255,255,.02);
-  border-radius:14px;
-  padding:14px;
-}
-
-.staff-top{
-  display:flex;
-  gap:12px;
-  align-items:center;
-}
-
-.staff-avatar{
-  width:42px;
-  height:42px;
-  border-radius:12px;
-  display:grid;
-  place-items:center;
-  border:1px solid var(--line);
-  background:rgba(90,167,255,.10);
-  font-weight:700;
-}
-
-.staff-name{
-  font-weight:700;
-}
-
-.staff-tags{
-  list-style:none;
-  padding:0;
-  margin:12px 0 0;
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-}
-
-.staff-tags li{
-  font-size:12px;
-  color:var(--muted);
-  border:1px solid var(--line);
-  background:rgba(255,255,255,.02);
-  padding:4px 10px;
-  border-radius:999px;
-}
-
-.staff-note{
-  margin:10px 0 0;
-  color:var(--muted);
-}
-
-.staff-quote{
-  margin:10px 0 0;
-  padding:10px 12px;
-  border-radius:12px;
-  border:1px solid var(--line);
-  background:rgba(255,255,255,.02);
-  font-size:13px;
-}
-
-.staff-card-sub{
-  opacity:.95;
-}
-
-/* ===============================
-   STAFF 微調整（クール寄せ）
-================================= */
-
-.staff-card{
-  padding:16px 18px;
-  transition: all .2s ease;
-}
-
-.staff-card:hover{
-  transform: translateY(-2px);
-  border-color: rgba(90,167,255,.25);
-}
-
-.staff-top{
-  margin-bottom:8px;
-}
-
-.staff-avatar{
-  width:38px;
-  height:38px;
-  font-size:14px;
-}
-
-.staff-tags{
-  margin:8px 0 6px;
-}
-
-.staff-tags li{
-  font-size:11px;
-  padding:3px 9px;
-  background:rgba(255,255,255,.015);
-  border-color: rgba(255,255,255,.06);
-}
-
-.staff-note{
-  font-size:13px;
-  line-height:1.6;
-}
-
-.staff-quote{
-  margin-top:8px;
-  padding:8px 10px;
-  font-size:12px;
-  background:rgba(90,167,255,.06);
-  border:1px solid rgba(90,167,255,.15);
-}
-
-.staff-grid{
-  gap:18px;
-}
-
-.staff-avatar{
-  width:48px;
-  height:48px;
-  border-radius:50%;
-  overflow:hidden;
-  border:1px solid var(--line);
-}
-
-.staff-avatar img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  display:block;
-}
-
-/* =========================================
-   STAFF ICON ULTIMATE（アイコン最高版）
-========================================= */
 
 /* 役職カラー（リング色） */
 :root{
@@ -332,22 +165,43 @@
   --ring-sub  : rgba(165, 255,210, .75);
 }
 
-/* カードを少し締めて、ホバーで浮かせる */
-.staff-card{
-  position: relative;
-  border-radius:16px;
-  padding:16px 18px;
-  transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
-  overflow:hidden;
+.staff-grid{
+  display:grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap:18px;
+  margin-top:12px;
+}
+@media (max-width: 760px){
+  .staff-grid{ grid-template-columns: 1fr; }
 }
 
+/* カード */
+.staff-card{
+  position: relative;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.02);
+  border-radius:16px;
+  padding:16px 18px;
+  overflow:hidden;
+  transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
 .staff-card:hover{
   transform: translateY(-3px);
   border-color: rgba(255,255,255,.14);
   box-shadow: 0 14px 30px rgba(0,0,0,.35);
 }
 
-/* ROLEバッジ（右上） */
+.staff-top{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  margin-bottom:8px;
+}
+
+.staff-name{ font-weight:800; }
+.staff-role{ font-size:13px; }
+
+/* ROLEバッジ */
 .staff-roleBadge{
   position:absolute;
   top:12px;
@@ -361,7 +215,7 @@
   color:var(--muted);
 }
 
-/* アイコン：丸＋リング＋グロー */
+/* アイコン（丸＋リング＋グロー） */
 .staff-avatar{
   width:46px;
   height:46px;
@@ -370,16 +224,10 @@
   position:relative;
   flex:0 0 auto;
 
-  /* 外周リング */
   border:2px solid rgba(255,255,255,.10);
-
-  /* 内側の暗め背景（画像が薄い時用） */
   background: rgba(255,255,255,.02);
-
-  /* グロー */
   box-shadow: 0 0 0 6px rgba(255,255,255,.02);
 }
-
 .staff-avatar img{
   width:100%;
   height:100%;
@@ -387,13 +235,12 @@
   display:block;
   transition: transform .35s ease, filter .35s ease;
 }
-
 .staff-card:hover .staff-avatar img{
   transform: scale(1.06);
   filter: brightness(1.05);
 }
 
-/* 役職別リング色 */
+/* 役職別リング */
 .staff-owner .staff-avatar{
   border-color: var(--ring-owner);
   box-shadow: 0 0 0 6px rgba(255, 200, 90, .08);
@@ -407,7 +254,7 @@
   box-shadow: 0 0 0 6px rgba(165, 255,210, .07);
 }
 
-/* ホバー時のリング発光 */
+/* ホバー時の発光 */
 .staff-owner:hover .staff-avatar{
   box-shadow: 0 0 0 6px rgba(255, 200, 90, .12), 0 0 26px rgba(255, 200, 90, .18);
 }
@@ -418,7 +265,7 @@
   box-shadow: 0 0 0 6px rgba(165, 255,210, .10), 0 0 26px rgba(165, 255,210, .16);
 }
 
-/* バッジも役職色に寄せる */
+/* バッジ色 */
 .staff-owner .staff-roleBadge{
   border-color: rgba(255, 200, 90, .28);
   color: rgba(255, 220, 140, .95);
@@ -432,19 +279,33 @@
   color: rgba(205, 255,235, .95);
 }
 
-/* タグは控えめにして“クール”に */
+/* タグ（控えめ） */
 .staff-tags{
+  list-style:none;
+  padding:0;
   margin:10px 0 6px;
+  display:flex;
+  flex-wrap:wrap;
   gap:6px;
 }
 .staff-tags li{
   font-size:11px;
-  padding:3px 9px;
+  color:var(--muted);
+  border:1px solid rgba(255,255,255,.06);
   background:rgba(255,255,255,.015);
-  border-color: rgba(255,255,255,.06);
+  padding:3px 9px;
+  border-radius:999px;
 }
 
-/* セリフ枠を少し軽く、読みやすく */
+/* 説明 */
+.staff-note{
+  margin:8px 0 0;
+  color:var(--muted);
+  font-size:13px;
+  line-height:1.6;
+}
+
+/* セリフ */
 .staff-quote{
   margin-top:10px;
   padding:9px 11px;
@@ -452,9 +313,139 @@
   font-size:12px;
   background:rgba(255,255,255,.02);
   border:1px solid rgba(255,255,255,.08);
+  color:var(--text);
 }
 
-/* 補佐官カードは少し控えめ */
-.staff-sub{
-  opacity:.96;
+/* 補佐官は少し控えめ */
+.staff-sub{ opacity:.96; }
+
+/* ===============================
+   MODAL（ポップアップ）
+================================= */
+
+.modal{
+  position: fixed;
+  inset: 0;
+  display:none;
+  z-index: 999;
+}
+.modal.is-open{ display:block; }
+
+.modal__backdrop{
+  position:absolute;
+  inset:0;
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(10px);
+}
+
+.modal__panel{
+  position: relative;
+  width: min(720px, calc(100% - 32px));
+  margin: 10vh auto;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: rgba(17,24,38,.95);
+  box-shadow: 0 20px 55px rgba(0,0,0,.45);
+  overflow:hidden;
+}
+
+.modal__close{
+  position:absolute;
+  top:10px;
+  right:10px;
+  width:38px;
+  height:38px;
+  border-radius:12px;
+  border:1px solid var(--line);
+  background: rgba(255,255,255,.03);
+  color: var(--text);
+  cursor:pointer;
+}
+.modal__close:hover{
+  border-color: rgba(90,167,255,.25);
+}
+
+.modal__header{
+  display:flex;
+  gap:14px;
+  padding:18px 18px 12px;
+  align-items:center;
+}
+
+.modal__avatar{
+  width:64px;
+  height:64px;
+  border-radius: 999px;
+  overflow:hidden;
+  border: 2px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.02);
+  flex: 0 0 auto;
+}
+.modal__avatar img{
+  width:100%;
+  height:100%;
+  object-fit: cover;
+  display:block;
+}
+
+.modal__name{
+  font-size:20px;
+  font-weight: 800;
+}
+.modal__role{
+  margin-top:2px;
+  font-size:13px;
+}
+
+.modal__tags{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-top:10px;
+}
+.modal__tags span{
+  font-size:11px;
+  padding:3px 9px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.02);
+  color: var(--muted);
+}
+
+.modal__body{
+  padding: 6px 18px 18px;
+}
+
+.modal__quote{
+  margin-top:12px;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.02);
+  font-size:12px;
+  color: var(--text);
+}
+
+.modal__meta{
+  margin-top:14px;
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:12px;
+}
+.modal__metaItem{
+  border:1px solid rgba(255,255,255,.06);
+  background: rgba(255,255,255,.015);
+  border-radius:14px;
+  padding:12px;
+}
+.modal__metaLabel{
+  font-size:11px;
+  letter-spacing:.14em;
+  color: var(--muted);
+  margin-bottom:6px;
+}
+
+@media (max-width: 760px){
+  .modal__panel{ margin: 8vh auto; }
+  .modal__meta{ grid-template-columns: 1fr; }
 }
