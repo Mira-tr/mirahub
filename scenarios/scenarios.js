@@ -1,5 +1,5 @@
 // /scenarios/scenarios.js
-const API_URL = "https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbxXucWg9ATHVEM8jm45pD8gCxkyA5Q1wWeG6ruoR3ujyJ4LV8JZwJCFh7tHeLZEfHzfuQ/exec";
 
 const LS = {
   THEME: "mirahub.theme",
