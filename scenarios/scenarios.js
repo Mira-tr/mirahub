@@ -1,25 +1,34 @@
-// /scenarios/scenarios.js
+/* scenarios/scenarios.js (players_raw対応・メタ活用・色/選択見やすさ維持) */
 (() => {
-  const API_URL = "https://script.google.com/macros/s/AKfycbxXucWg9ATHVEM8jm45pD8gCxkyA5Q1wWeG6ruoR3ujyJ4LV8JZwJCFh7tHeLZEfHzfuQ/exec?action=list";
-  const API_META = "https://script.google.com/macros/s/AKfycbxXucWg9ATHVEM8jm45pD8gCxkyA5Q1wWeG6ruoR3ujyJ4LV8JZwJCFh7tHeLZEfHzfuQ/exec?action=meta";
+  "use strict";
+
+  const API_URL =
+    "https://script.google.com/macros/s/AKfycbxXucWg9ATHVEM8jm45pD8gCxkyA5Q1wWeG6ruoR3ujyJ4LV8JZwJCFh7tHeLZEfHzfuQ/exec";
 
   const LS = {
     THEME: "mirahub.theme",
     SKIP_CONFIRM: "mirahub.skipExternalConfirm",
-    TAG_MODE: "mirahub.tagsMode.v1", // "or" | "and"
-    COMPACT: "mirahub.compact.v1",
-    SHOW_TRAILERS: "mirahub.showTrailers.v1",
-    CACHE: "mirahub.cache.rows.v2",
-    CACHE_AT: "mirahub.cache.at.v2",
+    TAG_MODE: "mirahub.tagsMode.sc",
+    COMPACT: "mirahub.compact.sc",
+    SHOW_TRAILERS: "mirahub.showTrailers.sc",
+    VIEW: "mirahub.view.sc",
+    SORT: "mirahub.sort.sc",
+    PAGE_CARDS: "mirahub.page.cards.sc",
+    PAGE_TABLE: "mirahub.page.table.sc",
+    FAV_MAP: "mirahub.favs.sc",
+    CACHE_ROWS: "mirahub.cache.rows.sc",
+    CACHE_AT: "mirahub.cache.at.sc",
+    CACHE_META: "mirahub.cache.meta.sc",
   };
+
+  const PAGE_SIZE = { cards: 15, table: 30 };
 
   const els = {
     status: document.getElementById("status"),
     metaRow: document.getElementById("metaRow"),
-    btnReload: document.getElementById("btnReload"),
-    btnResetFilters: document.getElementById("btnResetFilters"),
+    refreshBtn: document.getElementById("refreshBtn"),
+    resetFiltersBtn: document.getElementById("resetFiltersBtn"),
     themeToggle: document.getElementById("themeToggle"),
-    btnScrollTop: document.getElementById("btnScrollTop"),
 
     searchInput: document.getElementById("searchInput"),
     sortSelect: document.getElementById("sortSelect"),
@@ -28,29 +37,33 @@
 
     filterSystem: document.getElementById("filterSystem"),
     filterFormat: document.getElementById("filterFormat"),
-    filterPlayersPreset: document.getElementById("filterPlayersPreset"),
-    filterTimePreset: document.getElementById("filterTimePreset"),
     filterR18: document.getElementById("filterR18"),
-    filterLoss: document.getElementById("filterLoss"),
 
-    tagsTopChips: document.getElementById("tagsTopChips"),
+    playersMin: document.getElementById("playersMin"),
+    playersMax: document.getElementById("playersMax"),
+    playersClear: document.getElementById("playersClear"),
+
+    timeMin: document.getElementById("timeMin"),
+    timeMax: document.getElementById("timeMax"),
+    timeClear: document.getElementById("timeClear"),
+
+    lossMin: document.getElementById("lossMin"),
+    lossMax: document.getElementById("lossMax"),
+    lossClear: document.getElementById("lossClear"),
+
     tagsSearchInput: document.getElementById("tagsSearchInput"),
     tagsChips: document.getElementById("tagsChips"),
     tagsSelected: document.getElementById("tagsSelected"),
     tagsClearBtn: document.getElementById("tagsClearBtn"),
     tagsModeBtn: document.getElementById("tagsModeBtn"),
-    tagsMoreBtn: document.getElementById("tagsMoreBtn"),
-    tagsSearchClearBtn: document.getElementById("tagsSearchClearBtn"),
-    tagModal: document.getElementById("tagModal"),
 
     scenarioGrid: document.getElementById("scenarioGrid"),
     tableWrap: document.getElementById("tableWrap"),
     tableBody: document.getElementById("tableBody"),
     resultInfo: document.getElementById("resultInfo"),
 
-    btnPagePrev: document.getElementById("btnPagePrev"),
-    btnPageNext: document.getElementById("btnPageNext"),
-    pageInfo: document.getElementById("pageInfo"),
+    pagerHost: document.getElementById("pagerHost"),
+    pagerInfo: document.getElementById("pagerInfo"),
 
     detailModal: document.getElementById("detailModal"),
     detailTitle: document.getElementById("detailTitle"),
@@ -67,14 +80,6 @@
     confirmCancel: document.getElementById("confirmCancel"),
     confirmOk: document.getElementById("confirmOk"),
 
-    popover: document.getElementById("popover"),
-    popoverTitle: document.getElementById("popoverTitle"),
-    popoverBody: document.getElementById("popoverBody"),
-    popoverClose: document.getElementById("popoverClose"),
-    popoverMore: document.getElementById("popoverMore"),
-    helpModal: document.getElementById("helpModal"),
-    helpBody: document.getElementById("helpBody"),
-
     toastHost: document.getElementById("toastHost"),
   };
 
@@ -82,13 +87,19 @@
     rawRows: [],
     rows: [],
     filtered: [],
-    view: "cards",
+    meta: null,
+
+    view: (lsGet(LS.VIEW, "cards") === "table") ? "table" : "cards",
+    pageCards: clampInt(parseInt(lsGet(LS.PAGE_CARDS, "0"), 10) || 0, 0, 999999),
+    pageTable: clampInt(parseInt(lsGet(LS.PAGE_TABLE, "0"), 10) || 0, 0, 999999),
 
     selectedTags: new Set(),
-    tagsMode: "or",
+    tagsMode: (lsGet(LS.TAG_MODE, "or") === "and") ? "and" : "or",
 
-    compact: false,
-    trailersEnabled: true,
+    compact: lsGet(LS.COMPACT, "0") === "1",
+    trailersEnabled: lsGet(LS.SHOW_TRAILERS, "1") !== "0",
+
+    favs: loadFavMap(),
 
     pendingOpenUrl: null,
     pendingOpenIsR18: false,
@@ -96,32 +107,32 @@
     activeId: null,
     trailerIndex: 0,
     trailerList: [],
-
-    // pagination
-    page: 0,
-    pageSizeCards: 15,
-    pageSizeTable: 30,
-    pages: 1,
-
-    // tags
-    tagsFreq: new Map(),
-    allTags: [],
-    topTags: [],
+    trailerBoundForId: null,
   };
 
+  /* utils */
   function norm(v){ return String(v ?? "").trim(); }
   function lower(v){ return norm(v).toLowerCase(); }
+  function nowLocal(){ return new Date().toLocaleString(); }
+  function clampInt(n,min,max){ return Number.isFinite(n) ? Math.max(min, Math.min(max,n)) : min; }
+
+  function toHalfWidth(s){
+    let t = String(s ?? "");
+    t = t.replace(/[０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0)-0xFEE0));
+    t = t.replace(/[Ａ-Ｚａ-ｚ]/g, ch => String.fromCharCode(ch.charCodeAt(0)-0xFEE0));
+    t = t.replace(/[〜～]/g,"~").replace(/[－―ー–—]/g,"-").replace(/　/g," ");
+    return t;
+  }
   function escapeHtml(s){
-    return String(s).replace(/[&<>"']/g, (c)=>({
-      "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
+    return String(s ?? "").replace(/[&<>"']/g, c => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
     }[c]));
   }
-  function nowLocal(){ return new Date().toLocaleString(); }
 
-  function lsGet(key, fallback=null){
+  function lsGet(key,fallback=null){
     try{ const v = localStorage.getItem(key); return v===null ? fallback : v; }catch{ return fallback; }
   }
-  function lsSet(key, value){
+  function lsSet(key,value){
     try{ localStorage.setItem(key, String(value)); }catch{}
   }
 
@@ -129,11 +140,11 @@
     if(!els.toastHost) return;
     const node = document.createElement("div");
     node.className = "toast";
-    node.textContent = msg;
+    node.textContent = String(msg ?? "");
     els.toastHost.appendChild(node);
     void node.offsetWidth;
     node.classList.add("is-show");
-    setTimeout(()=>{ node.classList.remove("is-show"); setTimeout(()=>node.remove(), 220); }, 1700);
+    setTimeout(()=>{ node.classList.remove("is-show"); setTimeout(()=>node.remove(),220); }, 1700);
   }
 
   async function copyText(text){
@@ -144,8 +155,8 @@
     }catch{
       const ta = document.createElement("textarea");
       ta.value = t;
-      ta.style.position = "fixed";
-      ta.style.opacity = "0";
+      ta.style.position="fixed";
+      ta.style.opacity="0";
       document.body.appendChild(ta);
       ta.select();
       document.execCommand("copy");
@@ -174,10 +185,10 @@
   }
 
   async function safeFetchText(url, ms=25000){
-    return withTimeout(async(signal) => {
+    return withTimeout(async(signal)=>{
       const res = await fetch(url, { cache:"no-store", signal });
       const text = await res.text();
-      return { ok: res.ok, status: res.status, text };
+      return { ok:res.ok, status:res.status, text };
     }, ms);
   }
 
@@ -185,16 +196,53 @@
     if(!data) return [];
     if(Array.isArray(data)) return data;
     const cands = ["rows","items","data","list","result"];
-    for(const k of cands){
-      if(Array.isArray(data[k])) return data[k];
-    }
+    for(const k of cands) if(Array.isArray(data[k])) return data[k];
+    if(data.ok && Array.isArray(data.rows)) return data.rows;
     return [];
   }
 
-  /* -------- domain -------- */
+  function extractMeta(data){
+    if(!data || typeof data!=="object") return null;
+    if(data.meta && typeof data.meta==="object") return data.meta;
+    return null;
+  }
 
+  function setStatus(msg){ if(els.status) els.status.textContent = msg; }
+
+  function uniqSorted(arr){
+    return Array.from(new Set(arr.filter(Boolean))).sort((a,b)=>a.localeCompare(b,"ja"));
+  }
+
+  function buildSelectOptions(selectEl, values, placeholder="指定なし"){
+    if(!selectEl) return;
+    const list = uniqSorted(values.map(norm).filter(Boolean));
+    selectEl.innerHTML = `<option value="">${escapeHtml(placeholder)}</option>` +
+      list.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("");
+  }
+
+  /* fav */
+  function loadFavMap(){
+    try{
+      const raw = lsGet(LS.FAV_MAP, "{}");
+      const obj = safeJSONParse(raw);
+      if(obj && typeof obj==="object" && !Array.isArray(obj)) return obj;
+      return {};
+    }catch{ return {}; }
+  }
+  function saveFavMap(){ try{ lsSet(LS.FAV_MAP, JSON.stringify(state.favs)); }catch{} }
+  function isFav(id){ const k = norm(id); return !!(k && state.favs[k]); }
+  function toggleFav(id){
+    const k = norm(id);
+    if(!k) return;
+    if(state.favs[k]) delete state.favs[k];
+    else state.favs[k]=1;
+    saveFavMap();
+    render();
+  }
+
+  /* normalize fields */
   function normalizeR18(raw){
-    const s = lower(raw);
+    const s = lower(toHalfWidth(raw));
     if(!s) return "unknown";
     if(["none","soft","mix","hard","unknown"].includes(s)) return s;
     if(["なし","全年齢","健全","no","false","0"].includes(s)) return "none";
@@ -206,47 +254,42 @@
     return "unknown";
   }
   function r18Label(key){
-    if(key==="none") return "なし";
-    if(key==="soft") return "あり";
-    if(key==="mix") return "あり";
-    if(key==="hard") return "あり";
-    return "不明";
+    switch(key){
+      case "none": return "なし";
+      case "soft": return "R18（軽）";
+      case "mix": return "R18（混）";
+      case "hard": return "R18（重）";
+      default: return "不明";
+    }
   }
   function isR18Key(key){ return ["soft","mix","hard"].includes(key); }
 
-  function clampInt(n, min, max){
-    if(!Number.isFinite(n)) return min;
-    return Math.max(min, Math.min(max, n));
-  }
+  function clampPct(n){ return clampInt(n,0,100); }
 
   function normalizeLoss(raw){
-    const s = norm(raw);
+    if(typeof raw==="number" && Number.isFinite(raw)){
+      const n = clampPct(raw);
+      return { key:`${n}-${n}`, min:n, max:n };
+    }
+    const s0 = norm(raw);
+    const s = toHalfWidth(s0);
     if(!s || s==="不明" || lower(s)==="unknown") return { key:"unknown", min:null, max:null };
 
-    const t = s.replace(/[％%]/g,"").replace(/[〜~–—]/g,"-").replace(/\s+/g,"");
-    const m = t.match(/(\d{1,3})-(\d{1,3})/);
+    const t = s.replace(/[％%]/g,"").replace(/[~]/g,"-").replace(/\s+/g,"");
+    let m = t.match(/(\d{1,3})-(\d{1,3})/);
     if(m){
-      const a = clampInt(parseInt(m[1],10),0,100);
-      const b = clampInt(parseInt(m[2],10),0,100);
-      const min = Math.min(a,b);
-      const max = Math.max(a,b);
+      const a = clampPct(parseInt(m[1],10));
+      const b = clampPct(parseInt(m[2],10));
+      const min = Math.min(a,b), max = Math.max(a,b);
       return { key:`${min}-${max}`, min, max };
     }
-
-    // single number like 80
-    const one = t.match(/^(\d{1,3})$/);
-    if(one){
-      const v = clampInt(parseInt(one[1],10),0,100);
-      if(v<=10) return { key:"0-10", min:0, max:10 };
-      if(v<=30) return { key:"10-30", min:10, max:30 };
-      if(v<=50) return { key:"30-50", min:30, max:50 };
-      if(v<=70) return { key:"50-70", min:50, max:70 };
-      return { key:"70-100", min:70, max:100 };
+    m = t.match(/(\d{1,3})/);
+    if(m){
+      const n = clampPct(parseInt(m[1],10));
+      return { key:`${n}-${n}`, min:n, max:n };
     }
-
-    return { key:"unknown", min:null, max:null };
+    return { key:s0 || s, min:null, max:null };
   }
-
   function lossClassFromKey(key){
     if(!key || key==="unknown") return "";
     const m = String(key).match(/(\d+)-(\d+)/);
@@ -258,57 +301,103 @@
     return "loss-very";
   }
 
-  function parseTimeRangeToMinutes(raw){
-    const original = norm(raw);
-    if(!original) return { min:null, max:null };
-    let s = original.replace(/　/g," ").replace(/[〜~–—]/g,"-").replace(/\s+/g,"");
-    s = s.replace(/ボイセ|テキセ|どちらでも|kpレス|KPレス/gi,"");
-    const parts = s.split("-").filter(Boolean);
-    if(parts.length===0) return { min:null, max:null };
-    const vals = parts.map(parseSingleDurationToMinutes).filter(v=>v!==null);
-    if(vals.length===0) return { min:null, max:null };
-    if(vals.length===1) return { min:vals[0], max:vals[0] };
-    return { min:Math.min(...vals), max:Math.max(...vals) };
-  }
   function parseSingleDurationToMinutes(token){
-    const t = String(token ?? "").toLowerCase();
+    const t = lower(toHalfWidth(token));
     if(!t) return null;
+
     let m = t.match(/(\d+(?:\.\d+)?)\s*(m|min|分)/);
     if(m) return Math.round(parseFloat(m[1]));
+
     m = t.match(/(\d+(?:\.\d+)?)\s*(h|hr|hrs|時間)/);
     if(m) return Math.round(parseFloat(m[1])*60);
+
+    m = t.match(/(\d+(?:\.\d+)?)h/);
+    if(m) return Math.round(parseFloat(m[1])*60);
+
     return null;
   }
+  function parseTimeRangeToMinutes(raw){
+    const original0 = norm(raw);
+    if(!original0) return { min:null, max:null };
 
-  function parsePlayers(raw){
-    const original = norm(raw);
-    if(!original) return { min:null, max:null };
-    const s = original.replace(/[〜~–—]/g,"-").replace(/\s+/g,"");
+    let s = toHalfWidth(original0).replace(/\s+/g,"");
+    s = s.replace(/[〜~]/g,"-");
 
-    let m = s.match(/(\d+)\D*-\D*(\d+)/);
-    if(m){
-      const a = parseInt(m[1],10);
-      const b = parseInt(m[2],10);
-      return { min:Math.min(a,b), max:Math.max(a,b) };
+    // "8h-" / "-5h" / "2.5h-" / "6-7h"
+    if(/^-/.test(s) && s.includes("h")){
+      const v = parseSingleDurationToMinutes(s.replace(/^-/, ""));
+      return { min:null, max:v };
     }
+
+    const parts = s.split("-").filter(Boolean);
+    if(parts.length===0) return { min:null, max:null };
+
+    const vals = parts.map(parseSingleDurationToMinutes).filter(v=>v!==null);
+    if(vals.length===0) return { min:null, max:null };
+    if(vals.length===1){
+      // "2.5h-" みたいな場合：minだけある
+      if(/-$/.test(s)) return { min:vals[0], max:null };
+      return { min:vals[0], max:vals[0] };
+    }
+    return { min:Math.min(...vals), max:Math.max(...vals) };
+  }
+
+  /* ★ここが重要：players_raw を確実に拾う + 人数レンジ化 */
+  function parsePlayers(raw){
+    const original0 = norm(raw);
+    if(!original0) return { min:null, max:null };
+
+    let s = toHalfWidth(original0)
+      .replace(/\s+/g,"")
+      .replace(/[〜~]/g,"-");
+
+    // "1〜4PL" / "2-4PL" / "2PL" / "4"
+    let m = s.match(/(\d+)\s*(?:人|pl)?\s*-\s*(\d+)\s*(?:人|pl)?/i);
+    if(m){
+      const a = parseInt(m[1],10), b = parseInt(m[2],10);
+      if(Number.isFinite(a) && Number.isFinite(b)) return { min:Math.min(a,b), max:Math.max(a,b) };
+    }
+
     m = s.match(/kpc\+(\d+)pl/i);
     if(m){
       const n = parseInt(m[1],10);
-      return { min:n+1, max:n+1 };
+      if(Number.isFinite(n)) return { min:n+1, max:n+1 };
     }
-    m = s.match(/(\d+)\s*pl/i);
+
+    // "KPC+1PL,2PL" → 最小2 最大2（列挙はレンジに寄せる）
+    if(/kpc\+1pl/i.test(s)) return { min:2, max:2 };
+
+    // "1-(何人でも)"
+    m = s.match(/(\d+)-\((?:何人でも|何人でも可|any)\)/i);
     if(m){
       const n = parseInt(m[1],10);
-      return { min:n, max:n };
+      if(Number.isFinite(n)) return { min:n, max:null };
     }
+
+    // "1PL" / "2PL" / "1人"
+    m = s.match(/(\d+)\s*(?:pl|人)\b/i);
+    if(m){
+      const n = parseInt(m[1],10);
+      if(Number.isFinite(n)) return { min:n, max:n };
+    }
+
+    // 数字だけ "4"
+    m = s.match(/^(\d+)$/);
+    if(m){
+      const n = parseInt(m[1],10);
+      if(Number.isFinite(n)) return { min:n, max:n };
+    }
+
     if(s.includes("ソロ")) return { min:1, max:1 };
+
     return { min:null, max:null };
   }
 
   function splitTags(raw){
     const s = norm(raw);
     if(!s) return [];
-    return s.split(/[,\s/・]+/).map(t=>norm(t)).filter(Boolean).map(t => t.startsWith("#") ? t : `#${t}`);
+    // 送ってくれたデータは "#A,#B,#coc" なのでカンマ優先
+    return s.split(/[,\s/・]+/).map(t=>norm(t)).filter(Boolean);
   }
   function splitTrailerUrls(raw){
     const s = norm(raw);
@@ -320,23 +409,28 @@
     const r = {};
     for(const k of Object.keys(input || {})) r[String(k).toLowerCase()] = input[k];
 
+    // players が players_raw に変わったので両対応
+    const playersRaw = norm(r.players_raw ?? r.players ?? r.player ?? r.pl ?? "");
+
     const loss = normalizeLoss(r.loss_rate);
     const r18Key = normalizeR18(r.r18);
-
-    const timeRange = parseTimeRangeToMinutes(r.time);
-    const playersRange = parsePlayers(r.players);
+    const timeRange = parseTimeRangeToMinutes(r.time_raw ?? r.time);
+    const playersRange = parsePlayers(playersRaw);
 
     return {
-      id: norm(r.id).replace(/^#/, ""),
+      id: norm(r.id),
       name: norm(r.name),
       system: norm(r.system),
       author: norm(r.author),
-      players: norm(r.players),
+
+      playersRaw,
       format: norm(r.format),
-      time: norm(r.time),
+      timeRaw: norm(r.time_raw ?? r.time),
 
       r18Key,
       lossKey: loss.key,
+      lossMin: loss.min,
+      lossMax: loss.max,
 
       timeMin: timeRange.min,
       timeMax: timeRange.max,
@@ -347,90 +441,109 @@
       memo: norm(r.memo),
       url: norm(r.url),
       trailers: splitTrailerUrls(r.trailer_urls || r.trailer_url),
-      fav: Number(r.fav || 0) || 0,
-      updatedAt: norm(r.updated_at || r.updatedat || r.updated || r.updatedtime || r.updated_time),
+      status: norm(r.status),
+      createdAt: norm(r.created_at),
+      updatedAt: norm(r.updated_at ?? r.updatedat ?? r.updated),
+      fav: (typeof r.fav==="number" ? r.fav : null),
     };
   }
 
-  /* -------- tags index -------- */
-
-  function buildTagsIndex(rows){
-    const freq = new Map();
-    for(const row of rows){
-      for(const t of row.tags){
-        const k = lower(t);
-        freq.set(k, (freq.get(k) || 0) + 1);
-      }
+  function playersLabel(row){
+    const a = row.playersMin, b = row.playersMax;
+    if(a!=null && b!=null){
+      if(a===b) return `${a}人`;
+      return `${a}〜${b}人`;
     }
-    const all = Array.from(freq.entries())
-      .sort((a,b)=> b[1]-a[1] || a[0].localeCompare(b[0],"ja"))
-      .map(([k])=>k);
-
-    state.tagsFreq = freq;
-    state.allTags = all;
-    state.topTags = all.slice(0, 18);
+    if(a!=null && b==null) return `${a}人〜`;
+    return row.playersRaw || "指定なし";
+  }
+  function timeLabel(row){
+    const a = row.timeMin, b = row.timeMax;
+    if(a!=null && b!=null){
+      const ha = (Math.round((a/60)*10)/10).toString().replace(/\.0$/,"");
+      const hb = (Math.round((b/60)*10)/10).toString().replace(/\.0$/,"");
+      if(ha===hb) return `${ha}h`;
+      return `${ha}〜${hb}h`;
+    }
+    if(a!=null && b==null){
+      const ha = (Math.round((a/60)*10)/10).toString().replace(/\.0$/,"");
+      return `${ha}h〜`;
+    }
+    if(a==null && b!=null){
+      const hb = (Math.round((b/60)*10)/10).toString().replace(/\.0$/,"");
+      return `〜${hb}h`;
+    }
+    return row.timeRaw || "指定なし";
   }
 
-  function renderTopTagChips(){
-    if(!els.tagsTopChips) return;
-    els.tagsTopChips.innerHTML = state.topTags.map(t=>{
-      const c = state.tagsFreq.get(t) || 0;
-      const selected = state.selectedTags.has(t);
-      return `<button type="button" class="chip ${selected?"is-selected":""}" data-tag="${escapeHtml(t)}">${escapeHtml(t)} ${c}</button>`;
-    }).join("");
-  }
+  /* tags ui */
+  function rebuildTagChips(){
+    if(!els.tagsChips || !els.tagsSelected) return;
 
-  function renderTagModalChips(){
-    if(!els.tagsChips) return;
+    const all = state._allTags || [];
     const q = lower(els.tagsSearchInput?.value || "");
-    const items = state.allTags.filter(t => !q || lower(t).includes(q)).slice(0, 240);
-    els.tagsChips.innerHTML = items.map(t=>{
-      const c = state.tagsFreq.get(t) || 0;
+    const visible = all.filter(t => !q || lower(t).includes(q)).slice(0, 140);
+
+    els.tagsChips.innerHTML = visible.map(t=>{
       const selected = state.selectedTags.has(t);
-      return `<button type="button" class="chip ${selected?"is-selected":""}" data-tag="${escapeHtml(t)}">${escapeHtml(t)} ${c}</button>`;
+      return `<button type="button" class="sc-pill sc-tag ${selected?"is-selected":""}" data-tag="${escapeHtml(t)}">${escapeHtml(t)}</button>`;
     }).join("");
+
+    els.tagsSelected.innerHTML = Array.from(state.selectedTags).map(t=>{
+      return `<button type="button" class="sc-pill sc-tag is-selected" data-tag="${escapeHtml(t)}" data-selected="1">${escapeHtml(t)} ✕</button>`;
+    }).join("");
+
+    if(els.tagsModeBtn) els.tagsModeBtn.textContent = `条件：${state.tagsMode.toUpperCase()}`;
   }
 
-  function renderSelectedTags(){
-    if(!els.tagsSelected) return;
-    const arr = Array.from(state.selectedTags);
-    els.tagsSelected.innerHTML = arr.length
-      ? arr.map(t=>`<button type="button" class="chip is-selected" data-tag="${escapeHtml(t)}" data-selected="1">${escapeHtml(t)} ✕</button>`).join("")
-      : `<span class="text-muted">—</span>`;
+  function tagsMatch(row){
+    if(state.selectedTags.size===0) return true;
+    const rowTags = new Set(row.tags);
+    if(state.tagsMode==="and"){
+      for(const t of state.selectedTags) if(!rowTags.has(t)) return false;
+      return true;
+    }
+    for(const t of state.selectedTags) if(rowTags.has(t)) return true;
+    return false;
   }
 
-  /* -------- filters -------- */
-
-  function timePresetMatch(row, preset){
-    if(!preset) return true;
-    if(preset==="unknown") return row.timeMin===null && row.timeMax===null;
-
-    const v = (row.timeMax ?? row.timeMin);
-    if(v===null) return false;
-
-    if(preset==="lt120") return v < 120;
-    if(preset==="120_360") return v >= 120 && v <= 360;
-    if(preset==="360_720") return v > 360 && v <= 720;
-    if(preset==="gt720") return v > 720;
-    return true;
+  function searchMatch(row, q){
+    const query = norm(q);
+    if(!query) return true;
+    const tokens = query.split(/\s+/).filter(Boolean).map(lower);
+    const hay = lower([
+      row.id,row.name,row.system,row.author,
+      row.playersRaw, playersLabel(row),
+      row.format,row.timeRaw,timeLabel(row),
+      row.r18Key,row.lossKey,
+      row.tags.join(" "),
+      row.memo
+    ].join(" / "));
+    return tokens.every(t=>hay.includes(t));
   }
 
-  function playersPresetMatch(row, preset){
-    if(!preset) return true;
-    if(preset==="unknown") return row.playersMin===null && row.playersMax===null;
+  function parseNumInput(el){
+    const s = toHalfWidth(norm(el?.value));
+    if(!s) return null;
+    const n = parseFloat(s);
+    return Number.isFinite(n) ? n : null;
+  }
 
-    const min = row.playersMin;
-    const max = row.playersMax;
-    if(preset==="solo") return min===1 && max===1;
+  function rangeOverlap(rowMin,rowMax, qMin, qMax){
+    if(qMin==null && qMax==null) return true;
+    if(rowMin==null && rowMax==null) return false;
 
-    if(min===null && max===null) return false;
-    const vMin = min ?? max;
-    const vMax = max ?? min;
+    const a = (rowMin==null ? rowMax : rowMin);
+    const b = (rowMax==null ? rowMin : rowMax);
+    let rMin = a, rMax = b;
+    if(rMin==null && rMax==null) return false;
+    if(rMin!=null && rMax!=null && rMin>rMax){ const t=rMin; rMin=rMax; rMax=t; }
 
-    if(preset==="2_3") return vMin >= 2 && vMax <= 3;
-    if(preset==="4_5") return vMin >= 4 && vMax <= 5;
-    if(preset==="6_8") return vMin >= 6 && vMax <= 8;
-    if(preset==="gt8") return (vMax ?? 0) >= 9;
+    let fMin = qMin, fMax = qMax;
+    if(fMin!=null && fMax!=null && fMin>fMax){ const t=fMin; fMin=fMax; fMax=t; }
+
+    if(fMin!=null && rMax!=null && rMax < fMin) return false;
+    if(fMax!=null && rMin!=null && rMin > fMax) return false;
     return true;
   }
 
@@ -442,62 +555,30 @@
     return true;
   }
 
-  function lossMatch(row, filterVal){
-    if(!filterVal) return true;
-    if(filterVal==="unknown") return row.lossKey==="unknown";
-    return row.lossKey === filterVal;
-  }
-
-  function tagsMatch(row){
-    if(state.selectedTags.size===0) return true;
-    const rowTags = new Set(row.tags.map(lower));
-
-    if(state.tagsMode==="and"){
-      for(const t of state.selectedTags){
-        if(!rowTags.has(lower(t))) return false;
-      }
-      return true;
-    }
-
-    for(const t of state.selectedTags){
-      if(rowTags.has(lower(t))) return true;
-    }
-    return false;
-  }
-
-  function searchMatch(row, q){
-    const query = norm(q);
-    if(!query) return true;
-
-    const tokens = query.split(/\s+/).filter(Boolean).map(lower);
-
-    const hay = lower([
-      row.id, row.name, row.system, row.author,
-      row.players, row.format, row.time,
-      row.r18Key, row.lossKey,
-      row.tags.join(" "),
-      row.memo
-    ].join(" / "));
-
-    return tokens.every(t => hay.includes(t));
-  }
-
   function parseIdNumber(id){
-    const m = String(id || "").match(/(\d+)/);
+    const m = String(id||"").match(/(\d+)/);
     if(!m) return 0;
     const n = Number(m[1]);
     return Number.isFinite(n) ? n : 0;
   }
 
-  function applySort(list){
-    const key = norm(els.sortSelect?.value || "id_desc");
-    const byName = (a,b)=>a.name.localeCompare(b.name,"ja");
+  function applySort(){
+    const key = norm(els.sortSelect?.value || lsGet(LS.SORT,"id_desc"));
+    lsSet(LS.SORT, key);
+
+    const byName = (a,b)=>(a.name||"").localeCompare(b.name||"","ja");
     const byId = (a,b)=>parseIdNumber(a.id)-parseIdNumber(b.id);
     const byUpdated = (a,b)=>{
-      const ta = Date.parse(a.updatedAt || "") || 0;
-      const tb = Date.parse(b.updatedAt || "") || 0;
+      const ta = Date.parse(a.updatedAt||"")||0;
+      const tb = Date.parse(b.updatedAt||"")||0;
       if(ta===tb) return byId(a,b);
       return ta - tb;
+    };
+    const byFav = (a,b)=>{
+      const fa = isFav(a.id)?1:0;
+      const fb = isFav(b.id)?1:0;
+      if(fa===fb) return -byId(a,b);
+      return fb-fa;
     };
 
     const cmp = {
@@ -507,178 +588,194 @@
       name_desc: (a,b)=>-byName(a,b),
       updated_asc: byUpdated,
       updated_desc: (a,b)=>-byUpdated(a,b),
+      fav_desc: byFav,
     }[key] || ((a,b)=>-byId(a,b));
 
-    list.sort(cmp);
+    state.filtered.sort(cmp);
   }
 
   function applyFilters(){
     const q = els.searchInput?.value || "";
     const system = norm(els.filterSystem?.value);
     const format = norm(els.filterFormat?.value);
-    const playersPreset = norm(els.filterPlayersPreset?.value);
-    const timePreset = norm(els.filterTimePreset?.value);
     const r18 = norm(els.filterR18?.value);
-    const loss = norm(els.filterLoss?.value);
 
-    const out = state.rows.filter(row=>{
+    const pMin = parseNumInput(els.playersMin);
+    const pMax = parseNumInput(els.playersMax);
+
+    const tMinH = parseNumInput(els.timeMin);
+    const tMaxH = parseNumInput(els.timeMax);
+    const tMin = (tMinH==null) ? null : Math.round(tMinH*60);
+    const tMax = (tMaxH==null) ? null : Math.round(tMaxH*60);
+
+    const lMin = parseNumInput(els.lossMin);
+    const lMax = parseNumInput(els.lossMax);
+    const lfMin = (lMin==null) ? null : clampPct(Math.round(lMin));
+    const lfMax = (lMax==null) ? null : clampPct(Math.round(lMax));
+
+    state.filtered = state.rows.filter(row=>{
       if(system && row.system !== system) return false;
       if(format && row.format !== format) return false;
-      if(!playersPresetMatch(row, playersPreset)) return false;
-      if(!timePresetMatch(row, timePreset)) return false;
       if(!r18Match(row, r18)) return false;
-      if(!lossMatch(row, loss)) return false;
       if(!tagsMatch(row)) return false;
       if(!searchMatch(row, q)) return false;
+
+      if(!rangeOverlap(row.playersMin, row.playersMax, pMin, pMax)) return false;
+      if(!rangeOverlap(row.timeMin, row.timeMax, tMin, tMax)) return false;
+      if(!rangeOverlap(row.lossMin, row.lossMax, lfMin, lfMax)) return false;
+
       return true;
     });
 
-    applySort(out);
-    state.filtered = out;
+    applySort();
   }
 
-  /* -------- pagination -------- */
-
-  function pageSize(){
-    return state.view === "table" ? state.pageSizeTable : state.pageSizeCards;
+  /* paging */
+  function getPage(){ return state.view==="cards" ? state.pageCards : state.pageTable; }
+  function setPage(p){
+    const v = clampInt(p,0,999999);
+    if(state.view==="cards"){ state.pageCards=v; lsSet(LS.PAGE_CARDS,String(v)); }
+    else{ state.pageTable=v; lsSet(LS.PAGE_TABLE,String(v)); }
   }
 
-  function ensurePageInRange(){
-    state.pages = Math.max(1, Math.ceil(state.filtered.length / pageSize()));
-    state.page = Math.max(0, Math.min(state.page, state.pages - 1));
+  function updatePagerUI(total){
+    const pageSize = state.view==="cards" ? PAGE_SIZE.cards : PAGE_SIZE.table;
+    const pages = Math.max(1, Math.ceil(total/pageSize));
+    let page = clampInt(getPage(),0,pages-1);
+    setPage(page);
+
+    const start = total===0 ? 0 : page*pageSize+1;
+    const end = Math.min(total, (page+1)*pageSize);
+
+    if(els.pagerInfo) els.pagerInfo.textContent = total===0 ? "—" : `表示 ${start}–${end} / ${total}`;
+    const prev = els.pagerHost?.querySelector?.('[data-pager="prev"]');
+    const next = els.pagerHost?.querySelector?.('[data-pager="next"]');
+    if(prev) prev.disabled = page<=0;
+    if(next) next.disabled = page>=pages-1;
   }
 
-  function pagedSlice(){
-    ensurePageInRange();
-    const start = state.page * pageSize();
-    return state.filtered.slice(start, start + pageSize());
-  }
-
-  function renderPager(){
-    if(!els.pageInfo) return;
-    ensurePageInRange();
-    const total = state.filtered.length;
-    const start = total ? (state.page * pageSize() + 1) : 0;
-    const end = Math.min(total, state.page * pageSize() + pageSize());
-    els.pageInfo.textContent = total ? `表示: ${start}–${end} / ${total}` : "—";
-    if(els.btnPagePrev) els.btnPagePrev.disabled = (state.page<=0);
-    if(els.btnPageNext) els.btnPageNext.disabled = (state.page>=state.pages-1);
-  }
-
-  /* -------- rendering -------- */
-
-  function buildSelectOptions(selectEl, values, placeholder="指定なし"){
-    if(!selectEl) return;
-    const list = Array.from(new Set(values.filter(Boolean))).sort((a,b)=>a.localeCompare(b,"ja"));
-    selectEl.innerHTML =
-      `<option value="">${escapeHtml(placeholder)}</option>` +
-      list.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("");
-  }
-
-  function renderCard(r){
-    const r18 = isR18Key(r.r18Key);
-    const lossCls = lossClassFromKey(r.lossKey);
-
-    const pills = [];
-    if(r.system) pills.push(`<span class="sc-pill">${escapeHtml(r.system)}</span>`);
-    if(r.players) pills.push(`<span class="sc-pill">${escapeHtml(r.players)}</span>`);
-    if(r.format) pills.push(`<span class="sc-pill">${escapeHtml(r.format)}</span>`);
-    if(r.time) pills.push(`<span class="sc-pill">${escapeHtml(r.time)}</span>`);
-    pills.push(`<span class="sc-pill ${escapeHtml(lossCls)}">ロスト:${escapeHtml(r.lossKey==="unknown"?"不明":r.lossKey)}</span>`);
-    if(r18) pills.push(`<span class="sc-pill sc-r18">🔞 ${escapeHtml(r18Label(r.r18Key))}</span>`);
-
-    const tagsHtml = r.tags.slice(0,10).map(t=>(
-      `<button type="button" class="sc-pill sc-tag" data-tag="${escapeHtml(t)}">${escapeHtml(t)}</button>`
-    )).join("");
-
-    const actions = [];
-    if(r.url){
-      actions.push(`<button type="button" class="sc-icon" data-action="open-url" data-url="${escapeHtml(r.url)}" data-r18="${r18?"1":"0"}" aria-label="外部リンク">🔗</button>`);
-      actions.push(`<button type="button" class="sc-icon" data-action="copy-url" data-url="${escapeHtml(r.url)}" aria-label="URLコピー">📋</button>`);
-    }
-
-    return `
-      <article class="sc-card" data-action="open-detail" data-id="${escapeHtml(r.id)}">
-        ${r.id ? `<div class="sc-id">${escapeHtml(r.id)}</div>` : ""}
-        <div class="sc-title">${escapeHtml(r.name || "(no title)")}</div>
-        <div class="sc-pillRow">${pills.join("")}</div>
-        ${tagsHtml ? `<div class="sc-pillRow" style="margin-top:8px;">${tagsHtml}</div>` : ""}
-        ${(!state.compact && r.memo) ? `<div class="sc-note">${escapeHtml(r.memo)}</div>` : ""}
-        <div class="sc-actions">${actions.join("")}</div>
-      </article>
-    `;
-  }
-
-  function renderTableRow(r){
-    const r18 = isR18Key(r.r18Key);
-    const urlCell = r.url ? `
-      <button type="button" class="sc-link-btn" data-action="open-url" data-url="${escapeHtml(r.url)}" data-r18="${r18?"1":"0"}">open</button>
-      <button type="button" class="sc-link-btn" data-action="copy-url" data-url="${escapeHtml(r.url)}">copy</button>
-    ` : "";
-
-    return `
-      <tr data-action="open-detail" data-id="${escapeHtml(r.id)}">
-        <td>${escapeHtml(r.id)}</td>
-        <td>${escapeHtml(r.name)}</td>
-        <td>${escapeHtml(r.system)}</td>
-        <td>${escapeHtml(r.players)}</td>
-        <td>${escapeHtml(r.format)}</td>
-        <td>${escapeHtml(r.time)}</td>
-        <td>${escapeHtml(r18Label(r.r18Key))}</td>
-        <td>${escapeHtml(r.lossKey==="unknown"?"不明":r.lossKey)}</td>
-        <td>${urlCell}</td>
-      </tr>
-    `;
-  }
-
+  /* render */
   function render(){
     applyFilters();
-    state.page = 0;
-    renderInner();
+
+    const total = state.filtered.length;
+    if(els.resultInfo) els.resultInfo.textContent = `表示: ${total} 件 / 全体: ${state.rows.length} 件`;
+
+    const latest = state.meta?.latest_updated_at ? ` / 最新更新: ${state.meta.latest_updated_at}` : "";
+    if(els.metaRow) els.metaRow.textContent = `最終取得: ${nowLocal()}${latest}`;
+
+    updatePagerUI(total);
+
+    if(state.view==="cards") renderCards();
+    else renderTable();
   }
 
-  function renderInner(){
-    const slice = pagedSlice();
-    if(els.resultInfo){
-      els.resultInfo.textContent = `表示: ${state.filtered.length} 件 / 全体: ${state.rows.length} 件`;
-    }
-    if(els.metaRow){
-      els.metaRow.textContent = `最終取得: ${nowLocal()} / 表示 ${state.filtered.length}件`;
-    }
+  function renderCards(){
+    if(!els.scenarioGrid) return;
+    if(els.tableWrap) els.tableWrap.style.display="none";
 
-    if(state.view==="cards"){
-      if(els.scenarioGrid) els.scenarioGrid.innerHTML = slice.map(renderCard).join("");
-      if(els.tableWrap) els.tableWrap.style.display = "none";
-      if(els.tableBody) els.tableBody.innerHTML = "";
-    }else{
-      if(els.tableBody) els.tableBody.innerHTML = slice.map(renderTableRow).join("");
-      if(els.tableWrap) els.tableWrap.style.display = "";
-      if(els.scenarioGrid) els.scenarioGrid.innerHTML = "";
-    }
+    const pageSize = PAGE_SIZE.cards;
+    const total = state.filtered.length;
+    const pages = Math.max(1, Math.ceil(total/pageSize));
+    let page = clampInt(getPage(),0,pages-1);
+    setPage(page);
 
-    renderPager();
+    const slice = state.filtered.slice(page*pageSize, page*pageSize+pageSize);
+
+    els.scenarioGrid.innerHTML = slice.map(r=>{
+      const r18 = isR18Key(r.r18Key);
+      const lossCls = lossClassFromKey(r.lossKey);
+      const fav = isFav(r.id);
+
+      const pills = [];
+      if(r.system) pills.push(`<span class="sc-pill">${escapeHtml(r.system)}</span>`);
+      pills.push(`<span class="sc-pill">人数:${escapeHtml(playersLabel(r))}</span>`);
+      if(r.format) pills.push(`<span class="sc-pill">${escapeHtml(r.format)}</span>`);
+      pills.push(`<span class="sc-pill">時間:${escapeHtml(timeLabel(r))}</span>`);
+      pills.push(`<span class="sc-pill ${escapeHtml(lossCls)}">ロスト:${escapeHtml(r.lossKey==="unknown"?"不明":r.lossKey)}</span>`);
+      if(r18) pills.push(`<span class="sc-pill sc-r18">🔞 ${escapeHtml(r18Label(r.r18Key))}</span>`);
+
+      const tagsHtml = r.tags.slice(0,10).map(t=>
+        `<button type="button" class="sc-pill sc-tag" data-tag="${escapeHtml(t)}">${escapeHtml(t)}</button>`
+      ).join("");
+
+      const actions = [];
+      if(r.url){
+        actions.push(`<button type="button" class="sc-icon" data-action="open-url" data-url="${escapeHtml(r.url)}" data-r18="${r18?"1":"0"}" aria-label="外部リンク">🔗</button>`);
+        actions.push(`<button type="button" class="sc-icon" data-action="copy-url" data-url="${escapeHtml(r.url)}" aria-label="URLコピー">📋</button>`);
+      }
+      actions.push(`<button type="button" class="sc-icon" data-action="toggle-fav" data-id="${escapeHtml(r.id)}" aria-label="お気に入り">${fav?"★":"☆"}</button>`);
+
+      return `
+        <article class="sc-card" data-action="open-detail" data-id="${escapeHtml(r.id)}">
+          ${r.id ? `<div class="sc-id">${escapeHtml(r.id)}</div>` : ""}
+          <div class="sc-title">${escapeHtml(r.name || "(no title)")}</div>
+          ${r.author ? `<div class="muted" style="margin-top:6px;font-weight:900;">作者: ${escapeHtml(r.author)}</div>` : ""}
+          <div class="sc-pillRow">${pills.join("")}</div>
+          ${tagsHtml ? `<div class="sc-pillRow" style="margin-top:8px;">${tagsHtml}</div>` : ""}
+          ${(!state.compact && r.memo) ? `<div class="sc-note">${escapeHtml(r.memo)}</div>` : ""}
+          <div class="sc-actions">${actions.join("")}</div>
+        </article>
+      `;
+    }).join("");
   }
 
-  /* -------- modals -------- */
+  function renderTable(){
+    if(!els.tableBody) return;
 
+    if(els.tableWrap) els.tableWrap.style.display="";
+    if(els.scenarioGrid) els.scenarioGrid.innerHTML="";
+
+    const pageSize = PAGE_SIZE.table;
+    const total = state.filtered.length;
+    const pages = Math.max(1, Math.ceil(total/pageSize));
+    let page = clampInt(getPage(),0,pages-1);
+    setPage(page);
+
+    const slice = state.filtered.slice(page*pageSize, page*pageSize+pageSize);
+
+    els.tableBody.innerHTML = slice.map(r=>{
+      const r18 = isR18Key(r.r18Key);
+      const fav = isFav(r.id);
+      const urlCell = r.url ? `
+        <button type="button" class="sc-link-btn" data-action="open-url" data-url="${escapeHtml(r.url)}" data-r18="${r18?"1":"0"}">open</button>
+        <button type="button" class="sc-link-btn" data-action="copy-url" data-url="${escapeHtml(r.url)}">copy</button>
+      ` : "";
+
+      return `
+        <tr data-action="open-detail" data-id="${escapeHtml(r.id)}">
+          <td>${escapeHtml(r.id)}</td>
+          <td>${escapeHtml(r.name)}</td>
+          <td>${escapeHtml(r.system)}</td>
+          <td>${escapeHtml(playersLabel(r))}</td>
+          <td>${escapeHtml(r.format)}</td>
+          <td>${escapeHtml(timeLabel(r))}</td>
+          <td>${escapeHtml(r18Label(r.r18Key))}</td>
+          <td>${escapeHtml(r.lossKey==="unknown"?"不明":r.lossKey)}</td>
+          <td><button type="button" class="sc-link-btn" data-action="toggle-fav" data-id="${escapeHtml(r.id)}">${fav?"★":"☆"}</button></td>
+          <td>${urlCell}</td>
+        </tr>
+      `;
+    }).join("");
+  }
+
+  /* modals */
   function openModal(modalEl){
     if(!modalEl) return;
     modalEl.classList.add("is-show");
     modalEl.setAttribute("aria-hidden","false");
-    document.body.style.overflow = "hidden";
-
+    document.body.style.overflow="hidden";
     const panel = modalEl.querySelector(".modal-panel");
     if(panel){
       panel.setAttribute("tabindex","-1");
       panel.focus({ preventScroll:true });
     }
   }
-
   function closeModal(modalEl){
     if(!modalEl) return;
     modalEl.classList.remove("is-show");
     modalEl.setAttribute("aria-hidden","true");
-    document.body.style.overflow = "";
+    document.body.style.overflow="";
   }
 
   function openZoom(src){
@@ -704,23 +801,19 @@
       if(els.zoomModal?.classList.contains("is-show")) closeModal(els.zoomModal);
       else if(els.detailModal?.classList.contains("is-show")) closeModal(els.detailModal);
       else if(els.confirmModal?.classList.contains("is-show")) closeConfirm();
-      else if(els.tagModal?.classList.contains("is-show")) closeModal(els.tagModal);
-      else if(els.helpModal?.classList.contains("is-show")) closeModal(els.helpModal);
-      else if(els.popover?.classList.contains("is-show")) popoverClose();
     });
   }
 
-  /* -------- confirm -------- */
+  /* confirm */
+  function shouldSkipConfirm(){ return lsGet(LS.SKIP_CONFIRM,"0")==="1"; }
+  function setSkipConfirm(v){ lsSet(LS.SKIP_CONFIRM, v ? "1":"0"); }
 
-  function shouldSkipConfirm(){ return lsGet(LS.SKIP_CONFIRM, "0") === "1"; }
-  function setSkipConfirm(v){ lsSet(LS.SKIP_CONFIRM, v ? "1" : "0"); }
-
-  function openConfirm(url, isR18){
+  function openConfirm(url,isR18){
     state.pendingOpenUrl = url;
     state.pendingOpenIsR18 = !!isR18;
 
     if(!state.pendingOpenIsR18 && shouldSkipConfirm()){
-      window.open(url, "_blank", "noopener,noreferrer");
+      window.open(url,"_blank","noopener,noreferrer");
       state.pendingOpenUrl = null;
       state.pendingOpenIsR18 = false;
       return;
@@ -730,7 +823,7 @@
       const ok = window.confirm(state.pendingOpenIsR18
         ? "【R18注意】外部サイトへ移動しますか？"
         : "外部サイトへ移動しますか？");
-      if(ok) window.open(url, "_blank", "noopener,noreferrer");
+      if(ok) window.open(url,"_blank","noopener,noreferrer");
       state.pendingOpenUrl = null;
       state.pendingOpenIsR18 = false;
       return;
@@ -752,14 +845,14 @@
 
     els.confirmModal.classList.add("is-show");
     els.confirmModal.setAttribute("aria-hidden","false");
-    document.body.style.overflow = "hidden";
+    document.body.style.overflow="hidden";
   }
 
   function closeConfirm(){
     if(!els.confirmModal) return;
     els.confirmModal.classList.remove("is-show");
     els.confirmModal.setAttribute("aria-hidden","true");
-    document.body.style.overflow = "";
+    document.body.style.overflow="";
     state.pendingOpenUrl = null;
     state.pendingOpenIsR18 = false;
   }
@@ -771,14 +864,13 @@
       if(!state.pendingOpenIsR18 && els.confirmDontAsk){
         setSkipConfirm(!!els.confirmDontAsk.checked);
       }
-      window.open(url, "_blank", "noopener,noreferrer");
+      window.open(url,"_blank","noopener,noreferrer");
       closeConfirm();
     });
     els.confirmCancel?.addEventListener("click", closeConfirm);
   }
 
-  /* -------- detail + trailer -------- */
-
+  /* detail + trailer (前の版と同じ挙動) */
   function findById(id){ return state.rows.find(r=>r.id===id) || null; }
 
   function buildTrailerBlock(trailers){
@@ -786,20 +878,18 @@
       return `
         <div class="detail-block" style="grid-column: 1 / -1;">
           <h3>トレーラー</h3>
-          <div class="detail-val"><span class="text-muted">非表示</span></div>
+          <div class="detail-val"><span class="muted">非表示</span></div>
         </div>
       `;
     }
-
     if(!trailers || trailers.length===0){
       return `
         <div class="detail-block" style="grid-column: 1 / -1;">
           <h3>トレーラー</h3>
-          <div class="detail-val"><span class="text-muted">なし</span></div>
+          <div class="detail-val"><span class="muted">なし</span></div>
         </div>
       `;
     }
-
     return `
       <div class="detail-block" style="grid-column: 1 / -1;">
         <h3>トレーラー</h3>
@@ -822,6 +912,9 @@
     if(!row || !els.detailModal || !els.detailBody) return;
 
     state.activeId = id;
+    state.trailerList = (row.trailers || []).slice();
+    state.trailerIndex = 0;
+    state.trailerBoundForId = null;
 
     const r18 = isR18Key(row.r18Key);
     const lossCls = lossClassFromKey(row.lossKey);
@@ -831,14 +924,15 @@
 
     const tagsHtml = row.tags.length
       ? row.tags.map(t=>`<button type="button" class="sc-pill sc-tag" data-tag="${escapeHtml(t)}">${escapeHtml(t)}</button>`).join("")
-      : `<span class="text-muted">なし</span>`;
+      : `<span class="muted">なし</span>`;
 
     const urlHtml = row.url ? `
       <div class="detail-actions">
         <button type="button" class="sc-icon" data-action="open-url" data-url="${escapeHtml(row.url)}" data-r18="${r18?"1":"0"}" aria-label="外部リンク">🔗</button>
         <button type="button" class="sc-icon" data-action="copy-url" data-url="${escapeHtml(row.url)}" aria-label="URLコピー">📋</button>
+        <button type="button" class="sc-icon" data-action="toggle-fav" data-id="${escapeHtml(row.id)}" aria-label="お気に入り">${isFav(row.id)?"★":"☆"}</button>
       </div>
-    ` : `<span class="text-muted">URLなし</span>`;
+    ` : `<span class="muted">URLなし</span>`;
 
     const trailerBlock = buildTrailerBlock(row.trailers);
 
@@ -849,21 +943,19 @@
           <div class="detail-val">
             ${row.system ? `<div>System: <strong>${escapeHtml(row.system)}</strong></div>` : ""}
             ${row.format ? `<div>形式: <strong>${escapeHtml(row.format)}</strong></div>` : ""}
-            ${row.players ? `<div>人数: <strong>${escapeHtml(row.players)}</strong></div>` : ""}
-            ${row.time ? `<div>時間: <strong>${escapeHtml(row.time)}</strong></div>` : ""}
+            <div>人数: <strong>${escapeHtml(playersLabel(row))}</strong></div>
+            <div>時間: <strong>${escapeHtml(timeLabel(row))}</strong></div>
           </div>
         </div>
 
         <div class="detail-block">
           <h3>危険度</h3>
           <div class="detail-val">
-            <div>R18:
-              <strong class="${r18 ? "sc-r18" : ""}" style="padding:2px 8px;border-radius:999px;border:1px solid var(--line);display:inline-block;">
-                ${escapeHtml(r18Label(row.r18Key))}
-              </strong>
-            </div>
+            <div>R18: <strong class="${r18 ? "sc-r18" : ""}" style="padding:2px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.12);display:inline-block;">
+              ${escapeHtml(r18Label(row.r18Key))}
+            </strong></div>
             <div style="margin-top:6px;">ロスト率:
-              <strong class="${escapeHtml(lossCls)}" style="padding:2px 8px;border-radius:999px;border:1px solid var(--line);display:inline-block;">
+              <strong class="${escapeHtml(lossCls)}" style="padding:2px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.12);display:inline-block;">
                 ${escapeHtml(row.lossKey==="unknown" ? "不明" : row.lossKey)}
               </strong>
             </div>
@@ -890,10 +982,6 @@
     `;
 
     openModal(els.detailModal);
-
-    // init trailer state
-    state.trailerList = (row.trailers || []).slice();
-    state.trailerIndex = 0;
     renderTrailer();
   }
 
@@ -907,300 +995,224 @@
     const list = state.trailerList;
     if(!img || !dots || !viewport || !list || list.length===0) return;
 
-    const idx = clampInt(state.trailerIndex, 0, list.length - 1);
+    const idx = clampInt(state.trailerIndex,0,list.length-1);
     state.trailerIndex = idx;
 
     img.src = list[idx];
     img.dataset.src = list[idx];
 
-    dots.innerHTML = list.map((_, i)=>(
+    dots.innerHTML = list.map((_,i)=>
       `<button type="button" class="trailer-dot ${i===idx?"is-active":""}" data-index="${i}" aria-label="画像 ${i+1}"></button>`
-    )).join("");
+    ).join("");
 
-    const showNav = list.length > 1;
+    const showNav = list.length>1;
     if(prev) prev.style.display = showNav ? "" : "none";
     if(next) next.style.display = showNav ? "" : "none";
 
-    if(!viewport.dataset.bound){
-      viewport.dataset.bound = "1";
+    if(state.trailerBoundForId !== state.activeId){
+      state.trailerBoundForId = state.activeId;
 
-      prev?.addEventListener("click", (e)=>{
-        e.stopPropagation();
+      prev?.addEventListener("click",(e)=>{
+        e.preventDefault(); e.stopPropagation();
         state.trailerIndex = (state.trailerIndex - 1 + state.trailerList.length) % state.trailerList.length;
         renderTrailer();
       });
-      next?.addEventListener("click", (e)=>{
-        e.stopPropagation();
+      next?.addEventListener("click",(e)=>{
+        e.preventDefault(); e.stopPropagation();
         state.trailerIndex = (state.trailerIndex + 1) % state.trailerList.length;
         renderTrailer();
       });
 
-      dots.addEventListener("click", (e)=>{
+      dots.addEventListener("click",(e)=>{
         const dot = e.target.closest(".trailer-dot");
         if(!dot) return;
-        const i = parseInt(dot.dataset.index, 10);
+        const i = parseInt(dot.dataset.index,10);
         if(Number.isFinite(i)){
           state.trailerIndex = i;
           renderTrailer();
         }
       });
 
-      img.addEventListener("click", ()=>{
+      img.addEventListener("click",(e)=>{
+        e.preventDefault(); e.stopPropagation();
         if(img.dataset.src) openZoom(img.dataset.src);
       });
 
-      // swipe
       let startX = null;
-      viewport.addEventListener("pointerdown", (e)=>{
+      viewport.addEventListener("pointerdown",(e)=>{
         startX = e.clientX;
         viewport.setPointerCapture?.(e.pointerId);
       });
-      viewport.addEventListener("pointerup", (e)=>{
+      viewport.addEventListener("pointerup",(e)=>{
         if(startX===null) return;
         const dx = e.clientX - startX;
         startX = null;
         if(Math.abs(dx) < 40) return;
-
         if(dx < 0) state.trailerIndex = (state.trailerIndex + 1) % state.trailerList.length;
         else state.trailerIndex = (state.trailerIndex - 1 + state.trailerList.length) % state.trailerList.length;
-
         renderTrailer();
       });
     }
   }
 
-  /* -------- view/prefs -------- */
-
-  function setView(view){
-    state.view = view;
-    document.querySelectorAll(".sc-tab").forEach(t=>{
-      t.classList.toggle("is-active", t.dataset.view === view);
-    });
-    if(view==="cards"){
-      if(els.tableWrap) els.tableWrap.style.display = "none";
-    }else{
-      if(els.tableWrap) els.tableWrap.style.display = "";
-    }
-    state.page = 0;
-    renderInner();
-  }
-
-  function applyUiPrefsToDom(){
+  /* prefs/view */
+  function applyUiPrefs(){
     document.body.classList.toggle("is-compact", !!state.compact);
     if(els.toggleCompact) els.toggleCompact.checked = !!state.compact;
     if(els.toggleShowTrailers) els.toggleShowTrailers.checked = !!state.trailersEnabled;
     if(els.tagsModeBtn) els.tagsModeBtn.textContent = `条件：${state.tagsMode.toUpperCase()}`;
   }
-
-  function loadUiPrefs(){
-    state.tagsMode = (lsGet(LS.TAG_MODE, "or")==="and") ? "and" : "or";
-    state.compact = lsGet(LS.COMPACT, "0")==="1";
-    state.trailersEnabled = lsGet(LS.SHOW_TRAILERS, "1")!=="0";
-    applyUiPrefsToDom();
-  }
   function saveUiPrefs(){
     lsSet(LS.TAG_MODE, state.tagsMode);
-    lsSet(LS.COMPACT, state.compact ? "1" : "0");
-    lsSet(LS.SHOW_TRAILERS, state.trailersEnabled ? "1" : "0");
+    lsSet(LS.COMPACT, state.compact ? "1":"0");
+    lsSet(LS.SHOW_TRAILERS, state.trailersEnabled ? "1":"0");
+  }
+  function setView(view){
+    state.view = view;
+    lsSet(LS.VIEW, view);
+    document.querySelectorAll(".sc-tab").forEach(t=>{
+      t.classList.toggle("is-active", t.dataset.view === view);
+    });
+    setPage(0);
+    render();
   }
 
-  /* -------- data load (cache + remote) -------- */
-
-  function cacheSave(rows){
+  /* cache */
+  function cacheSave(rows, meta){
     try{
-      lsSet(LS.CACHE, JSON.stringify({ ok:true, rows }));
+      lsSet(LS.CACHE_ROWS, JSON.stringify(rows));
       lsSet(LS.CACHE_AT, String(Date.now()));
+      if(meta) lsSet(LS.CACHE_META, JSON.stringify(meta));
     }catch{}
   }
   function cacheLoad(){
     try{
-      const raw = lsGet(LS.CACHE, "");
-      const at = Number(lsGet(LS.CACHE_AT, "0")) || 0;
+      const raw = lsGet(LS.CACHE_ROWS,"");
+      const at = Number(lsGet(LS.CACHE_AT,"0")) || 0;
       const data = safeJSONParse(raw);
-      const rows = extractRows(data) || (data?.rows && Array.isArray(data.rows) ? data.rows : []);
-      if(!Array.isArray(rows) || rows.length===0) return { rows:[], at:0 };
-      return { rows, at };
-    }catch{
-      return { rows:[], at:0 };
-    }
-  }
-
-  function setStatus(msg){
-    if(els.status) els.status.textContent = msg;
-  }
-
-  async function loadRemoteRows(){
-    const first = await safeFetchText(API_URL, 25000);
-    if(!first.ok) throw new Error(`HTTP ${first.status}`);
-    const parsed = safeJSONParse(first.text);
-    if(!parsed) throw new Error("NON_JSON");
-    const okFlag = (parsed && typeof parsed === "object" && "ok" in parsed) ? !!parsed.ok : true;
-    const rowsRaw = extractRows(parsed);
-    if(!okFlag && rowsRaw.length===0) throw new Error("API_OK_FALSE");
-    return rowsRaw;
-  }
-
-  async function loadMeta(){
-    const m = await safeFetchText(API_META, 20000);
-    if(!m.ok) return null;
-    const parsed = safeJSONParse(m.text);
-    if(!parsed || parsed.ok===false) return null;
-    return parsed.meta || null;
+      const rows = extractRows(data) || (Array.isArray(data)?data:[]);
+      let meta = null;
+      const metaRaw = lsGet(LS.CACHE_META,"");
+      const metaObj = safeJSONParse(metaRaw);
+      if(metaObj && typeof metaObj==="object") meta = metaObj;
+      if(!Array.isArray(rows) || rows.length===0) return { rows:[], at:0, meta };
+      return { rows, at, meta };
+    }catch{ return { rows:[], at:0, meta:null }; }
   }
 
   async function loadData(isReload=false){
-    setStatus("取得中…");
-
-    // show cache first
-    const cache = cacheLoad();
-    if(cache.rows.length){
-      state.rawRows = cache.rows;
-      state.rows = state.rawRows.map(normalizeRow);
-      buildSelectOptions(els.filterSystem, state.rows.map(r=>r.system), "指定なし");
-      buildSelectOptions(els.filterFormat, state.rows.map(r=>r.format), "指定なし");
-      buildTagsIndex(state.rows);
-      renderTopTagChips();
-      renderSelectedTags();
-      render();
-      setStatus("キャッシュ表示");
-    }
-
     try{
-      const remote = await loadRemoteRows();
-      state.rawRows = Array.isArray(remote) ? remote : [];
+      setStatus("取得中…");
+
+      const cache = cacheLoad();
+      if(cache.rows.length){
+        state.rawRows = cache.rows;
+        state.rows = state.rawRows.map(normalizeRow);
+        state.meta = cache.meta;
+        setStatus(`キャッシュ表示：${state.rows.length}件`);
+        afterDataPrepared();
+        render();
+      }
+
+      const first = await safeFetchText(API_URL, 25000);
+      if(!first.ok) throw new Error(`HTTP ${first.status}`);
+
+      const parsed = safeJSONParse(first.text);
+      if(!parsed) throw new Error("NON_JSON");
+
+      const okFlag = (parsed && typeof parsed==="object" && "ok" in parsed) ? !!parsed.ok : true;
+      const rowsRaw = extractRows(parsed);
+      const meta = extractMeta(parsed);
+
+      if(!okFlag && rowsRaw.length===0) throw new Error("API_OK_FALSE");
+      if(!Array.isArray(rowsRaw) || rowsRaw.length===0) throw new Error("EMPTY");
+
+      state.rawRows = rowsRaw;
       state.rows = state.rawRows.map(normalizeRow);
+      state.meta = meta;
 
-      cacheSave(remote);
+      cacheSave(rowsRaw, meta);
 
-      buildSelectOptions(els.filterSystem, state.rows.map(r=>r.system), "指定なし");
-      buildSelectOptions(els.filterFormat, state.rows.map(r=>r.format), "指定なし");
-      buildTagsIndex(state.rows);
-      renderTopTagChips();
-      renderSelectedTags();
+      afterDataPrepared();
 
-      const meta = await loadMeta();
-      const latest = meta?.latest_updated_at ? new Date(meta.latest_updated_at).toLocaleString() : nowLocal();
-
-      setStatus(`同期OK：${state.rows.length}件`);
-      if(els.metaRow) els.metaRow.textContent = `最終取得: ${latest} / 表示 ${state.filtered.length}件`;
-      if(isReload) toast("再取得しました");
-
+      setStatus(`OK：${state.rows.length}件 取得`);
+      if(isReload) toast("更新しました");
       render();
     }catch(err){
       console.error(err);
+      const cache = cacheLoad();
       if(cache.rows.length){
+        state.meta = cache.meta;
         setStatus("同期できません（キャッシュ表示）");
+        afterDataPrepared();
         if(isReload) toast("同期できません（キャッシュ表示）");
+        render();
       }else{
-        setStatus("取得失敗：API URL/公開設定を確認");
+        setStatus("取得失敗：API / 公開設定を確認");
         toast("取得に失敗しました");
       }
     }
   }
 
-  /* -------- help -------- */
+  function afterDataPrepared(){
+    buildSelectOptions(els.filterSystem, state.rows.map(r=>r.system), "指定なし");
+    buildSelectOptions(els.filterFormat, state.rows.map(r=>r.format), "指定なし");
 
-  const HELP = {
-    scenarios: {
-      title: "このページの使い方",
-      body: "検索→絞り込み→詳細。タグは人気順、全タグは一覧モーダルから。",
-      more: `
-        <h3>導線</h3>
-        <ul>
-          <li>カード/表を切替</li>
-          <li>詳細モーダルでURL・トレーラー</li>
-          <li>タグを押すと条件に追加</li>
-        </ul>
-      `,
-    },
-    filters: {
-      title: "絞り込み",
-      body: "プリセットで雑に絞る→キーワードで仕上げるのが速い。",
-      more: `
-        <ul>
-          <li>人数・時間はざっくり判定（入力揺れに強い）</li>
-          <li>R18/ロストは参考情報（重要度は低め）</li>
-        </ul>
-      `,
-    },
-    tags: {
-      title: "タグ",
-      body: "人気タグが上。OR/AND 切替で精度調整。",
-      more: `
-        <ul>
-          <li>OR：どれか含む</li>
-          <li>AND：全部含む</li>
-          <li>「タグ一覧」で検索して追加</li>
-        </ul>
-      `,
-    },
-    prefs: {
-      title: "表示設定",
-      body: "コンパクトはメモ非表示で密度アップ。トレーラー表示は詳細の画像欄。",
-      more: `
-        <ul>
-          <li>コンパクト：カードを詰める（メモ省略）</li>
-          <li>トレーラー：重いときはOFF</li>
-        </ul>
-      `,
-    },
-  };
+    // metaの top_tags があるならそれ優先でタグ並びを良くする
+    const metaTags = Array.isArray(state.meta?.top_tags)
+      ? state.meta.top_tags.map(x=>x?.tag).filter(Boolean)
+      : [];
 
-  function popoverOpen(key){
-    const h = HELP[key] || HELP.scenarios;
-    if(!els.popover || !els.popoverBody || !els.popoverTitle) return;
-    els.popoverTitle.textContent = h.title;
-    els.popoverBody.textContent = h.body;
-    els.popover.dataset.key = key;
-    els.popover.classList.add("is-show");
-    els.popover.setAttribute("aria-hidden","false");
-  }
-  function popoverClose(){
-    if(!els.popover) return;
-    els.popover.classList.remove("is-show");
-    els.popover.setAttribute("aria-hidden","true");
-  }
-  function helpOpen(key){
-    const h = HELP[key] || HELP.scenarios;
-    if(!els.helpModal || !els.helpBody) return;
-    els.helpBody.innerHTML = `
-      <div class="prose">
-        <p class="text-muted" style="margin:0 0 10px; line-height:1.8;">${h.body}</p>
-        ${h.more || ""}
-      </div>
-    `;
-    openModal(els.helpModal);
+    const allFromRows = uniqSorted(state.rows.flatMap(r=>r.tags));
+    const setAll = new Set(allFromRows);
+
+    const ordered = [];
+    for(const t of metaTags){
+      if(setAll.has(t)) ordered.push(t);
+    }
+    for(const t of allFromRows){
+      if(!ordered.includes(t)) ordered.push(t);
+    }
+
+    state._allTags = ordered;
+    rebuildTagChips();
+
+    if(els.sortSelect && !els.sortSelect.value){
+      els.sortSelect.value = lsGet(LS.SORT,"id_desc");
+    }
   }
 
-  /* -------- events -------- */
-
+  /* events */
   function debounce(fn, wait){
-    let t = null;
+    let t=null;
     return (...args)=>{
       clearTimeout(t);
-      t = setTimeout(()=>fn(...args), wait);
+      t=setTimeout(()=>fn(...args), wait);
     };
   }
 
   function resetFilters(){
     if(els.searchInput) els.searchInput.value = "";
-    if(els.sortSelect) els.sortSelect.value = "id_desc";
+    if(els.sortSelect) els.sortSelect.value = lsGet(LS.SORT, "id_desc");
     if(els.filterSystem) els.filterSystem.value = "";
     if(els.filterFormat) els.filterFormat.value = "";
-    if(els.filterPlayersPreset) els.filterPlayersPreset.value = "";
-    if(els.filterTimePreset) els.filterTimePreset.value = "";
     if(els.filterR18) els.filterR18.value = "";
-    if(els.filterLoss) els.filterLoss.value = "";
+
+    if(els.playersMin) els.playersMin.value = "";
+    if(els.playersMax) els.playersMax.value = "";
+    if(els.timeMin) els.timeMin.value = "";
+    if(els.timeMax) els.timeMax.value = "";
+    if(els.lossMin) els.lossMin.value = "";
+    if(els.lossMax) els.lossMax.value = "";
+
     state.selectedTags.clear();
-    renderSelectedTags();
-    renderTopTagChips();
-    state.page = 0;
+    rebuildTagChips();
+    setPage(0);
     render();
     toast("条件をリセット");
   }
 
   function bindEvents(){
-    // theme
     els.themeToggle?.addEventListener("click", ()=>{
       const now = document.documentElement.getAttribute("data-theme") || "dark";
       const next = now==="light" ? "dark" : "light";
@@ -1209,136 +1221,97 @@
       toast(`テーマ：${next}`);
     });
 
-    // top actions
-    els.btnReload?.addEventListener("click", ()=>loadData(true));
-    els.btnResetFilters?.addEventListener("click", resetFilters);
+    els.refreshBtn?.addEventListener("click", ()=>loadData(true));
+    els.resetFiltersBtn?.addEventListener("click", resetFilters);
 
-    els.btnScrollTop?.addEventListener("click", ()=>window.scrollTo({ top: 0, behavior:"smooth" }));
+    const rerender = debounce(()=>{ setPage(0); render(); }, 90);
 
-    // inputs
-    els.searchInput?.addEventListener("input", debounce(render, 80));
-    els.sortSelect?.addEventListener("change", render);
-    els.filterSystem?.addEventListener("change", render);
-    els.filterFormat?.addEventListener("change", render);
-    els.filterPlayersPreset?.addEventListener("change", render);
-    els.filterTimePreset?.addEventListener("change", render);
-    els.filterR18?.addEventListener("change", render);
-    els.filterLoss?.addEventListener("change", render);
+    els.searchInput?.addEventListener("input", rerender);
+    els.sortSelect?.addEventListener("change", rerender);
 
-    // toggles
+    els.filterSystem?.addEventListener("change", rerender);
+    els.filterFormat?.addEventListener("change", rerender);
+    els.filterR18?.addEventListener("change", rerender);
+
+    els.playersMin?.addEventListener("input", rerender);
+    els.playersMax?.addEventListener("input", rerender);
+    els.timeMin?.addEventListener("input", rerender);
+    els.timeMax?.addEventListener("input", rerender);
+    els.lossMin?.addEventListener("input", rerender);
+    els.lossMax?.addEventListener("input", rerender);
+
+    els.playersClear?.addEventListener("click", ()=>{
+      if(els.playersMin) els.playersMin.value="";
+      if(els.playersMax) els.playersMax.value="";
+      setPage(0); render(); toast("人数の範囲をクリア");
+    });
+    els.timeClear?.addEventListener("click", ()=>{
+      if(els.timeMin) els.timeMin.value="";
+      if(els.timeMax) els.timeMax.value="";
+      setPage(0); render(); toast("時間の範囲をクリア");
+    });
+    els.lossClear?.addEventListener("click", ()=>{
+      if(els.lossMin) els.lossMin.value="";
+      if(els.lossMax) els.lossMax.value="";
+      setPage(0); render(); toast("ロスト率の範囲をクリア");
+    });
+
     els.toggleCompact?.addEventListener("change", ()=>{
       state.compact = !!els.toggleCompact.checked;
       saveUiPrefs();
-      applyUiPrefsToDom();
-      renderInner();
+      applyUiPrefs();
+      render();
     });
+
     els.toggleShowTrailers?.addEventListener("change", ()=>{
       state.trailersEnabled = !!els.toggleShowTrailers.checked;
       saveUiPrefs();
-      applyUiPrefsToDom();
-      // no heavy rerender needed
-      toast(state.trailersEnabled ? "トレーラー表示：ON" : "トレーラー表示：OFF");
+      applyUiPrefs();
+      render();
     });
 
-    // tags
-    els.tagsMoreBtn?.addEventListener("click", ()=>{
-      renderTagModalChips();
-      openModal(els.tagModal);
-      setTimeout(()=>els.tagsSearchInput?.focus?.(), 60);
-    });
-    els.tagsSearchClearBtn?.addEventListener("click", ()=>{
-      if(els.tagsSearchInput) els.tagsSearchInput.value = "";
-      renderTagModalChips();
-      els.tagsSearchInput?.focus?.();
-    });
-    els.tagsSearchInput?.addEventListener("input", debounce(renderTagModalChips, 80));
+    els.tagsSearchInput?.addEventListener("input", debounce(rebuildTagChips, 80));
 
     els.tagsClearBtn?.addEventListener("click", ()=>{
       state.selectedTags.clear();
-      renderSelectedTags();
-      renderTopTagChips();
+      rebuildTagChips();
+      setPage(0);
       render();
-      toast("タグをクリア");
+      toast("タグを解除");
     });
 
     els.tagsModeBtn?.addEventListener("click", ()=>{
       state.tagsMode = state.tagsMode==="or" ? "and" : "or";
       saveUiPrefs();
-      applyUiPrefsToDom();
+      applyUiPrefs();
+      rebuildTagChips();
+      setPage(0);
       render();
       toast(`タグ条件：${state.tagsMode.toUpperCase()}`);
     });
 
-    // view tabs
     document.querySelectorAll(".sc-tab").forEach(btn=>{
       btn.addEventListener("click", ()=>setView(btn.dataset.view));
     });
 
-    // pagination
-    els.btnPagePrev?.addEventListener("click", ()=>{
-      state.page = Math.max(0, state.page - 1);
-      renderInner();
-      window.scrollTo({ top: els.tableWrap?.getBoundingClientRect?.().top ? window.scrollY + els.tableWrap.getBoundingClientRect().top - 120 : 0, behavior:"smooth" });
-    });
-    els.btnPageNext?.addEventListener("click", ()=>{
-      ensurePageInRange();
-      state.page = Math.min(state.pages - 1, state.page + 1);
-      renderInner();
-      window.scrollTo({ top: els.tableWrap?.getBoundingClientRect?.().top ? window.scrollY + els.tableWrap.getBoundingClientRect().top - 120 : 0, behavior:"smooth" });
-    });
-
-    // delegation
     document.addEventListener("click", (e)=>{
-      // help
-      const helpBtn = e.target.closest("[data-help]");
-      if(helpBtn){
-        const key = helpBtn.getAttribute("data-help");
-        if(key) popoverOpen(key);
-        return;
-      }
-
-      // popover close
-      if(e.target.closest("#popoverClose")){ popoverClose(); return; }
-      if(e.target.closest("#popoverMore")){
-        const key = els.popover?.dataset.key || "scenarios";
-        popoverClose();
-        helpOpen(key);
-        return;
-      }
-
-      // tag click (top/selected/modal)
-      const tagBtn = e.target.closest("[data-tag]");
-      if(tagBtn){
-        const t = tagBtn.dataset.tag;
-        if(!t) return;
-
-        if(tagBtn.dataset.selected==="1"){
-          state.selectedTags.delete(lower(t));
-        }else{
-          const key = lower(t);
-          if(state.selectedTags.has(key)) state.selectedTags.delete(key);
-          else state.selectedTags.add(key);
-        }
-
-        renderSelectedTags();
-        renderTopTagChips();
-        renderTagModalChips();
+      const pager = e.target.closest("[data-pager]");
+      if(pager){
+        const dir = pager.getAttribute("data-pager");
+        const total = state.filtered.length;
+        const pageSize = state.view==="cards" ? PAGE_SIZE.cards : PAGE_SIZE.table;
+        const pages = Math.max(1, Math.ceil(total/pageSize));
+        let page = clampInt(getPage(),0,pages-1);
+        if(dir==="prev") page = Math.max(0, page-1);
+        if(dir==="next") page = Math.min(pages-1, page+1);
+        setPage(page);
         render();
         return;
       }
 
-      // open detail (avoid icon buttons)
-      const detailEl = e.target.closest('[data-action="open-detail"]');
-      if(detailEl){
-        if(e.target.closest('[data-action="open-url"], [data-action="copy-url"]')) return;
-        const id = detailEl.dataset.id;
-        if(id) openDetail(id);
-        return;
-      }
-
-      // copy/open url (works in cards/table/detail)
       const copyBtn = e.target.closest('[data-action="copy-url"]');
       if(copyBtn){
+        e.preventDefault(); e.stopPropagation();
         const url = copyBtn.dataset.url || "";
         if(url) copyText(url);
         return;
@@ -1346,56 +1319,81 @@
 
       const openBtn = e.target.closest('[data-action="open-url"]');
       if(openBtn){
+        e.preventDefault(); e.stopPropagation();
         const url = openBtn.dataset.url || "";
         const isR18 = openBtn.dataset.r18 === "1";
         if(url) openConfirm(url, isR18);
         return;
       }
 
-      // close popover when click outside
-      if(els.popover?.classList.contains("is-show")){
-        const inside = e.target.closest(".popover-panel") || e.target.closest("[data-help]");
-        if(!inside) popoverClose();
+      const favBtn = e.target.closest('[data-action="toggle-fav"]');
+      if(favBtn){
+        e.preventDefault(); e.stopPropagation();
+        toggleFav(favBtn.dataset.id || "");
+        return;
       }
+
+      const tagBtn = e.target.closest("[data-tag]");
+      if(tagBtn){
+        e.preventDefault(); e.stopPropagation();
+        const t = tagBtn.dataset.tag;
+        if(!t) return;
+        if(tagBtn.dataset.selected==="1") state.selectedTags.delete(t);
+        else{
+          if(state.selectedTags.has(t)) state.selectedTags.delete(t);
+          else state.selectedTags.add(t);
+        }
+        rebuildTagChips();
+        setPage(0);
+        render();
+        return;
+      }
+
+      const detailEl = e.target.closest('[data-action="open-detail"]');
+      if(detailEl){
+        if(e.target.closest('[data-action="open-url"],[data-action="copy-url"],[data-action="toggle-fav"]')) return;
+        const id = detailEl.dataset.id;
+        if(id) openDetail(id);
+        return;
+      }
+    }, { passive:false });
+  }
+
+  function applyThemeFromLS(){
+    const saved = lsGet(LS.THEME,"");
+    if(saved==="light" || saved==="dark") document.documentElement.setAttribute("data-theme", saved);
+  }
+
+  function applyUiPrefs(){
+    document.body.classList.toggle("is-compact", !!state.compact);
+    if(els.toggleCompact) els.toggleCompact.checked = !!state.compact;
+    if(els.toggleShowTrailers) els.toggleShowTrailers.checked = !!state.trailersEnabled;
+    if(els.tagsModeBtn) els.tagsModeBtn.textContent = `条件：${state.tagsMode.toUpperCase()}`;
+  }
+  function saveUiPrefs(){
+    lsSet(LS.TAG_MODE, state.tagsMode);
+    lsSet(LS.COMPACT, state.compact ? "1":"0");
+    lsSet(LS.SHOW_TRAILERS, state.trailersEnabled ? "1":"0");
+  }
+  function setView(view){
+    state.view = view;
+    lsSet(LS.VIEW, view);
+    document.querySelectorAll(".sc-tab").forEach(t=>{
+      t.classList.toggle("is-active", t.dataset.view === view);
     });
+    setPage(0);
+    render();
   }
 
-  /* -------- boot -------- */
-
-  function parseQueryParams(){
-    const sp = new URLSearchParams(location.search);
-
-    // id jump
-    const id = sp.get("id") || sp.get("scenario") || "";
-    if(id) state._openIdOnLoad = id.replace(/^#/, "");
-
-    // q from HUB tags
-    const q = sp.get("q") || "";
-    if(q && els.searchInput) els.searchInput.value = q;
-
-    // support old: id=#coc6_0001
-    const id2 = sp.get("id") || "";
-    if(id2 && id2.startsWith("#")) state._openIdOnLoad = id2.slice(1);
-  }
-
-  function loadUiPrefsAndApply(){
-    loadUiPrefs();
-    applyUiPrefsToDom();
-  }
-
-  async function boot(){
-    parseQueryParams();
-    loadUiPrefsAndApply();
+  function boot(){
+    applyThemeFromLS();
+    applyUiPrefs();
     initModalCloseHandlers();
     bindConfirmButtons();
     bindEvents();
-    setView("cards");
-    await loadData(false);
-
-    // open detail by id if provided
-    if(state._openIdOnLoad){
-      openDetail(state._openIdOnLoad);
-    }
+    setView(state.view);
+    if(els.sortSelect) els.sortSelect.value = lsGet(LS.SORT,"id_desc");
+    loadData(false);
   }
 
   boot();

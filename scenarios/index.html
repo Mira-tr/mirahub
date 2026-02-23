@@ -1,363 +1,243 @@
-<!-- /scenarios/index.html -->
+<!-- scenarios/index.html -->
 <!doctype html>
 <html lang="ja" data-theme="dark">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>シナリオ一覧 | MIRAHUB</title>
-  <meta name="description" content="MIRAHUB所持シナリオ一覧。検索・絞り込み・詳細・トレーラー・お気に入り対応。" />
-  <link rel="stylesheet" href="../style.css" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MIRAHUB / Scenarios</title>
   <link rel="stylesheet" href="./scenarios.css" />
-  <script>
-  (function(){
-    try{
-      const t = localStorage.getItem("mirahub.theme");
-      if(t) document.documentElement.setAttribute("data-theme", t);
-    }catch(e){}
-  })();
-  </script>
 </head>
-
 <body>
-<header class="layout-header">
-  <div class="layout-wrap layout-header-inner">
-    <div class="brand">
-      <span class="brand-dot" aria-hidden="true"></span>
-      <a href="../">MIRAHUB</a>
-      <span class="text-muted">/</span>
-      <span class="text-muted">Scenarios</span>
-    </div>
-
-    <nav class="nav">
-      <a class="nav-link" href="../">HUB</a>
-      <a class="nav-link nav-cta" href="../shinji/">しんじ卓</a>
-      <button class="icon-btn" id="themeToggle" type="button" aria-label="テーマ切替">🌓</button>
-    </nav>
-  </div>
-</header>
-
-<main class="layout-wrap sc-layout" id="main">
-
-  <!-- HERO -->
-  <section class="sc-hero">
-    <div class="sc-hero-left">
-      <div class="hero-badge">
-        <span class="hero-badge-dot"></span>
-        <span>SCENARIO / SEARCH / DETAIL</span>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-dot"></div>
+        <div class="brand-text">MIRAHUB <span class="muted">/ Scenarios</span></div>
       </div>
 
-      <h1 class="hero-title">
-        シナリオ一覧
-        <span class="hero-accent">（所持分のみ）</span>
-      </h1>
+      <nav class="nav">
+        <a class="nav-link" href="../">HUB</a>
+        <a class="nav-link is-active" href="./">Scenarios</a>
+      </nav>
 
-      <p class="hero-lead text-muted">
-        キーワード・タグ・各種プリセットで瞬時に絞り込み。<br>
-        詳細モーダルでトレーラーを大きく確認。
-      </p>
-
-      <div class="hero-actions">
-        <button class="btn btn-ghost" id="btnReload" type="button">同期</button>
-        <button class="btn btn-ghost" id="btnResetFilters" type="button">条件リセット</button>
-        <button class="btn btn-ghost" id="btnHelpSc" type="button" data-help="scenarios">？</button>
-        <span id="status" class="text-muted sc-status">待機中</span>
+      <div class="top-actions">
+        <button id="themeToggle" class="btn btn-ghost" type="button" aria-label="テーマ切替">🌓</button>
+        <button id="refreshBtn" class="btn" type="button">更新</button>
+        <button id="resetFiltersBtn" class="btn btn-ghost" type="button">リセット</button>
       </div>
-
-      <div id="metaRow" class="text-muted sc-metaRow"></div>
     </div>
+  </header>
 
-    <div class="sc-hero-right">
-      <div class="hero-panel">
-        <div class="hero-panel-top">
-          <div class="hero-panel-title">表示設定</div>
-          <button class="icon-btn mini" type="button" data-help="prefs" aria-label="ヘルプ">？</button>
+  <main class="wrap">
+    <section class="panel hero">
+      <div class="hero-left">
+        <div class="hero-kicker">TRPG / SCENARIOS</div>
+        <h1 class="hero-title">世界線の入口。</h1>
+        <p class="hero-sub">検索・タグ・範囲指定（人数/時間/ロスト）で、迷わず探す。</p>
+
+        <div class="hero-tools">
+          <div class="tabs">
+            <button class="tab sc-tab is-active" type="button" data-view="cards">カード</button>
+            <button class="tab sc-tab" type="button" data-view="table">表</button>
+          </div>
+
+          <label class="toggle">
+            <input id="toggleCompact" type="checkbox" />
+            <span>コンパクト</span>
+          </label>
+
+          <label class="toggle">
+            <input id="toggleShowTrailers" type="checkbox" checked />
+            <span>トレーラー</span>
+          </label>
         </div>
 
-        <div class="prefs">
-          <label class="pref">
-            <span class="pref-label">コンパクト</span>
-            <span class="pref-sub text-muted">メモを省略して見やすく</span>
-            <input id="toggleCompact" class="pref-switch" type="checkbox" />
-          </label>
+        <div class="statusRow">
+          <div id="status" class="statusChip">—</div>
+          <div id="metaRow" class="muted">—</div>
+        </div>
+      </div>
 
-          <label class="pref">
-            <span class="pref-label">トレーラー表示</span>
-            <span class="pref-sub text-muted">詳細の画像エリア</span>
-            <input id="toggleShowTrailers" class="pref-switch" type="checkbox" />
-          </label>
+      <div class="hero-right">
+        <div class="panel mini">
+          <div class="mini-title">検索</div>
+          <div class="mini-row">
+            <input id="searchInput" class="input" type="search" placeholder="ID / タイトル / タグ / メモ …" />
+          </div>
+          <div class="mini-row mini-split">
+            <div class="mini-col">
+              <div class="mini-label">並び替え</div>
+              <select id="sortSelect" class="select">
+                <option value="id_desc">ID（新→旧）</option>
+                <option value="id_asc">ID（旧→新）</option>
+                <option value="name_asc">名前（A→Z）</option>
+                <option value="name_desc">名前（Z→A）</option>
+                <option value="updated_desc">更新（新→旧）</option>
+                <option value="updated_asc">更新（旧→新）</option>
+                <option value="fav_desc">★（お気に入り優先）</option>
+              </select>
+            </div>
+            <div class="mini-col">
+              <div class="mini-label">表示</div>
+              <div id="resultInfo" class="mini-value">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
-          <div class="pref-row">
-            <div class="pref-hint text-muted">並び替え</div>
-            <select id="sortSelect" class="select">
-              <option value="id_desc">ID（新→旧）</option>
-              <option value="id_asc">ID（旧→新）</option>
-              <option value="name_asc">名前（A→Z）</option>
-              <option value="name_desc">名前（Z→A）</option>
-              <option value="updated_desc">更新（新→旧）</option>
-              <option value="updated_asc">更新（旧→新）</option>
-            </select>
+    <section class="panel controls">
+      <div class="controls-grid">
+
+        <div class="ctrl">
+          <div class="ctrl-label">System</div>
+          <select id="filterSystem" class="select">
+            <option value="">指定なし</option>
+          </select>
+        </div>
+
+        <div class="ctrl">
+          <div class="ctrl-label">形式</div>
+          <select id="filterFormat" class="select">
+            <option value="">指定なし</option>
+          </select>
+        </div>
+
+        <div class="ctrl">
+          <div class="ctrl-label">R18</div>
+          <select id="filterR18" class="select">
+            <option value="">指定なし</option>
+            <option value="none">なし</option>
+            <option value="any">あり（軽/混/重）</option>
+            <option value="unknown">不明</option>
+          </select>
+        </div>
+
+        <div class="ctrl">
+          <div class="ctrl-label">人数（自分で範囲指定）</div>
+          <div class="range">
+            <input id="playersMin" class="input" inputmode="numeric" placeholder="最小" />
+            <span class="range-sep">〜</span>
+            <input id="playersMax" class="input" inputmode="numeric" placeholder="最大" />
+            <button id="playersClear" class="btn btn-ghost btn-mini" type="button">クリア</button>
+          </div>
+          <div class="hint">例：2〜4 / 1〜 / 〜6</div>
+        </div>
+
+        <div class="ctrl">
+          <div class="ctrl-label">時間（自分で範囲指定 / h）</div>
+          <div class="range">
+            <input id="timeMin" class="input" inputmode="decimal" placeholder="最小(h)" />
+            <span class="range-sep">〜</span>
+            <input id="timeMax" class="input" inputmode="decimal" placeholder="最大(h)" />
+            <button id="timeClear" class="btn btn-ghost btn-mini" type="button">クリア</button>
+          </div>
+          <div class="hint">例：2〜3 / 2.5〜 / 〜6</div>
+        </div>
+
+        <div class="ctrl">
+          <div class="ctrl-label">ロスト率（自分で範囲指定 / %）</div>
+          <div class="range">
+            <input id="lossMin" class="input" inputmode="numeric" placeholder="最小(%)" />
+            <span class="range-sep">〜</span>
+            <input id="lossMax" class="input" inputmode="numeric" placeholder="最大(%)" />
+            <button id="lossClear" class="btn btn-ghost btn-mini" type="button">クリア</button>
+          </div>
+          <div class="hint">例：0〜30 / 40〜70 / 80〜</div>
+        </div>
+
+        <div class="ctrl ctrl-wide">
+          <div class="ctrl-top">
+            <div class="ctrl-label">タグ</div>
+            <div class="ctrl-actions">
+              <button id="tagsModeBtn" class="btn btn-ghost btn-mini" type="button">条件：OR</button>
+              <button id="tagsClearBtn" class="btn btn-ghost btn-mini" type="button">タグ解除</button>
+            </div>
+          </div>
+
+          <div class="tags-bar">
+            <input id="tagsSearchInput" class="input" type="search" placeholder="タグ検索（候補を絞る）" />
+          </div>
+
+          <div class="tags-grid" id="tagsChips"></div>
+
+          <div class="picked">
+            <div class="picked-label muted">選択中</div>
+            <div id="tagsSelected" class="tags-picked"></div>
           </div>
         </div>
 
-        <div class="hero-panel-foot">
-          <div id="resultInfo" class="text-muted">—</div>
+      </div>
+    </section>
+
+    <section class="panel view">
+      <div id="pagerHost" class="pager">
+        <button type="button" class="btn btn-ghost" data-pager="prev">前へ</button>
+        <div id="pagerInfo" class="pager-info muted">—</div>
+        <button type="button" class="btn btn-ghost" data-pager="next">次へ</button>
+      </div>
+
+      <div id="scenarioGrid" class="grid"></div>
+
+      <div id="tableWrap" class="tableWrap" style="display:none;">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th><th>名前</th><th>System</th><th>人数</th><th>形式</th><th>時間</th><th>R18</th><th>ロスト</th><th>★</th><th>URL</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- Detail Modal -->
+  <div class="modal" id="detailModal" aria-hidden="true">
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+      <div class="modal-top">
+        <div class="modal-titleWrap">
+          <div id="detailTitle" class="modal-title">詳細</div>
+          <div id="detailSub" class="modal-sub muted"></div>
         </div>
+        <button class="modal-close" data-close type="button" aria-label="閉じる">✕</button>
       </div>
+      <div id="detailBody"></div>
     </div>
-  </section>
-
-  <!-- FILTERS -->
-  <section class="section-card sc-section">
-    <div class="section-head">
-      <h2 class="section-title">
-        検索・絞り込み
-        <button class="icon-btn mini" type="button" data-help="filters" aria-label="ヘルプ">？</button>
-      </h2>
-
-      <div class="sc-tabs">
-        <button class="sc-tab is-active" data-view="cards" type="button">カード</button>
-        <button class="sc-tab" data-view="table" type="button">表</button>
-      </div>
-    </div>
-
-    <div class="sc-filter-grid">
-      <div class="sc-field">
-        <label for="searchInput">キーワード</label>
-        <input id="searchInput" class="input" type="search" placeholder="タイトル / 作者 / タグ（#coc6）など" />
-      </div>
-
-      <div class="sc-field">
-        <label for="filterSystem">System</label>
-        <select id="filterSystem" class="select"></select>
-      </div>
-
-      <div class="sc-field">
-        <label for="filterFormat">形式</label>
-        <select id="filterFormat" class="select"></select>
-      </div>
-
-      <div class="sc-field">
-        <label for="filterPlayersPreset">人数</label>
-        <select id="filterPlayersPreset" class="select">
-          <option value="">指定なし</option>
-          <option value="solo">ソロ</option>
-          <option value="2_3">2–3人</option>
-          <option value="4_5">4–5人</option>
-          <option value="6_8">6–8人</option>
-          <option value="gt8">9人以上</option>
-          <option value="unknown">不明</option>
-        </select>
-      </div>
-
-      <div class="sc-field">
-        <label for="filterTimePreset">時間</label>
-        <select id="filterTimePreset" class="select">
-          <option value="">指定なし</option>
-          <option value="lt120">〜2時間</option>
-          <option value="120_360">2–6時間</option>
-          <option value="360_720">6–12時間</option>
-          <option value="gt720">12時間以上</option>
-          <option value="unknown">不明</option>
-        </select>
-      </div>
-
-      <div class="sc-field">
-        <label for="filterR18">R18</label>
-        <select id="filterR18" class="select">
-          <option value="">指定なし</option>
-          <option value="none">なし</option>
-          <option value="any">あり</option>
-          <option value="unknown">不明</option>
-        </select>
-      </div>
-
-      <div class="sc-field">
-        <label for="filterLoss">ロスト率</label>
-        <select id="filterLoss" class="select">
-          <option value="">指定なし</option>
-          <option value="0-10">0-10%</option>
-          <option value="10-30">10-30%</option>
-          <option value="30-50">30-50%</option>
-          <option value="50-70">50-70%</option>
-          <option value="70-100">70-100%</option>
-          <option value="unknown">不明</option>
-        </select>
-      </div>
-    </div>
-
-    <!-- TAGS -->
-    <div class="tag-area">
-      <div class="tag-top">
-        <div class="tag-title">
-          タグ
-          <button class="icon-btn mini" type="button" data-help="tags" aria-label="ヘルプ">？</button>
-        </div>
-        <div class="tag-actions">
-          <button class="btn btn-ghost" id="tagsModeBtn" type="button">条件：OR</button>
-          <button class="btn btn-ghost" id="tagsClearBtn" type="button">クリア</button>
-          <button class="btn btn-ghost" id="tagsMoreBtn" type="button">タグ一覧</button>
-        </div>
-      </div>
-
-      <div class="chips" id="tagsTopChips"></div>
-
-      <div class="picked-row picked-row-tight">
-        <div class="picked-title text-muted">選択中</div>
-        <div class="chips chips-picked" id="tagsSelected"></div>
-      </div>
-
-      <div class="tag-modal-note text-muted">
-        ※ 人気タグは上に表示。全タグは「タグ一覧」から検索して追加。
-      </div>
-    </div>
-  </section>
-
-  <!-- RESULTS -->
-  <section class="section-card sc-section">
-    <div id="scenarioGrid" class="sc-cards"></div>
-
-    <div id="tableWrap" style="display:none;">
-      <table class="sc-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>名前</th>
-            <th>System</th>
-            <th>人数</th>
-            <th>形式</th>
-            <th>時間</th>
-            <th>R18</th>
-            <th>ロスト</th>
-            <th>URL</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-      </table>
-    </div>
-
-    <div class="pager2">
-      <button class="pager-btn" id="btnPagePrev" type="button">‹</button>
-      <div class="pager-info text-muted" id="pageInfo">—</div>
-      <button class="pager-btn" id="btnPageNext" type="button">›</button>
-    </div>
-  </section>
-
-</main>
-
-<footer class="layout-footer">
-  <div class="layout-wrap footer-inner">
-    <div>© MIRAHUB</div>
-    <button class="btn-link" id="btnScrollTop" type="button">Top</button>
   </div>
-</footer>
 
-<!-- DETAIL MODAL -->
-<div class="modal" id="detailModal" aria-hidden="true">
-  <div class="modal-backdrop" data-close></div>
-
-  <div class="modal-panel modal-detail" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
-    <div class="modal-top">
-      <div class="modal-titleWrap">
-        <div id="detailTitle" class="modal-title">詳細</div>
-        <div id="detailSub" class="modal-sub text-muted"></div>
-      </div>
+  <!-- Zoom Modal -->
+  <div class="modal" id="zoomModal" aria-hidden="true">
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-panel modal-panel--zoom" role="dialog" aria-modal="true">
       <button class="modal-close" data-close type="button" aria-label="閉じる">✕</button>
-    </div>
-
-    <div class="modal-body" id="detailBody"></div>
-  </div>
-</div>
-
-<!-- ZOOM MODAL -->
-<div class="modal" id="zoomModal" aria-hidden="true">
-  <div class="modal-backdrop" data-close></div>
-  <div class="modal-panel modal-zoom" role="dialog" aria-modal="true">
-    <button class="modal-close modal-zoom-close" data-close type="button" aria-label="閉じる">✕</button>
-    <img id="zoomImage" alt="zoom" />
-  </div>
-</div>
-
-<!-- CONFIRM MODAL -->
-<div class="confirm" id="confirmModal" aria-hidden="true">
-  <div class="confirm__backdrop" data-close></div>
-  <div class="confirm__panel" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
-    <div class="confirm__title" id="confirmTitle">確認</div>
-    <div class="confirm__text" id="confirmMessage"></div>
-
-    <label class="confirm__check">
-      <input type="checkbox" id="confirmDontAsk">
-      今後（通常リンクは）確認しない
-    </label>
-
-    <div class="confirm__actions">
-      <button class="btn btn-ghost" id="confirmCancel" type="button">キャンセル</button>
-      <button class="btn btn-primary" id="confirmOk" type="button">移動する</button>
+      <img id="zoomImage" class="zoom-img" alt="zoom" />
     </div>
   </div>
-</div>
 
-<!-- TAG LIST MODAL -->
-<div class="modal" id="tagModal" aria-hidden="true">
-  <div class="modal-backdrop" data-close></div>
-  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="tagModalTitle">
-    <div class="modal-top">
-      <div class="modal-titleWrap">
-        <div class="modal-title" id="tagModalTitle">タグ一覧</div>
-        <div class="modal-sub text-muted">検索して追加</div>
+  <!-- Confirm Modal -->
+  <div class="confirm" id="confirmModal" aria-hidden="true">
+    <div class="modal-backdrop" data-close></div>
+    <div class="confirm-panel" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+      <div class="confirm-top">
+        <div id="confirmTitle" class="confirm-title">確認</div>
+        <button class="modal-close" data-close type="button" aria-label="閉じる">✕</button>
       </div>
-      <button class="modal-close" data-close type="button" aria-label="閉じる">✕</button>
-    </div>
-
-    <div class="modal-body">
-      <div class="modal-row">
-        <input class="input" id="tagsSearchInput" type="search" placeholder="タグ検索（例 #coc6 / クローズド）" />
-        <button class="btn btn-ghost" id="tagsSearchClearBtn" type="button">クリア</button>
-      </div>
-
-      <div class="modal-block">
-        <div class="modal-block-title text-muted">候補</div>
-        <div class="chips chips-list" id="tagsChips"></div>
-      </div>
-
-      <div class="modal-actions">
-        <button class="btn btn-ghost" data-close type="button">閉じる</button>
+      <div id="confirmMessage" class="confirm-msg">外部サイトへ移動しますか？</div>
+      <label class="confirm-check">
+        <input id="confirmDontAsk" type="checkbox" />
+        <span>次から確認しない</span>
+      </label>
+      <div class="confirm-actions">
+        <button id="confirmCancel" class="btn btn-ghost" type="button">キャンセル</button>
+        <button id="confirmOk" class="btn" type="button">OK</button>
       </div>
     </div>
   </div>
-</div>
 
-<!-- POPOVER -->
-<div class="popover" id="popover" aria-hidden="true">
-  <div class="popover-panel" role="dialog" aria-modal="false" aria-labelledby="popoverTitle">
-    <div class="popover-top">
-      <div class="popover-title" id="popoverTitle">ヘルプ</div>
-      <button class="icon-btn mini" id="popoverClose" type="button" aria-label="閉じる">✕</button>
-    </div>
-    <div class="popover-body text-muted" id="popoverBody"></div>
-    <div class="popover-actions">
-      <button class="btn btn-ghost" id="popoverMore" type="button">詳しく</button>
-    </div>
-  </div>
-</div>
+  <div id="toastHost" class="toastHost" aria-live="polite"></div>
 
-<!-- HELP MODAL -->
-<div class="modal" id="helpModal" aria-hidden="true">
-  <div class="modal-backdrop" data-close></div>
-  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
-    <div class="modal-top">
-      <div class="modal-titleWrap">
-        <div class="modal-title" id="helpTitle">ヘルプ</div>
-        <div class="modal-sub text-muted">使い方</div>
-      </div>
-      <button class="modal-close" data-close type="button" aria-label="閉じる">✕</button>
-    </div>
-    <div class="modal-body" id="helpBody"></div>
-  </div>
-</div>
-
-<!-- TOAST -->
-<div id="toastHost" class="toast-host" aria-live="polite"></div>
-
-<script src="./scenarios.js"></script>
+  <script src="./scenarios.js"></script>
 </body>
 </html>
