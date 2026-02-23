@@ -1,13 +1,13 @@
+<!-- /index.html -->
 <!doctype html>
 <html lang="ja" data-theme="dark">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="color-scheme" content="dark light" />
   <title>MIRAHUB</title>
-  <meta name="description" content="TRPG用まとめ拠点：所持シナリオ一覧・卓案内・リンク集" />
-
+  <meta name="description" content="TRPG用まとめ拠点：おすすめ・タグで探す・シナリオ管理" />
   <link rel="stylesheet" href="./style.css" />
-
   <script>
   (function(){
     try{
@@ -17,206 +17,265 @@
   })();
   </script>
 </head>
-
-<body class="hub">
+<body>
 
 <header class="layout-header">
   <div class="layout-wrap layout-header-inner">
-    <a class="brand" href="./" aria-label="MIRAHUB">
-      <span class="brand-mark" aria-hidden="true">
-        <span class="brand-ring"></span>
-        <span class="brand-dot"></span>
-      </span>
-      <span class="brand-text">
-        <span class="brand-title">MIRAHUB</span>
-        <span class="brand-sub">TRPG Archive</span>
-      </span>
-    </a>
+    <div class="brand">
+      <span class="brand-dot" aria-hidden="true"></span>
+      <a class="brand-link" href="./">MIRAHUB</a>
+    </div>
 
-    <nav class="nav">
-      <a class="nav-link nav-link-active" href="./">HUB</a>
-      <a class="nav-link" href="./scenarios/">Scenarios</a>
+    <nav class="nav" aria-label="主要ナビゲーション">
+      <a class="nav-link" href="./scenarios/">シナリオ</a>
       <a class="nav-link" href="./shinji/">しんじ卓</a>
-
-      <button class="icon-btn" id="themeToggle" type="button" aria-label="テーマ切替">🌓</button>
+      <button class="icon-btn" id="themeToggle" type="button" aria-label="テーマ切替" title="テーマ切替">🌓</button>
     </nav>
   </div>
 </header>
 
-<main id="top" class="layout-wrap hub-main">
+<main class="layout-wrap hub" id="top">
 
-  <!-- HERO (the face) -->
-  <section class="hub-hero" aria-labelledby="heroTitle">
-    <div class="hub-hero-inner">
-      <div class="hub-hero-center">
-        <div class="hub-hero-sigil" aria-hidden="true">
-          <div class="sigil-line"></div>
-          <div class="sigil-core"></div>
-        </div>
-
-        <h1 class="hub-hero-title" id="heroTitle">
-          <span class="hub-hero-title-main">MIRAHUB</span>
-          <span class="hub-hero-title-sub">TRPG Archive</span>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-grid">
+      <div class="hero-left">
+        <p class="text-tag">OFFICIAL / PERSONAL HUB</p>
+        <h1 class="text-hero">
+          ここは<span class="glow">MIRAHUB</span>。<br>
+          TRPGの案内と管理の拠点。
         </h1>
-
-        <p class="hub-hero-lead">
-          シナリオの記録と世界線の拠点。<span class="hub-hero-note">（所持シナリオのみ公開）</span>
+        <p class="text-lead text-muted">
+          ミラが運営してる個人HUB。<br>
+          “迷わない” 形で、見やすく、強く、美しく。
         </p>
 
-        <div class="hub-hero-actions">
-          <a class="btn btn-primary" href="./scenarios/">シナリオ一覧</a>
-          <a class="btn btn-ghost" href="./shinji/">しんじ卓</a>
-
-          <button class="btn btn-ghost btn-dice" id="btnRandom" type="button">
-            <span class="dice-ico" aria-hidden="true">🎲</span>
-            ランダムで1本
-          </button>
+        <div class="btn-row">
+          <a class="btn btn-primary" href="./scenarios/">シナリオ一覧へ</a>
+          <a class="btn btn-ghost" href="./shinji/">しんじ卓へ</a>
+          <button class="btn btn-ghost" id="btnRefresh" type="button">更新</button>
         </div>
 
-        <div class="hub-hero-hint">
-          <span class="hint-pill">URL共有：<code>/scenarios/#S0001</code></span>
-          <span class="hint-pill">⭐お気に入り：ランキングに反映</span>
+        <div class="kpis" aria-label="サマリー">
+          <div class="kpi">
+            <div class="kpi-num" id="kpiCount">—</div>
+            <div class="kpi-label">所持シナリオ</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-num" id="kpiUpdated">—</div>
+            <div class="kpi-label">最終同期</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-num" id="kpiStatus">—</div>
+            <div class="kpi-label">状態</div>
+          </div>
+        </div>
+
+        <div class="hint-row">
+          <button class="hint" type="button" data-help="hub" aria-label="このページの使い方">？</button>
+          <span class="text-muted">おすすめ・タグからシナリオへ最短導線。</span>
         </div>
       </div>
 
-      <div class="hub-hero-right" aria-hidden="true">
-        <div class="hub-hero-portal">
-          <div class="portal-glow"></div>
-          <div class="portal-rift"></div>
-          <div class="portal-grid"></div>
-          <div class="portal-caption">
-            <div class="portal-cap-title">WORLDLINE</div>
-            <div class="portal-cap-sub">convergence point</div>
+      <div class="hero-right" aria-hidden="true">
+        <div class="hero-frame">
+          <div class="sigil"></div>
+          <div class="hero-card">
+            <div class="hero-card-top">
+              <span class="badge">TRPG / SCENARIOS</span>
+              <span class="badge badge-soft">MIRA</span>
+            </div>
+            <div class="hero-card-title">世界線の入口</div>
+            <div class="hero-card-sub">検索・お気に入り・トレーラー</div>
+            <div class="hero-card-line"></div>
+            <div class="hero-card-mini">
+              <div class="mini-pill">#coc</div>
+              <div class="mini-pill">#初心者</div>
+              <div class="mini-pill">#シティ</div>
+              <div class="mini-pill">#秘匿HO</div>
+            </div>
           </div>
         </div>
       </div>
     </div>
-
-    <a class="hub-scroll" href="#content" aria-label="下へスクロール">
-      <span class="hub-scroll-line" aria-hidden="true"></span>
-      <span class="hub-scroll-text">Scroll</span>
-    </a>
   </section>
 
-  <!-- CONTENT -->
-  <div id="content" class="hub-content">
+  <!-- RECOMMENDED -->
+  <section class="section-card">
+    <div class="section-head">
+      <div class="section-titleRow">
+        <h2 class="section-title">おすすめ</h2>
+        <div class="section-sub text-muted">固定/最近/日替わり。クリックで詳細へ。</div>
+      </div>
+      <div class="section-actions">
+        <button class="icon-btn" type="button" data-help="recommended" aria-label="おすすめとは">？</button>
+        <a class="btn btn-ghost btn-sm" href="./scenarios/">一覧で探す</a>
+      </div>
+    </div>
 
-    <!-- KPI -->
-    <section class="section-card hub-kpi" aria-labelledby="kpiTitle">
-      <div class="section-head">
-        <h2 id="kpiTitle">Overview</h2>
-        <div class="section-actions">
-          <button class="btn btn-ghost btn-sm" id="btnSync" type="button">データ取得</button>
-          <span class="text-muted" id="hubStatus">キャッシュ未取得</span>
+    <div class="banner banner-warn" id="syncBanner" hidden>
+      <div class="banner-text">
+        <strong>同期できませんでした。</strong> キャッシュを表示しています。
+      </div>
+      <button class="btn btn-ghost btn-sm" id="btnRetry" type="button">再試行</button>
+    </div>
+
+    <div class="rec-grid" id="recGrid" aria-live="polite"></div>
+
+    <div class="pager">
+      <div class="pager-left">
+        <span class="text-muted" id="recInfo">—</span>
+      </div>
+      <div class="pager-right">
+        <button class="btn btn-ghost btn-sm" id="btnRecPrev" type="button">前へ</button>
+        <button class="btn btn-ghost btn-sm" id="btnRecNext" type="button">次へ</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAGS -->
+  <section class="section-card">
+    <div class="section-head">
+      <div class="section-titleRow">
+        <h2 class="section-title">タグで眺める</h2>
+        <div class="section-sub text-muted">よく使われるタグを上に表示。全部見るなら「タグ一覧」。</div>
+      </div>
+      <div class="section-actions">
+        <button class="icon-btn" type="button" data-help="tags" aria-label="タグの使い方">？</button>
+        <button class="btn btn-ghost btn-sm" id="btnTagModal" type="button">タグ一覧</button>
+        <a class="btn btn-ghost btn-sm" id="btnBrowseAll" href="./scenarios/">一覧で探す</a>
+      </div>
+    </div>
+
+    <div class="chips" id="topTags" aria-label="人気タグ"></div>
+    <div class="divider"></div>
+
+    <div class="tag-pick">
+      <div class="tag-pick-left">
+        <div class="text-muted">選択中：</div>
+        <div class="chips chips-selected" id="pickedTags"></div>
+      </div>
+      <div class="tag-pick-right">
+        <button class="btn btn-ghost btn-sm" id="btnClearTags" type="button">クリア</button>
+        <a class="btn btn-primary btn-sm" id="btnSearchWithTags" href="./scenarios/">この条件で探す</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- SHORTCUTS -->
+  <section class="section-card">
+    <div class="section-head">
+      <div class="section-titleRow">
+        <h2 class="section-title">できること</h2>
+        <div class="section-sub text-muted">Webの顔として、綺麗で、強くて、迷わない。</div>
+      </div>
+      <div class="section-actions">
+        <button class="icon-btn" type="button" data-help="shortcuts" aria-label="ショートカットの説明">？</button>
+      </div>
+    </div>
+
+    <div class="shortcut-grid">
+      <a class="shortcut" href="./scenarios/">
+        <div class="shortcut-ic" aria-hidden="true">📚</div>
+        <div class="shortcut-txt">
+          <div class="shortcut-title">シナリオ管理</div>
+          <div class="shortcut-sub text-muted">検索・絞り込み・詳細・トレーラー</div>
         </div>
-      </div>
+        <div class="shortcut-go" aria-hidden="true">→</div>
+      </a>
 
-      <div class="kpi-grid">
-        <div class="kpi-card">
-          <div class="kpi-label">所持シナリオ</div>
-          <div class="kpi-value" id="kpiCount">—</div>
+      <a class="shortcut" href="./shinji/">
+        <div class="shortcut-ic" aria-hidden="true">🧭</div>
+        <div class="shortcut-txt">
+          <div class="shortcut-title">卓案内</div>
+          <div class="shortcut-sub text-muted">ルール・Q&A・運営</div>
         </div>
-        <div class="kpi-card">
-          <div class="kpi-label">⭐総数</div>
-          <div class="kpi-value" id="kpiFavSum">—</div>
+        <div class="shortcut-go" aria-hidden="true">→</div>
+      </a>
+
+      <button class="shortcut" type="button" id="btnScrollTop">
+        <div class="shortcut-ic" aria-hidden="true">🜁</div>
+        <div class="shortcut-txt">
+          <div class="shortcut-title">トップへ戻る</div>
+          <div class="shortcut-sub text-muted">スクロールしても迷わない</div>
         </div>
-        <div class="kpi-card">
-          <div class="kpi-label">最終更新</div>
-          <div class="kpi-value kpi-small" id="kpiUpdated">—</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-label">人気TOP1</div>
-          <div class="kpi-value kpi-small" id="kpiTop1">—</div>
-        </div>
-      </div>
+        <div class="shortcut-go" aria-hidden="true">↑</div>
+      </button>
+    </div>
+  </section>
 
-      <p class="text-muted hub-kpi-note">
-        ※トップは毎回APIへアクセスしません。10分キャッシュを優先し、必要なときだけ更新します。
-      </p>
-    </section>
-
-    <!-- TOP10 -->
-    <section class="section-card hub-rank" aria-labelledby="rankTitle">
-      <div class="section-head">
-        <div>
-          <h2 id="rankTitle">Top 10</h2>
-          <p class="text-muted" id="rankSub">⭐が育っていない場合は新着TOP10を表示します</p>
-        </div>
-        <div class="section-actions">
-          <a class="btn btn-ghost btn-sm" href="./scenarios/">ランキングを見る</a>
-        </div>
-      </div>
-
-      <div class="rank-strip" id="rankStrip" tabindex="0" aria-label="ランキング横スクロール">
-        <!-- JS inject -->
-        <div class="rank-empty text-muted" id="rankEmpty">データ未取得：上の「データ取得」を押すか、Scenariosを開くと反映されます。</div>
-      </div>
-    </section>
-
-    <!-- NEW -->
-    <section class="section-card hub-new" aria-labelledby="newTitle">
-      <div class="section-head">
-        <h2 id="newTitle">Latest</h2>
-        <div class="section-actions">
-          <a class="btn btn-ghost btn-sm" href="./scenarios/">一覧へ</a>
-        </div>
-      </div>
-
-      <div class="new-grid" id="newGrid">
-        <div class="new-empty text-muted">データ未取得</div>
-      </div>
-    </section>
-
-    <!-- ENTRY -->
-    <section class="hub-entry">
-      <div class="entry-grid">
-        <a class="entry-card" href="./scenarios/">
-          <div class="entry-title">Scenarios</div>
-          <div class="entry-desc text-muted">
-            検索・タグ・⭐お気に入り・ランキング。<br>
-            “迷わない”所持シナリオ管理。
-          </div>
-          <div class="entry-cta">開く →</div>
-        </a>
-
-        <a class="entry-card" href="./shinji/">
-          <div class="entry-title">しんじ卓</div>
-          <div class="entry-desc text-muted">
-            参加案内・ルール・Q&A・運営情報。<br>
-            卓の入口はこちら。
-          </div>
-          <div class="entry-cta">開く →</div>
-        </a>
-      </div>
-    </section>
-
-    <!-- ABOUT -->
-    <section class="section-card hub-about" aria-labelledby="aboutTitle">
-      <div class="section-head">
-        <h2 id="aboutTitle">About</h2>
-      </div>
-
-      <div class="about-box">
-        <div class="about-name">Mira</div>
-        <p class="about-text">
-          TRPGは物語の記録だと思っている。<br>
-          このHUBはその保管庫。所持シナリオのみ公開。
-        </p>
-        <p class="text-muted about-sub">
-          最終更新やランキングは Scenarios のデータと同期します。
-        </p>
-      </div>
-    </section>
-
+  <div class="fab">
+    <button class="fab-btn" id="fabTop" type="button" aria-label="トップへ">↑</button>
   </div>
+
 </main>
 
-<footer class="layout-footer">
-  <div class="layout-wrap footer-inner">
-    <div>© MIRAHUB</div>
-    <a class="footer-link" href="#top">↑ Top</a>
+<footer class="layout-footer">© MIRAHUB</footer>
+
+<!-- TAG MODAL -->
+<div class="modal" id="tagModal" aria-hidden="true">
+  <div class="modal-backdrop" data-close></div>
+  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="tagModalTitle">
+    <div class="modal-top">
+      <div class="modal-titleWrap">
+        <div id="tagModalTitle" class="modal-title">タグ一覧</div>
+        <div class="modal-sub text-muted">検索して追加できます。</div>
+      </div>
+      <button class="modal-close" type="button" data-close aria-label="閉じる">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="modal-row">
+        <input class="input" id="tagSearch" type="search" placeholder="タグ検索（例：#coc / シティ / 初心者）" />
+        <button class="btn btn-ghost btn-sm" id="btnTagSearchClear" type="button">クリア</button>
+      </div>
+
+      <div class="modal-row">
+        <div class="text-muted">選択中：</div>
+        <div class="chips chips-selected" id="modalPicked"></div>
+      </div>
+
+      <div class="modal-scroller" id="tagList" aria-label="タグ一覧"></div>
+
+      <div class="modal-actions">
+        <button class="btn btn-ghost" type="button" data-close>閉じる</button>
+        <a class="btn btn-primary" id="btnGoWithTags" href="./scenarios/">この条件で探す</a>
+      </div>
+    </div>
   </div>
-</footer>
+</div>
+
+<!-- HELP POPOVER -->
+<div class="popover" id="popover" aria-hidden="true">
+  <div class="popover-panel" role="dialog" aria-modal="false">
+    <div class="popover-head">
+      <div class="popover-title" id="popoverTitle">ヘルプ</div>
+      <button class="icon-btn" id="popoverClose" type="button" aria-label="閉じる">✕</button>
+    </div>
+    <div class="popover-body" id="popoverBody"></div>
+    <div class="popover-foot">
+      <button class="btn btn-ghost btn-sm" id="popoverMore" type="button">もっと詳しく</button>
+    </div>
+  </div>
+</div>
+
+<!-- HELP MODAL -->
+<div class="modal" id="helpModal" aria-hidden="true">
+  <div class="modal-backdrop" data-close></div>
+  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+    <div class="modal-top">
+      <div class="modal-titleWrap">
+        <div id="helpTitle" class="modal-title">ヘルプ</div>
+        <div class="modal-sub text-muted">操作のコツ。</div>
+      </div>
+      <button class="modal-close" type="button" data-close aria-label="閉じる">✕</button>
+    </div>
+    <div class="modal-body prose" id="helpBody"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-host" id="toastHost" aria-live="polite"></div>
 
 <script src="./hub.js"></script>
 </body>
