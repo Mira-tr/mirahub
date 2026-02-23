@@ -751,3 +751,133 @@ body{
 .prose ul{ margin: 8px 0 0 18px; }
 .prose li{ margin: 6px 0; color: var(--muted); }
 .prose b{ color: var(--text); }
+
+/* /hub.css (additions: background stays beautiful even on long pages) */
+
+:root{
+  --bg0: #070b14;
+  --bg1: #0b1224;
+  --bg2: #101a33;
+  --ink: rgba(255,255,255,.92);
+  --muted: rgba(255,255,255,.70);
+  --line: rgba(255,255,255,.10);
+  --glass: rgba(255,255,255,.05);
+  --glass2: rgba(255,255,255,.03);
+  --acc: #66aaff;
+  --gold: #f2c36b;
+  --shadow: 0 18px 42px rgba(0,0,0,.35);
+}
+
+:root[data-theme="light"]{
+  --bg0: #f6f7fb;
+  --bg1: #eef2ff;
+  --bg2: #e8ecfb;
+  --ink: rgba(10,16,28,.92);
+  --muted: rgba(10,16,28,.66);
+  --line: rgba(10,16,28,.12);
+  --glass: rgba(255,255,255,.70);
+  --glass2: rgba(255,255,255,.55);
+  --shadow: 0 18px 42px rgba(10,16,28,.16);
+}
+
+html, body{ min-height:100%; }
+
+body{
+  color: var(--ink);
+  background: var(--bg0);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* fixed "worldline" background that doesn't look broken when long */
+body::before{
+  content:"";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background:
+    radial-gradient(1200px 700px at 15% 15%, color-mix(in srgb, var(--acc) 26%, transparent) 0%, transparent 60%),
+    radial-gradient(900px 560px at 85% 25%, rgba(242,195,107,.18) 0%, transparent 62%),
+    radial-gradient(1200px 720px at 55% 92%, rgba(140,120,255,.18) 0%, transparent 60%),
+    linear-gradient(180deg, var(--bg1) 0%, var(--bg0) 55%, var(--bg2) 100%);
+  filter: saturate(1.05);
+  transform: translateZ(0);
+}
+
+/* subtle noise + vignette */
+body::after{
+  content:"";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events:none;
+  background:
+    radial-gradient(1200px 900px at 50% 10%, rgba(0,0,0,.22), transparent 60%),
+    radial-gradient(1200px 900px at 50% 95%, rgba(0,0,0,.26), transparent 60%),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.010), rgba(255,255,255,.010) 1px, transparent 1px, transparent 2px);
+  mix-blend-mode: overlay;
+  opacity: .55;
+}
+
+/* section cards feel consistent and readable */
+.section-card,
+.section-hero,
+.card,
+.panel,
+.glass{
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, var(--glass), var(--glass2));
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+/* sync banner tone (data-mode) */
+#syncBanner[data-mode="soft"]{
+  border-color: color-mix(in srgb, var(--line) 70%, transparent);
+  background: linear-gradient(180deg, var(--glass), var(--glass2));
+}
+#syncBanner[data-mode="warn"]{
+  border-color: rgba(242,195,107,.35);
+  background: linear-gradient(180deg, rgba(242,195,107,.10), rgba(242,195,107,.04));
+}
+#syncBanner[data-mode="danger"]{
+  border-color: rgba(255,90,122,.40);
+  background: linear-gradient(180deg, rgba(255,90,122,.12), rgba(255,90,122,.05));
+}
+
+/* recommended pager buttons better hit-area + clear disabled */
+.rec-pager button,
+[data-rec-pager] button{
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 999px;
+}
+.rec-pager button[disabled],
+[data-rec-pager] button[disabled]{
+  opacity: .5;
+  cursor: default;
+}
+
+/* readable info badge */
+#recInfo{
+  color: var(--muted);
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+
+/* pills */
+.pill{
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,.06);
+  color: var(--muted);
+}
+.pill-acc{
+  border-color: color-mix(in srgb, var(--acc) 35%, var(--line));
+  color: color-mix(in srgb, var(--acc) 75%, var(--ink));
+}
+.pill-gold{
+  border-color: rgba(242,195,107,.35);
+  color: rgba(242,195,107,.95);
+  background: rgba(242,195,107,.08);
+}
