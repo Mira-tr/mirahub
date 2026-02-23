@@ -73,3 +73,59 @@
 .sc-icon:hover{
   opacity:1;
 }
+/* ===== Modal ===== */
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.55);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
+}
+
+.modal.is-show{ display:flex; }
+
+.modal__backdrop{
+  position:absolute;
+  inset:0;
+}
+
+.modal-box{
+  position:relative;
+  background:#0f1626;
+  border:1px solid rgba(255,255,255,.10);
+  padding:22px 22px 18px;
+  border-radius:16px;
+  width:min(460px, calc(100% - 32px));
+  text-align:left;
+  box-shadow: 0 20px 55px rgba(0,0,0,.45);
+}
+
+.modal-box p{
+  margin:0;
+  line-height:1.7;
+}
+
+.modal-check{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  margin-top:14px;
+  font-size:13px;
+  color: rgba(255,255,255,.75);
+  user-select:none;
+}
+
+.modal-check input{
+  width:16px;
+  height:16px;
+  accent-color: var(--accent);
+}
+
+.modal-actions{
+  margin-top:16px;
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+}

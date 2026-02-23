@@ -192,5 +192,26 @@
 <div class="toast" id="toast" aria-live="polite" aria-atomic="true"></div>
 
 <script src="./scenarios.js"></script>
+
+<!-- Confirm Modal -->
+<div class="modal" id="confirmModal" aria-hidden="true">
+  <div class="modal__backdrop" data-close></div>
+
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modalText">
+    <p id="modalText">外部サイトへ移動しますか？</p>
+
+    <!-- ✅ 今後表示しない（R18は常に出すので、このチェックは通常リンクだけに効く） -->
+    <label class="modal-check">
+      <input type="checkbox" id="modalDontAsk">
+      今後この確認を表示しない（通常リンクのみ）
+    </label>
+
+    <div class="modal-actions">
+      <button id="modalCancel" class="btn btn-ghost btn-mini" type="button">キャンセル</button>
+      <button id="modalOk" class="btn btn-primary btn-mini" type="button">移動する</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

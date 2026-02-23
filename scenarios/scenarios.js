@@ -189,42 +189,77 @@ function renderCard(r){
   const players = norm(r.players);
   const format = norm(r.format);
   const time = norm(r.time);
-  const r18 = norm(r.r18);
+  const r18Raw = norm(r.r18);
   const loss = norm(r.loss_rate) || "不明";
   const tags = norm(r.tags);
   const memo = norm(r.memo);
   const url = norm(r.url);
+
+  // R18判定（"あり" 以外にも true/1/R18 等を許容）
+  const r18Lower = r18Raw.toLowerCase();
+  const isR18 = (
+    r18Lower === "あり" ||
+    r18Lower === "true" ||
+    r18Lower === "1" ||
+    r18Lower === "r18" ||
+    r18Lower === "🔞"
+  );
 
   const lossCls = lossClass(loss);
 
   const tagHtml = tags
     ? tags.split(/[,\s]+/)
         .filter(Boolean)
-        .map(t=>`<span class="sc-pill sc-tag" data-tag="${escapeHtml(t)}">${escapeHtml(t)}</span>`)
-        .join("")
+        .map(t => `
+          <span class="sc-pill sc-tag"
+                data-tag="${escapeHtml(t)}">
+            ${escapeHtml(t)}
+          </span>
+        `).join("")
     : "";
 
   return `
   <div class="sc-card">
-    ${id?`<div class="sc-id">${escapeHtml(id)}</div>`:""}
+    ${id ? `<div class="sc-id">${escapeHtml(id)}</div>` : ""}
+
     <div class="sc-title">${escapeHtml(name)}</div>
 
     <div class="sc-pillRow">
-      ${system?`<span class="sc-pill">${escapeHtml(system)}</span>`:""}
-      ${players?`<span class="sc-pill">${escapeHtml(players)}</span>`:""}
-      ${format?`<span class="sc-pill">${escapeHtml(format)}</span>`:""}
-      ${time?`<span class="sc-pill">${escapeHtml(time)}</span>`:""}
+      ${system ? `<span class="sc-pill">${escapeHtml(system)}</span>` : ""}
+      ${players ? `<span class="sc-pill">${escapeHtml(players)}</span>` : ""}
+      ${format ? `<span class="sc-pill">${escapeHtml(format)}</span>` : ""}
+      ${time ? `<span class="sc-pill">${escapeHtml(time)}</span>` : ""}
       <span class="sc-pill ${lossCls}">ロスト:${escapeHtml(loss)}</span>
-      ${r18==="あり"?`<span class="sc-pill sc-r18">🔞 R18</span>`:""}
+      ${isR18 ? `<span class="sc-pill sc-r18">🔞 R18</span>` : ""}
     </div>
 
-    ${tagHtml?`<div class="sc-pillRow" style="margin-top:8px;">${tagHtml}</div>`:""}
+    ${tagHtml ? `
+      <div class="sc-pillRow" style="margin-top:8px;">
+        ${tagHtml}
+      </div>
+    ` : ""}
 
-    ${memo?`<div class="sc-note">${escapeHtml(memo)}</div>`:""}
+    ${memo ? `<div class="sc-note">${escapeHtml(memo)}</div>` : ""}
 
     <div class="sc-actions">
-      ${url?`<span class="sc-icon" data-copy="${escapeHtml(url)}">🔗</span>`:""}
-      ${memo?`<span class="sc-icon" data-copy="${escapeHtml(memo)}">📋</span>`:""}
+      ${url ? `
+        <button
+          type="button"
+          class="sc-icon sc-open"
+          data-url="${escapeHtml(url)}"
+          data-r18="${isR18 ? "1" : "0"}"
+          aria-label="外部リンクを開く">
+          🔗
+        </button>
+
+        <button
+          type="button"
+          class="sc-icon sc-copy"
+          data-copy="${escapeHtml(url)}"
+          aria-label="URLをコピー">
+          📋
+        </button>
+      ` : ""}
     </div>
   </div>
   `;
@@ -421,5 +456,102 @@ async function main(){
     console.error(err);
   }
 }
+// ===== Confirm settings =====
+const LS_SKIP_KEY = "mirahub_skip_confirm"; // 通常リンクのみ
+const modal = document.getElementById("confirmModal");
+const modalText = document.getElementById("modalText");
+const modalOk = document.getElementById("modalOk");
+const modalCancel = document.getElementById("modalCancel");
+const modalDontAsk = document.getElementById("modalDontAsk");
+
+let pendingUrl = null;
+let pendingIsR18 = false;
+
+function isSkipConfirmEnabled(){
+  return localStorage.getItem(LS_SKIP_KEY) === "1";
+}
+
+function setSkipConfirmEnabled(v){
+  localStorage.setItem(LS_SKIP_KEY, v ? "1" : "0");
+}
+
+function openConfirm(url, isR18){
+  pendingUrl = url;
+  pendingIsR18 = !!isR18;
+
+  // ✅ 通常リンク：スキップONなら確認無しで即オープン
+  if (!pendingIsR18 && isSkipConfirmEnabled()){
+    window.open(pendingUrl, "_blank", "noopener,noreferrer");
+    pendingUrl = null;
+    pendingIsR18 = false;
+    return;
+  }
+
+  // ✅ R18は常に警告（スキップ設定がONでも出す）
+  if (pendingIsR18){
+    modalText.innerHTML =
+      '⚠️ <b>R18（成人向け）シナリオのリンクです。</b><br>外部サイトへ移動しますか？';
+    modalDontAsk.checked = false;
+    modalDontAsk.disabled = true; // R18には効かせない
+    modalDontAsk.parentElement.style.opacity = "0.5";
+  } else {
+    modalText.textContent = "外部サイトへ移動しますか？";
+    modalDontAsk.disabled = false;
+    modalDontAsk.parentElement.style.opacity = "1";
+    modalDontAsk.checked = isSkipConfirmEnabled();
+  }
+
+  modal.classList.add("is-show");
+  modal.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+}
+
+function closeConfirm(){
+  modal.classList.remove("is-show");
+  modal.setAttribute("aria-hidden", "true");
+  document.body.style.overflow = "";
+  pendingUrl = null;
+  pendingIsR18 = false;
+}
+
+modalOk.addEventListener("click", ()=>{
+  if (!pendingUrl) return closeConfirm();
+
+  // ✅ 通常リンクのみ「今後表示しない」を保存
+  if (!pendingIsR18){
+    setSkipConfirmEnabled(!!modalDontAsk.checked);
+  }
+
+  window.open(pendingUrl, "_blank", "noopener,noreferrer");
+  closeConfirm();
+});
+
+modalCancel.addEventListener("click", closeConfirm);
+
+// 背景クリックで閉じる
+modal.addEventListener("click", (e)=>{
+  if (e.target.matches("[data-close]")) closeConfirm();
+});
+
+// ESCで閉じる
+window.addEventListener("keydown", (e)=>{
+  if (e.key === "Escape" && modal.classList.contains("is-show")) closeConfirm();
+});
+
+// ===== Link open handler =====
+document.addEventListener("click", (e)=>{
+  const openBtn = e.target.closest(".sc-open");
+  if (openBtn){
+    const url = openBtn.dataset.url || "";
+    const isR18 = openBtn.dataset.r18 === "1";
+    if (url) openConfirm(url, isR18);
+  }
+
+  const copyBtn = e.target.closest(".sc-copy");
+  if (copyBtn){
+    const text = copyBtn.dataset.copy;
+    if (text) copyText(text);
+  }
+});
 
 main();
