@@ -107,20 +107,16 @@
     let t = String(text ?? "");
     if(!t) return null;
 
-    // remove BOM
     t = t.replace(/^\uFEFF/, "");
-
-    // trim leading spaces/newlines after BOM removal
     t = t.trim();
     if(!t) return null;
 
-    //remove XSSI prefix if present (e.g. ")]}'\n")
     if(t.startsWith(")]}'")){
-        t = t.slice(4).trimStart();
+      t = t.slice(4).trimStart();
     }
 
     if(t[0] !== "{" && t[0] !== "[") return null;
-    try{ return JSON.paarse(t); }catch{ return null; }
+    try{ return JSON.parse(t); }catch{ return null; }
   }
 
   function withTimeout(promise, ms){
@@ -137,12 +133,11 @@
     return wrapped;
   }
 
-  async function safeFetchText(url, ms=10000){
+  async function safeFetchText(url, ms=25000){
     return withTimeout(async(signal) => {
       const res = await fetch(url, { cache: "no-store", signal });
-      const ct = res.headers.get("content-type") || "";
       const text = await res.text();
-      return { ok: res.ok, status: res.status, ct, text };
+      return { ok: res.ok, status: res.status, text };
     }, ms);
   }
 
@@ -272,10 +267,17 @@
     if(els.btnGoWithTags) els.btnGoWithTags.href = href;
   }
 
+  function escAttr(s){
+    return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+  function escText(s){
+    return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
+
   function chipHTML(tag, count, selected=false){
-    const safeTag = tag.replace(/"/g,"&quot;");
+    const safeTag = escAttr(tag);
     const cls = selected ? "chip is-selected" : "chip";
-    const label = count ? `${safeTag} ${count}` : safeTag;
+    const label = count ? `${escText(tag)} ${count}` : escText(tag);
     return `<button type="button" class="${cls}" data-tag="${safeTag}">${label}</button>`;
   }
 
@@ -339,13 +341,13 @@
   function pill(v, cls=""){
     const t = norm(v);
     if(!t) return "";
-    return `<span class="pill ${cls}">${t.replace(/</g,"&lt;").replace(/>/g,"&gt;")}</span>`;
+    return `<span class="pill ${cls}">${escText(t)}</span>`;
   }
 
   function makeCard(row, reason, kind){
-    const id = row.id ? row.id.replace(/</g,"&lt;").replace(/>/g,"&gt;") : "";
-    const title = cardTitle(row).replace(/</g,"&lt;").replace(/>/g,"&gt;");
-    const author = row.author ? row.author.replace(/</g,"&lt;").replace(/>/g,"&gt;") : "";
+    const id = row.id ? escText(row.id) : "";
+    const title = escText(cardTitle(row));
+    const author = row.author ? escText(row.author) : "";
     const system = pill(row.system, "pill-acc");
     const format = pill(row.format);
     const players = pill(row.players);
@@ -355,7 +357,7 @@
     const href = row.id ? `./scenarios/?id=${encodeURIComponent(row.id)}` : `./scenarios/`;
 
     return `
-      <a class="card" href="${href}" data-id="${id}" data-kind="${kind}">
+      <a class="card" href="${href}" data-id="${escAttr(row.id)}" data-kind="${escAttr(kind)}">
         <div class="card-top">
           <div class="card-title">${title}</div>
           ${id ? `<div class="card-id">${id}</div>` : ``}
@@ -365,7 +367,7 @@
         </div>
         <div class="card-sub">${sub}</div>
         <div class="card-foot">
-          <div class="card-reason">${reason}</div>
+          <div class="card-reason">${escText(reason)}</div>
           <div class="card-go">→</div>
         </div>
       </a>
@@ -380,7 +382,10 @@
   function pickFeatured(rows){
     const list = rows.slice();
 
-    const hasPinned = list.filter(r => r.tags.some(t => lower(t) === "#pin" || lower(t) === "pin" || lower(t) === "★" || lower(t) === "favpin"));
+    const hasPinned = list.filter(r => r.tags.some(t => {
+      const lt = lower(t);
+      return lt === "#pin" || lt === "pin" || lt === "★" || lt === "favpin";
+    }));
     const fixed = hasPinned.slice(0, 3);
 
     const recent = list
@@ -457,8 +462,7 @@
   }
 
   function normalizeAll(rows){
-    const normed = rows.map(normalizeRow).filter(r => r.id || r.name);
-    return normed;
+    return rows.map(normalizeRow).filter(r => r.id || r.name);
   }
 
   async function loadRemote(){
@@ -466,16 +470,12 @@
     if(!first.ok) throw new Error(`HTTP ${first.status}`);
 
     const parsed = safeJSONParse(first.text);
-    if(!parsed){
-      throw new Error("NON_JSON");
-    }
+    if(!parsed) throw new Error("NON_JSON");
 
     const okFlag = (parsed && typeof parsed === "object" && "ok" in parsed) ? !!parsed.ok : true;
     const rowsRaw = extractRows(parsed);
 
-    if(!okFlag && rowsRaw.length === 0){
-      throw new Error("API_OK_FALSE");
-    }
+    if(!okFlag && rowsRaw.length === 0) throw new Error("API_OK_FALSE");
 
     return rowsRaw;
   }
@@ -528,7 +528,7 @@
       renderRecommended();
 
       if(force) toast("更新しました");
-    }catch(err){
+    }catch{
       state.ok = false;
       if(state.fromCache && state.rows.length){
         showSyncBanner(true);
