@@ -457,7 +457,8 @@ async function main(){
   }
 }
 // ===== Confirm settings =====
-const LS_SKIP_KEY = "mirahub_skip_confirm"; // 通常リンクのみ
+const LS_SKIP_KEY = "mirahub_skip_confirm";
+
 const modal = document.getElementById("confirmModal");
 const modalText = document.getElementById("modalText");
 const modalOk = document.getElementById("modalOk");
@@ -476,81 +477,73 @@ function setSkipConfirmEnabled(v){
 }
 
 function openConfirm(url, isR18){
+  if (!modal) return window.open(url, "_blank", "noopener,noreferrer");
+
   pendingUrl = url;
   pendingIsR18 = !!isR18;
 
-  // ✅ 通常リンク：スキップONなら確認無しで即オープン
   if (!pendingIsR18 && isSkipConfirmEnabled()){
     window.open(pendingUrl, "_blank", "noopener,noreferrer");
-    pendingUrl = null;
-    pendingIsR18 = false;
     return;
   }
 
-  // ✅ R18は常に警告（スキップ設定がONでも出す）
   if (pendingIsR18){
-    modalText.innerHTML =
-      '⚠️ <b>R18（成人向け）シナリオのリンクです。</b><br>外部サイトへ移動しますか？';
-    modalDontAsk.checked = false;
-    modalDontAsk.disabled = true; // R18には効かせない
-    modalDontAsk.parentElement.style.opacity = "0.5";
+    if (modalText){
+      modalText.innerHTML =
+        '⚠️ <b>R18（成人向け）シナリオのリンクです。</b><br>外部サイトへ移動しますか？';
+    }
+    if (modalDontAsk){
+      modalDontAsk.checked = false;
+      modalDontAsk.disabled = true;
+    }
   } else {
-    modalText.textContent = "外部サイトへ移動しますか？";
-    modalDontAsk.disabled = false;
-    modalDontAsk.parentElement.style.opacity = "1";
-    modalDontAsk.checked = isSkipConfirmEnabled();
+    if (modalText){
+      modalText.textContent = "外部サイトへ移動しますか？";
+    }
+    if (modalDontAsk){
+      modalDontAsk.disabled = false;
+      modalDontAsk.checked = isSkipConfirmEnabled();
+    }
   }
 
   modal.classList.add("is-show");
-  modal.setAttribute("aria-hidden", "false");
   document.body.style.overflow = "hidden";
 }
 
 function closeConfirm(){
+  if (!modal) return;
   modal.classList.remove("is-show");
-  modal.setAttribute("aria-hidden", "true");
   document.body.style.overflow = "";
   pendingUrl = null;
   pendingIsR18 = false;
 }
 
-modalOk.addEventListener("click", ()=>{
-  if (!pendingUrl) return closeConfirm();
+if (modalOk){
+  modalOk.addEventListener("click", ()=>{
+    if (!pendingUrl) return closeConfirm();
 
-  // ✅ 通常リンクのみ「今後表示しない」を保存
-  if (!pendingIsR18){
-    setSkipConfirmEnabled(!!modalDontAsk.checked);
-  }
+    if (!pendingIsR18 && modalDontAsk){
+      setSkipConfirmEnabled(!!modalDontAsk.checked);
+    }
 
-  window.open(pendingUrl, "_blank", "noopener,noreferrer");
-  closeConfirm();
-});
+    window.open(pendingUrl, "_blank", "noopener,noreferrer");
+    closeConfirm();
+  });
+}
 
-modalCancel.addEventListener("click", closeConfirm);
+if (modalCancel){
+  modalCancel.addEventListener("click", closeConfirm);
+}
 
-// 背景クリックで閉じる
-modal.addEventListener("click", (e)=>{
-  if (e.target.matches("[data-close]")) closeConfirm();
-});
+if (modal){
+  modal.addEventListener("click", (e)=>{
+    if (e.target.matches("[data-close]")) closeConfirm();
+  });
+}
 
-// ESCで閉じる
 window.addEventListener("keydown", (e)=>{
-  if (e.key === "Escape" && modal.classList.contains("is-show")) closeConfirm();
-});
-
-// ===== Link open handler =====
-document.addEventListener("click", (e)=>{
-  const openBtn = e.target.closest(".sc-open");
-  if (openBtn){
-    const url = openBtn.dataset.url || "";
-    const isR18 = openBtn.dataset.r18 === "1";
-    if (url) openConfirm(url, isR18);
-  }
-
-  const copyBtn = e.target.closest(".sc-copy");
-  if (copyBtn){
-    const text = copyBtn.dataset.copy;
-    if (text) copyText(text);
+  if (e.key === "Escape" && modal && modal.classList.contains("is-show")){
+    closeConfirm();
   }
 });
 
