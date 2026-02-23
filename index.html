@@ -1,37 +1,65 @@
 <!doctype html>
-<html lang="ja">
+<html lang="ja" data-theme="dark">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>MIRAHUB</title>
   <meta name="description" content="TRPG用まとめ拠点：卓案内・シナリオ管理・リンク集" />
+
+  <!-- OGP（必要なら assets/ogp.png を置く。無ければそのままでもOK） -->
+  <meta property="og:title" content="MIRAHUB" />
+  <meta property="og:description" content="TRPG用まとめ拠点：卓案内・シナリオ管理・リンク集" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="./assets/ogp.png" />
+
   <link rel="stylesheet" href="./style.css" />
+
+  <!-- テーマのチラつき防止 -->
+  <script>
+    (function () {
+      try {
+        const saved = localStorage.getItem('mirahub.theme');
+        if (saved === 'light' || saved === 'dark') {
+          document.documentElement.setAttribute('data-theme', saved);
+        } else {
+          const prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+          document.documentElement.setAttribute('data-theme', prefersLight ? 'light' : 'dark');
+        }
+      } catch (e) {}
+    })();
+  </script>
 </head>
 
 <body>
 
+<a class="skip-link" href="#main">本文へスキップ</a>
+
 <header class="layout-header">
   <div class="layout-wrap layout-header-inner">
     <div class="brand">
-      <span class="brand-dot"></span>
-      <a href="./">MIRAHUB</a>
+      <span class="brand-dot" aria-hidden="true"></span>
+      <a class="brand-link" href="./" aria-label="MIRAHUB ホーム">MIRAHUB</a>
     </div>
 
-    <nav class="nav">
+    <nav class="nav" aria-label="メインナビゲーション">
       <a class="nav-link" href="./scenarios/">シナリオ一覧</a>
       <a class="nav-link nav-cta" href="./shinji/">しんじ卓</a>
+
+      <button class="icon-btn" id="themeToggle" type="button" aria-label="テーマ切替">
+        <span class="icon" aria-hidden="true">🌓</span>
+      </button>
     </nav>
   </div>
 </header>
 
-<main class="layout-wrap">
+<main class="layout-wrap" id="main">
 
   <section class="section-hero hero-split">
     <div class="hero-left">
       <p class="text-tag">OFFICIAL / PERSONAL HUB</p>
 
       <h1 class="text-hero">
-        ここは<span>MIRAHUB</span>。<br>
+        ここは<span class="text-accent">MIRAHUB</span>。<br>
         TRPGの案内と管理の拠点。
       </h1>
 
@@ -45,71 +73,121 @@
         <a class="btn btn-ghost" href="./shinji/">しんじ卓へ</a>
       </div>
 
-      <div class="hero-kpis">
-        <div class="kpi">
+      <div class="hero-kpis" role="list" aria-label="主要な特徴">
+        <div class="kpi" role="listitem">
           <div class="kpi-num">100+</div>
           <div class="kpi-label">所持シナリオ</div>
         </div>
-        <div class="kpi">
+        <div class="kpi" role="listitem">
           <div class="kpi-num">CoC6</div>
           <div class="kpi-label">メイン</div>
         </div>
-        <div class="kpi">
+        <div class="kpi" role="listitem">
           <div class="kpi-num">検索</div>
           <div class="kpi-label">絞り込み対応</div>
         </div>
       </div>
+
+      <div class="hero-note">
+        <span class="badge">NEW</span>
+        <span class="text-muted">シナリオ一覧は Google Sheets 同期で運用予定</span>
+      </div>
     </div>
 
     <div class="hero-right">
-      <!-- 画像を置きたいなら /assets/hero.jpg を入れるだけでOK（なくても表示崩れない） -->
-      <div class="hero-media">
-        <img src="./assets/hero.jpg" alt="" loading="lazy" onerror="this.style.display='none'">
+      <div class="hero-media" aria-label="MIRAHUB キービジュアル">
+        <img src="./assets/hero.jpg" alt="" loading="lazy" onerror="this.remove();">
         <div class="hero-media-fallback">
           <div class="hero-media-title">MIRAHUB</div>
           <div class="hero-media-sub">TRPG / Discord / Scenarios</div>
+          <div class="hero-media-meta">UI / Search / Filters / Modal</div>
         </div>
       </div>
     </div>
   </section>
 
   <section class="section-card">
-    <h2>できること</h2>
+    <div class="section-head">
+      <h2>できること</h2>
+      <p class="text-muted">迷わず行ける導線＋運用しやすい管理を優先。</p>
+    </div>
+
     <div class="grid-2">
-      <div class="mini">
-        <h3>シナリオ管理（検索）</h3>
+      <article class="mini">
+        <div class="mini-head">
+          <h3>シナリオ管理（検索）</h3>
+          <span class="pill">scenarios</span>
+        </div>
         <p class="text-muted">
           人数・形式・時間・R18・ロスト率で絞り込み。<br>
-          URLコピーや外部リンク確認もできる。
+          URLコピーや外部リンク確認まで一体化。
         </p>
         <div class="btn-row">
           <a class="btn btn-ghost" href="./scenarios/">シナリオ一覧へ</a>
         </div>
-      </div>
+      </article>
 
-      <div class="mini">
-        <h3>卓案内（しんじ卓）</h3>
+      <article class="mini">
+        <div class="mini-head">
+          <h3>卓案内（しんじ卓）</h3>
+          <span class="pill">shinji</span>
+        </div>
         <p class="text-muted">
-          参加案内・ルール・Q&A・運営プロフィール。
+          参加案内・ルール・Q&A・運営プロフィールをまとめて管理。
         </p>
         <div class="btn-row">
           <a class="btn btn-ghost" href="./shinji/">しんじ卓へ</a>
         </div>
-      </div>
+      </article>
     </div>
   </section>
 
   <section class="section-card card-compact">
-    <h2>今後の拡張（予定）</h2>
-    <ul class="text-muted">
-      <li>トレーラー画像URL（クリックでプレビュー）</li>
-      <li>所持シナリオの「ステータス」追加（未読/準備中/回した/回す予定）</li>
-      <li>タグ辞書（タグゆれ防止）</li>
+    <div class="section-head">
+      <h2>今後の拡張</h2>
+      <p class="text-muted">“サイトとして強い”機能を順番に積む。</p>
+    </div>
+
+    <ul class="list">
+      <li><span class="list-dot" aria-hidden="true"></span>トレーラー画像URL（クリックでプレビュー / カルーセル / ズーム）</li>
+      <li><span class="list-dot" aria-hidden="true"></span>所持シナリオのステータス（未読 / 準備中 / 回した / 回す予定）</li>
+      <li><span class="list-dot" aria-hidden="true"></span>タグ辞書（タグゆれ防止）＋タグ検索強化</li>
     </ul>
   </section>
 
 </main>
 
-<footer class="layout-footer">© MIRAHUB</footer>
+<footer class="layout-footer">
+  <div class="layout-wrap footer-inner">
+    <div class="footer-left">© <span id="year"></span> MIRAHUB</div>
+    <div class="footer-right">
+      <a class="footer-link" href="./scenarios/">Scenarios</a>
+      <span class="footer-sep" aria-hidden="true">•</span>
+      <a class="footer-link" href="./shinji/">Shinji</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // 年
+  (function () {
+    const el = document.getElementById('year');
+    if (el) el.textContent = String(new Date().getFullYear());
+  })();
+
+  // テーマ切替（scenarios/shinji も同じキーを使う）
+  (function () {
+    const btn = document.getElementById('themeToggle');
+    if (!btn) return;
+
+    btn.addEventListener('click', () => {
+      const now = document.documentElement.getAttribute('data-theme');
+      const next = now === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', next);
+      try { localStorage.setItem('mirahub.theme', next); } catch (e) {}
+    });
+  })();
+</script>
+
 </body>
 </html>
