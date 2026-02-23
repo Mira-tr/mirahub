@@ -1,262 +1,332 @@
+<!-- /scenarios/index.html -->
 <!doctype html>
 <html lang="ja" data-theme="dark">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>シナリオ一覧 | MIRAHUB</title>
-  <meta name="description" content="MIRAHUB所持シナリオ一覧。検索・絞り込み・詳細表示・トレーラー対応。" />
+  <title>Scenarios | MIRAHUB</title>
+  <meta name="description" content="MIRAHUB 所持シナリオ一覧：検索・絞り込み・詳細・トレーラー・お気に入り" />
 
-  <link rel="stylesheet" href="../style.css" />
-  <link rel="stylesheet" href="./scenarios.css" />
-
-  <!-- テーマのチラつき防止 -->
   <script>
   (function(){
     try{
       const t = localStorage.getItem("mirahub.theme");
-      if(t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+      if(t) document.documentElement.setAttribute("data-theme", t);
     }catch(e){}
   })();
   </script>
+
+  <link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="./scenarios.css" />
 </head>
 
 <body>
-<a class="skip-link" href="#main">本文へスキップ</a>
+  <div class="world-layer world-layer-back"></div>
+  <div class="world-layer world-layer-mid"></div>
+  <div class="world-layer world-layer-front"></div>
+  <div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
 
-<header class="layout-header">
-  <div class="layout-wrap layout-header-inner">
-    <div class="brand">
-      <span class="brand-dot" aria-hidden="true"></span>
-      <a href="../">MIRAHUB</a>
-      <span class="text-muted" aria-hidden="true">/</span>
-      <span>Scenarios</span>
+  <header class="layout-header">
+    <div class="layout-wrap layout-header-inner">
+      <div class="brand">
+        <span class="brand-dot"></span>
+        <a href="../">MIRAHUB</a>
+        <span class="text-muted">/</span>
+        <span>Scenarios</span>
+      </div>
+
+      <nav class="nav">
+        <a class="nav-link" href="../">HUB</a>
+        <a class="nav-link nav-link-active" href="./">Scenarios</a>
+        <a class="nav-link" href="../shinji/">しんじ卓</a>
+        <button class="icon-btn" id="themeToggle" type="button" aria-label="テーマ切替">🌓</button>
+      </nav>
     </div>
+  </header>
 
-    <nav class="nav" aria-label="ナビゲーション">
-      <a class="nav-link" href="../">HUB</a>
-      <a class="nav-link" href="../shinji/">しんじ卓</a>
-      <button class="icon-btn" id="themeToggle" type="button" aria-label="テーマ切替">🌓</button>
-    </nav>
-  </div>
-</header>
-
-<main class="layout-wrap" id="main">
-
-  <!-- Head -->
-  <section class="page-head">
-    <div class="page-head-left">
-      <h1 class="page-title">シナリオ一覧</h1>
-      <p class="page-sub text-muted">
-        Google Sheets 同期 / R18正規化 / 詳細モーダル / トレーラー / 外部確認
+  <main class="layout-wrap sc-main" id="top">
+    <section class="section-hero sc-hero">
+      <p class="text-tag">SCENARIO / LIBRARY</p>
+      <h1 class="text-hero">所持シナリオ一覧</h1>
+      <p class="text-lead text-muted">
+        ※本ページは所持シナリオのみ公開しています
       </p>
-    </div>
 
-    <div class="page-head-right">
-      <div class="head-actions">
-        <button class="btn btn-ghost" id="refreshBtn" type="button">↻ 更新</button>
-        <button class="btn btn-ghost" id="resetFiltersBtn" type="button">✕ リセット</button>
-        <span id="status" class="text-muted" style="align-self:center;">待機中</span>
+      <div class="sc-hero-actions">
+        <button class="btn btn-ghost" id="btnReload" type="button">再取得</button>
+        <button class="btn btn-ghost" id="btnReset" type="button">条件リセット</button>
+        <span class="text-muted sc-status" id="status" aria-live="polite">待機中</span>
       </div>
-      <div id="metaRow" class="text-muted sc-metaRow" style="margin-top:10px;"></div>
-    </div>
-  </section>
 
-  <!-- Controls -->
-  <section class="panel controls" aria-label="検索と絞り込み">
-    <div class="controls-top">
-      <label class="control search">
-        <span class="control-label">検索</span>
-        <input id="searchInput" type="search" placeholder="タイトル / システム / 作者 / タグ / メモ…" autocomplete="off">
-      </label>
-
-      <label class="control">
-        <span class="control-label">ソート</span>
-        <select id="sortSelect">
-          <option value="id_desc">ID（新しい順）</option>
-          <option value="id_asc">ID（古い順）</option>
-          <option value="name_asc">タイトル（A→Z）</option>
-          <option value="name_desc">タイトル（Z→A）</option>
-          <option value="updated_desc">更新（新しい順）</option>
-          <option value="updated_asc">更新（古い順）</option>
-        </select>
-      </label>
-
-      <div class="control toggles" role="group" aria-label="表示オプション">
-        <label class="toggle">
-          <input id="toggleCompact" type="checkbox">
-          <span>コンパクト</span>
-        </label>
-        <label class="toggle">
-          <input id="toggleShowTrailers" type="checkbox" checked>
-          <span>トレーラー</span>
-        </label>
+      <div class="sc-statebar" role="status" aria-live="polite">
+        <div class="sc-activeFilters" id="activeFilters"></div>
+        <div class="sc-metrics">
+          <span class="sc-metric" id="resultInfo">—</span>
+          <span class="sc-metric" id="favTotalInfo">—</span>
+          <span class="sc-metric" id="metaInfo">—</span>
+        </div>
       </div>
-    </div>
+    </section>
 
-    <div class="controls-grid">
-      <label class="control">
-        <span class="control-label">システム</span>
-        <select id="filterSystem">
-          <option value="">指定なし</option>
-        </select>
-      </label>
+    <section class="section-card sc-sticky" id="stickyControls">
+      <div class="sc-controls">
+        <div class="sc-searchWrap">
+          <label class="sr-only" for="searchInput">検索</label>
+          <input id="searchInput" class="sc-input sc-search" type="search" placeholder="キーワード（タイトル / 作者 / タグ / メモ）" autocomplete="off" />
+          <button class="sc-help" type="button" data-help="search" aria-label="検索の説明">?</button>
+        </div>
 
-      <label class="control">
-        <span class="control-label">形式</span>
-        <select id="filterFormat">
-          <option value="">指定なし</option>
-        </select>
-      </label>
+        <div class="sc-controlsRow">
+          <div class="sc-field">
+            <label class="sc-label" for="sortSelect">
+              並び替え
+              <button class="sc-help-inline" type="button" data-help="sort" aria-label="並び替えの説明">?</button>
+            </label>
+            <select id="sortSelect" class="sc-select">
+              <option value="updated_desc">更新（新→古）</option>
+              <option value="updated_asc">更新（古→新）</option>
+              <option value="fav_desc">⭐（多→少）</option>
+              <option value="fav_asc">⭐（少→多）</option>
+              <option value="title_asc">タイトル（A→Z）</option>
+              <option value="title_desc">タイトル（Z→A）</option>
+              <option value="id_asc">ID（昇順）</option>
+              <option value="id_desc">ID（降順）</option>
+            </select>
+          </div>
 
-      <label class="control">
-        <span class="control-label">R18</span>
-        <select id="filterR18">
-          <option value="">指定なし</option>
-          <option value="none">なし</option>
-          <option value="any">あり（soft/mix/hard）</option>
-          <option value="unknown">不明</option>
-        </select>
-      </label>
+          <div class="sc-field">
+            <label class="sc-label" for="viewSelect">
+              表示
+              <button class="sc-help-inline" type="button" data-help="view" aria-label="表示の説明">?</button>
+            </label>
+            <select id="viewSelect" class="sc-select">
+              <option value="cards">カード（15件）</option>
+              <option value="table">表（30件）</option>
+              <option value="compact">コンパクト（40件）</option>
+            </select>
+          </div>
 
-      <label class="control">
-        <span class="control-label">ロスト率</span>
-        <select id="filterLoss">
-          <option value="">指定なし</option>
-          <option value="0-10">0–10%</option>
-          <option value="10-30">10–30%</option>
-          <option value="30-50">30–50%</option>
-          <option value="50-70">50–70%</option>
-          <option value="70-100">70–100%</option>
-          <option value="unknown">不明</option>
-        </select>
-      </label>
+          <div class="sc-field">
+            <label class="sc-label" for="systemSelect">System</label>
+            <select id="systemSelect" class="sc-select">
+              <option value="">指定なし</option>
+            </select>
+          </div>
 
-      <label class="control">
-        <span class="control-label">所要時間</span>
-        <select id="filterTimePreset">
-          <option value="">指定なし</option>
-          <option value="lt120">〜2時間</option>
-          <option value="120_360">2〜6時間</option>
-          <option value="360_720">6〜12時間</option>
-          <option value="gt720">12時間以上</option>
-          <option value="unknown">不明</option>
-        </select>
-      </label>
+          <div class="sc-field">
+            <label class="sc-label" for="formatSelect">形式</label>
+            <select id="formatSelect" class="sc-select">
+              <option value="">指定なし</option>
+              <option value="ボイセ">ボイセ</option>
+              <option value="テキセ">テキセ</option>
+              <option value="どちらでも">どちらでも</option>
+            </select>
+          </div>
 
-      <label class="control">
-        <span class="control-label">人数</span>
-        <select id="filterPlayersPreset">
-          <option value="">指定なし</option>
-          <option value="solo">ソロ</option>
-          <option value="2_3">2〜3</option>
-          <option value="4_5">4〜5</option>
-          <option value="6_8">6〜8</option>
-          <option value="gt8">9以上</option>
-          <option value="unknown">不明</option>
-        </select>
-      </label>
-    </div>
+          <div class="sc-field">
+            <label class="sc-label" for="playersSelect">人数</label>
+            <select id="playersSelect" class="sc-select">
+              <option value="">指定なし</option>
+              <option value="1">1人（ソロ）</option>
+              <option value="2">2人</option>
+              <option value="3">3人</option>
+              <option value="4">4人</option>
+              <option value="5+">5人以上</option>
+              <option value="unknown">不明</option>
+            </select>
+          </div>
 
-    <!-- Tags -->
-    <div class="tags-area">
-      <div class="tags-head">
-        <div class="control-label">タグ</div>
-        <div class="tag-actions">
-          <button class="chip-btn" id="tagsClearBtn" type="button">クリア</button>
-          <button class="chip-btn" id="tagsModeBtn" type="button">条件：OR</button>
+          <div class="sc-field">
+            <label class="sc-label" for="timeSelect">時間</label>
+            <select id="timeSelect" class="sc-select">
+              <option value="">指定なし</option>
+              <option value="lt120">〜2時間</option>
+              <option value="120_360">2-6時間</option>
+              <option value="360_720">6-12時間</option>
+              <option value="gt720">12時間以上</option>
+              <option value="unknown">不明</option>
+            </select>
+          </div>
+
+          <div class="sc-field">
+            <label class="sc-label" for="r18Select">
+              R18
+              <button class="sc-help-inline" type="button" data-help="r18" aria-label="R18の説明">?</button>
+            </label>
+            <select id="r18Select" class="sc-select">
+              <option value="">指定なし</option>
+              <option value="none">なし</option>
+              <option value="any">あり（soft/mix/hard）</option>
+              <option value="unknown">不明</option>
+            </select>
+          </div>
+
+          <div class="sc-field">
+            <label class="sc-label" for="lossSelect">
+              ロスト率
+              <button class="sc-help-inline" type="button" data-help="loss" aria-label="ロスト率の説明">?</button>
+            </label>
+            <select id="lossSelect" class="sc-select">
+              <option value="">指定なし</option>
+              <option value="0-10">0-10%</option>
+              <option value="10-30">10-30%</option>
+              <option value="30-50">30-50%</option>
+              <option value="50-70">50-70%</option>
+              <option value="70-100">70-100%</option>
+              <option value="unknown">不明</option>
+            </select>
+          </div>
+
+          <div class="sc-field sc-field-actions">
+            <label class="sc-label">操作</label>
+            <div class="sc-actionsRow">
+              <button class="btn btn-ghost btn-sm" id="btnCopyFilters" type="button">条件コピー</button>
+              <button class="btn btn-ghost btn-sm" id="btnCopyCount" type="button">件数コピー</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="sc-tagsTopBar">
+          <div class="sc-tagsTopLeft">
+            <div class="sc-tagsTopTitle">
+              よく使うタグ
+              <button class="sc-help-inline" type="button" data-help="tags" aria-label="タグの説明">?</button>
+            </div>
+            <div class="sc-tagsTop" id="tagTop"></div>
+          </div>
+          <div class="sc-tagsTopRight">
+            <button class="btn btn-ghost btn-sm" id="btnOpenTagModal" type="button">タグ一覧</button>
+            <button class="btn btn-ghost btn-sm" id="btnClearTags" type="button">タグ解除</button>
+          </div>
+        </div>
+
+        <div class="sc-selectedTagsWrap" id="selectedTagsWrap" hidden>
+          <div class="sc-selectedTagsTitle">選択中：</div>
+          <div class="sc-selectedTags" id="selectedTags"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-card sc-resultsCard">
+      <div id="cardView" class="sc-grid" aria-live="polite"></div>
+
+      <div id="tableView" class="sc-tableWrap" hidden>
+        <div class="sc-tableWrapInner">
+          <table class="sc-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>タイトル</th>
+                <th>作者</th>
+                <th>System</th>
+                <th>人数</th>
+                <th>形式</th>
+                <th>時間</th>
+                <th>⭐</th>
+                <th>URL</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
         </div>
       </div>
 
-      <div class="tags-input-row">
-        <input id="tagsSearchInput" type="search" placeholder="タグを検索…" autocomplete="off">
+      <div id="compactView" class="sc-compact" hidden></div>
+
+      <div class="sc-moreWrap">
+        <button class="btn btn-ghost" id="btnMore" type="button">もっと見る</button>
+        <button class="btn btn-ghost" id="btnToTop" type="button">↑ 上へ</button>
       </div>
+    </section>
 
-      <div class="chips" id="tagsChips" aria-label="タグ候補"></div>
-      <div class="chips selected" id="tagsSelected" aria-label="選択中タグ"></div>
-    </div>
-  </section>
-
-  <!-- View -->
-  <section class="section-card">
-    <div class="sc-view-row">
-      <div class="sc-tabs">
-        <button type="button" class="sc-tab is-active" data-view="cards">カード</button>
-        <button type="button" class="sc-tab" data-view="table">表</button>
+    <footer class="layout-footer sc-footer">
+      <div class="sc-footerRow">
+        <span id="footerCount">—</span>
+        <span class="sc-footerDot">•</span>
+        <span id="footerFavTotal">—</span>
+        <span class="sc-footerDot">•</span>
+        <span id="footerUpdated">—</span>
       </div>
-      <div id="resultInfo" class="text-muted"></div>
-    </div>
-  </section>
+      <div class="sc-footerRow text-muted">© MIRAHUB</div>
+    </footer>
+  </main>
 
-  <!-- Results -->
-  <section class="section-card">
-    <div id="scenarioGrid" class="sc-cards"></div>
-
-    <div id="tableWrap" style="display:none;">
-      <div class="sc-tableWrap">
-        <table class="sc-table">
-          <thead>
-            <tr>
-              <th>ID</th><th>名前</th><th>System</th><th>人数</th><th>形式</th><th>時間</th><th>R18</th><th>ロスト</th><th>URL</th>
-            </tr>
-          </thead>
-          <tbody id="tableBody"></tbody>
-        </table>
+  <div class="modal" id="detailModal" aria-hidden="true">
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+      <div class="modal-top">
+        <div class="modal-titleWrap">
+          <div id="detailTitle" class="modal-title">詳細</div>
+          <div id="detailSub" class="modal-sub text-muted"></div>
+        </div>
+        <button class="modal-close" data-close type="button" aria-label="閉じる">✕</button>
       </div>
-    </div>
-  </section>
-
-</main>
-
-<footer class="layout-footer">© MIRAHUB</footer>
-
-<!-- Detail Modal -->
-<div class="modal" id="detailModal" aria-hidden="true">
-  <div class="modal-backdrop" data-close></div>
-
-  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
-    <div class="modal-top">
-      <div class="modal-titleWrap">
-        <div id="detailTitle" class="modal-title">詳細</div>
-        <div id="detailSub" class="modal-sub text-muted"></div>
-      </div>
-      <button class="modal-close" data-close type="button" aria-label="閉じる">✕</button>
-    </div>
-
-    <div id="detailBody"></div>
-  </div>
-</div>
-
-<!-- Zoom Modal -->
-<div class="modal" id="zoomModal" aria-hidden="true">
-  <div class="modal-backdrop" data-close></div>
-  <div class="modal-panel modal-zoom" role="dialog" aria-modal="true" aria-label="画像拡大">
-    <button class="modal-close" data-close type="button" aria-label="閉じる">✕</button>
-    <img id="zoomImage" alt="">
-  </div>
-</div>
-
-<!-- Confirm Modal -->
-<div class="confirm" id="confirmModal" aria-hidden="true">
-  <div class="confirm__backdrop" data-close></div>
-  <div class="confirm__panel" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
-    <div class="confirm__title" id="confirmTitle">確認</div>
-    <div class="confirm__text" id="confirmMessage"></div>
-
-    <label class="confirm__check">
-      <input type="checkbox" id="confirmDontAsk">
-      今後（通常リンクは）確認しない
-    </label>
-
-    <div class="confirm__actions">
-      <button class="btn btn-ghost" id="confirmCancel" type="button">キャンセル</button>
-      <button class="btn btn-primary" id="confirmOk" type="button">移動する</button>
+      <div id="detailBody"></div>
     </div>
   </div>
-</div>
 
-<!-- Toast -->
-<div id="toastHost" class="toast-host" aria-live="polite"></div>
+  <div class="modal" id="tagModal" aria-hidden="true">
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="tagModalTitle">
+      <div class="modal-top">
+        <div class="modal-titleWrap">
+          <div id="tagModalTitle" class="modal-title">タグ一覧</div>
+          <div class="modal-sub text-muted">クリックで絞り込み（複数選択）</div>
+        </div>
+        <button class="modal-close" data-close type="button" aria-label="閉じる">✕</button>
+      </div>
 
-<script src="./scenarios.js"></script>
+      <div class="sc-tagModalTools">
+        <div class="sc-tagSearchWrap">
+          <input id="tagSearchInput" class="sc-input" type="search" placeholder="タグ検索" autocomplete="off" />
+        </div>
+        <div class="sc-tagModalRight">
+          <button class="btn btn-ghost btn-sm" id="tagModeBtn" type="button">条件：OR</button>
+          <button class="btn btn-ghost btn-sm" id="tagModalClearBtn" type="button">解除</button>
+        </div>
+      </div>
+
+      <div id="tagModalBody" class="sc-tagModalGrid"></div>
+    </div>
+  </div>
+
+  <div class="modal" id="zoomModal" aria-hidden="true">
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-panel modal-zoom" role="dialog" aria-modal="true" aria-label="画像拡大">
+      <img id="zoomImage" alt="" />
+    </div>
+  </div>
+
+  <div class="confirm" id="confirmModal" aria-hidden="true">
+    <div class="confirm__backdrop" data-close></div>
+    <div class="confirm__panel" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+      <div class="confirm__title" id="confirmTitle">確認</div>
+      <div class="confirm__text" id="confirmMessage"></div>
+
+      <label class="confirm__check">
+        <input type="checkbox" id="confirmDontAsk" />
+        今後（通常リンクは）確認しない
+      </label>
+
+      <div class="confirm__actions">
+        <button type="button" class="btn btn-ghost" id="confirmCancel">キャンセル</button>
+        <button type="button" class="btn btn-primary" id="confirmOk">移動する</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toastHost" class="toast-host" aria-live="polite"></div>
+
+  <div class="help-pop" id="helpPop" aria-hidden="true">
+    <div class="help-pop__panel" role="dialog" aria-modal="false">
+      <div class="help-pop__title" id="helpPopTitle">ヘルプ</div>
+      <div class="help-pop__text" id="helpPopText"></div>
+      <div class="help-pop__actions">
+        <button type="button" class="btn btn-ghost btn-sm" id="helpPopClose">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="./scenarios.js"></script>
 </body>
 </html>

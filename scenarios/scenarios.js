@@ -1,53 +1,72 @@
-/* scenarios.js (MIRAHUB FINAL v4 - trailer buttons + zoom FIXED by delegation) */
-
-const API_URL = "https://script.google.com/macros/s/AKfycbxXucWg9ATHVEM8jm45pD8gCxkyA5Q1wWeG6ruoR3ujyJ4LV8JZwJCFh7tHeLZEfHzfuQ/exec";
+// /scenarios/scenarios.js
+const API_URL = "https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec";
 
 const LS = {
   THEME: "mirahub.theme",
-  SKIP_CONFIRM: "mirahub.skipExternalConfirm",
-  TAG_MODE: "mirahub.tagsMode", // "or" | "and"
-  COMPACT: "mirahub.compact",
-  SHOW_TRAILERS: "mirahub.showTrailers",
+  CACHE: "mirahub.scenarios.cache.v1",
+  CACHE_TS: "mirahub.scenarios.cache.ts.v1",
+  CACHE_TTL_MS: 10 * 60 * 1000,
+
+  FAV_IDS: "mirahub.fav.ids.v1",
+  SKIP_CONFIRM: "mirahub.skipExternalConfirm.v1",
+
+  TAG_MODE: "mirahub.tags.mode.v1" // "or" | "and"
 };
 
 const els = {
-  // header/tools
-  status: document.getElementById("status"),
-  metaRow: document.getElementById("metaRow"),
-  refreshBtn: document.getElementById("refreshBtn"),
-  resetFiltersBtn: document.getElementById("resetFiltersBtn"),
+  scrollProgress: document.getElementById("scrollProgress"),
+
   themeToggle: document.getElementById("themeToggle"),
 
-  // controls
+  status: document.getElementById("status"),
+  activeFilters: document.getElementById("activeFilters"),
+  resultInfo: document.getElementById("resultInfo"),
+  favTotalInfo: document.getElementById("favTotalInfo"),
+  metaInfo: document.getElementById("metaInfo"),
+
+  footerCount: document.getElementById("footerCount"),
+  footerFavTotal: document.getElementById("footerFavTotal"),
+  footerUpdated: document.getElementById("footerUpdated"),
+
   searchInput: document.getElementById("searchInput"),
   sortSelect: document.getElementById("sortSelect"),
-  toggleCompact: document.getElementById("toggleCompact"),
-  toggleShowTrailers: document.getElementById("toggleShowTrailers"),
+  viewSelect: document.getElementById("viewSelect"),
+  systemSelect: document.getElementById("systemSelect"),
+  formatSelect: document.getElementById("formatSelect"),
+  playersSelect: document.getElementById("playersSelect"),
+  timeSelect: document.getElementById("timeSelect"),
+  r18Select: document.getElementById("r18Select"),
+  lossSelect: document.getElementById("lossSelect"),
 
-  filterSystem: document.getElementById("filterSystem"),
-  filterFormat: document.getElementById("filterFormat"),
-  filterPlayersPreset: document.getElementById("filterPlayersPreset"),
-  filterTimePreset: document.getElementById("filterTimePreset"),
-  filterR18: document.getElementById("filterR18"),
-  filterLoss: document.getElementById("filterLoss"),
+  btnReload: document.getElementById("btnReload"),
+  btnReset: document.getElementById("btnReset"),
+  btnCopyFilters: document.getElementById("btnCopyFilters"),
+  btnCopyCount: document.getElementById("btnCopyCount"),
+  btnMore: document.getElementById("btnMore"),
+  btnToTop: document.getElementById("btnToTop"),
 
-  tagsSearchInput: document.getElementById("tagsSearchInput"),
-  tagsChips: document.getElementById("tagsChips"),
-  tagsSelected: document.getElementById("tagsSelected"),
-  tagsClearBtn: document.getElementById("tagsClearBtn"),
-  tagsModeBtn: document.getElementById("tagsModeBtn"),
+  tagTop: document.getElementById("tagTop"),
+  btnOpenTagModal: document.getElementById("btnOpenTagModal"),
+  btnClearTags: document.getElementById("btnClearTags"),
 
-  // view
-  scenarioGrid: document.getElementById("scenarioGrid"),
-  tableWrap: document.getElementById("tableWrap"),
+  selectedTagsWrap: document.getElementById("selectedTagsWrap"),
+  selectedTags: document.getElementById("selectedTags"),
+
+  cardView: document.getElementById("cardView"),
+  tableView: document.getElementById("tableView"),
   tableBody: document.getElementById("tableBody"),
-  resultInfo: document.getElementById("resultInfo"),
+  compactView: document.getElementById("compactView"),
 
-  // modals
   detailModal: document.getElementById("detailModal"),
   detailTitle: document.getElementById("detailTitle"),
   detailSub: document.getElementById("detailSub"),
   detailBody: document.getElementById("detailBody"),
+
+  tagModal: document.getElementById("tagModal"),
+  tagSearchInput: document.getElementById("tagSearchInput"),
+  tagModeBtn: document.getElementById("tagModeBtn"),
+  tagModalClearBtn: document.getElementById("tagModalClearBtn"),
+  tagModalBody: document.getElementById("tagModalBody"),
 
   zoomModal: document.getElementById("zoomModal"),
   zoomImage: document.getElementById("zoomImage"),
@@ -59,71 +78,65 @@ const els = {
   confirmCancel: document.getElementById("confirmCancel"),
   confirmOk: document.getElementById("confirmOk"),
 
-  // toast
   toastHost: document.getElementById("toastHost"),
+
+  helpPop: document.getElementById("helpPop"),
+  helpPopTitle: document.getElementById("helpPopTitle"),
+  helpPopText: document.getElementById("helpPopText"),
+  helpPopClose: document.getElementById("helpPopClose"),
 };
 
 const state = {
-  rawRows: [],
+  raw: [],
   rows: [],
-  filtered: [],
+
   view: "cards",
+  limit: 15,
 
   selectedTags: new Set(),
-  tagsMode: "or",
+  tagMode: "or",
 
-  compact: false,
-  trailersEnabled: true,
-
-  pendingOpenUrl: null,
-  pendingOpenIsR18: false,
+  pendingUrl: null,
+  pendingIsR18: false,
 
   activeId: null,
-  trailerIndex: 0,
   trailerList: [],
-
-  // swipe
-  trailerSwipeStartX: null,
+  trailerIndex: 0,
+  trailerBound: false,
 };
-
-/* ---------------- Utils ---------------- */
 
 function norm(v){ return String(v ?? "").trim(); }
 function lower(v){ return norm(v).toLowerCase(); }
-
-function escapeHtml(s){
-  return String(s).replace(/[&<>"']/g, (c)=>({
+function esc(s){
+  return String(s ?? "").replace(/[&<>"']/g, c=>({
     "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
   }[c]));
 }
 
-function nowLocal(){ return new Date().toLocaleString(); }
-
-function lsGet(key, fallback=null){
+function lsGet(k, fb=null){
   try{
-    const v = localStorage.getItem(key);
-    return v === null ? fallback : v;
-  }catch{ return fallback; }
+    const v = localStorage.getItem(k);
+    return v === null ? fb : v;
+  }catch{ return fb; }
 }
-function lsSet(key, value){
-  try{ localStorage.setItem(key, String(value)); }catch{}
+function lsSet(k, v){
+  try{ localStorage.setItem(k, String(v)); }catch{}
 }
-
-function setStatus(msg){
-  if(els.status) els.status.textContent = msg;
+function lsDel(k){
+  try{ localStorage.removeItem(k); }catch{}
 }
 
 function toast(msg){
   if(!els.toastHost) return;
-  const node = document.createElement("div");
-  node.className = "toast";
-  node.textContent = msg;
-  els.toastHost.appendChild(node);
-  void node.offsetWidth;
-  node.classList.add("is-show");
+  const n = document.createElement("div");
+  n.className = "toast";
+  n.textContent = msg;
+  els.toastHost.appendChild(n);
+  void n.offsetWidth;
+  n.classList.add("is-show");
   setTimeout(()=>{
-    node.classList.remove("is-show");
-    setTimeout(()=>node.remove(), 220);
+    n.classList.remove("is-show");
+    setTimeout(()=>n.remove(), 220);
   }, 1800);
 }
 
@@ -145,10 +158,19 @@ async function copyText(text){
   }
 }
 
-async function fetchJSON(url){
-  const res = await fetch(url, { cache: "no-store" });
-  if(!res.ok) throw new Error(`HTTP ${res.status}`);
-  return await res.json();
+function setStatus(msg){
+  if(els.status) els.status.textContent = msg;
+}
+
+function prefersReducedMotion(){
+  return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function parseIdNumber(id){
+  const m = String(id || "").match(/(\d+)/);
+  if(!m) return 0;
+  const n = Number(m[1]);
+  return Number.isFinite(n) ? n : 0;
 }
 
 function clampInt(n, min, max){
@@ -156,117 +178,122 @@ function clampInt(n, min, max){
   return Math.max(min, Math.min(max, n));
 }
 
-/* ---------------- Domain normalization ---------------- */
-
 function normalizeR18(raw){
   const s = lower(raw);
   if(!s) return "unknown";
   if(["none","soft","mix","hard","unknown"].includes(s)) return s;
-
   if(["なし","全年齢","健全","no","false","0"].includes(s)) return "none";
-  if(["不明","?", "unknown","未確認"].includes(s)) return "unknown";
+  if(["不明","?","未確認"].includes(s)) return "unknown";
   if(["あり","r18","18+","18","adult","nsfw","🔞","true","1","yes"].includes(s)) return "soft";
-
   if(s.includes("hard")) return "hard";
   if(s.includes("mix")) return "mix";
   if(s.includes("soft")) return "soft";
-
   return "unknown";
 }
 function r18Label(key){
   switch(key){
     case "none": return "なし";
-    case "soft": return "R18（軽）";
-    case "mix": return "R18（混）";
-    case "hard": return "R18（重）";
-    default: return "不明";
+    case "soft": return "soft";
+    case "mix": return "mix";
+    case "hard": return "hard";
+    default: return "unknown";
   }
 }
 function isR18Key(key){
   return ["soft","mix","hard"].includes(key);
 }
 
-function normalizeLoss(raw){
-  const s = norm(raw);
-  if(!s || s==="不明" || lower(s)==="unknown") return { key:"unknown", min:null, max:null };
-
+function normalizeLossRate(raw){
+  const s = lower(raw);
+  if(!s || s==="不明") return "unknown";
   const t = s.replace(/[％%]/g,"").replace(/[〜~–—]/g,"-").replace(/\s+/g,"");
+  if(["unknown","?"].includes(t)) return "unknown";
   const m = t.match(/(\d{1,3})-(\d{1,3})/);
-  if(!m) return { key:s, min:null, max:null };
-
+  if(!m) return "unknown";
   const a = clampInt(parseInt(m[1],10),0,100);
   const b = clampInt(parseInt(m[2],10),0,100);
   const min = Math.min(a,b);
   const max = Math.max(a,b);
-  return { key:`${min}-${max}`, min, max };
+  return `${min}-${max}`;
 }
-function lossClassFromKey(key){
+function lossClass(key){
   if(!key || key==="unknown") return "";
   const m = String(key).match(/(\d+)-(\d+)/);
   if(!m) return "";
-  const avg = (parseInt(m[1],10)+parseInt(m[2],10))/2;
-  if(avg<=30) return "loss-low";
-  if(avg<=50) return "loss-mid";
-  if(avg<=70) return "loss-high";
+  const avg = (parseInt(m[1],10) + parseInt(m[2],10)) / 2;
+  if(avg <= 30) return "loss-low";
+  if(avg <= 50) return "loss-mid";
+  if(avg <= 70) return "loss-high";
   return "loss-very";
 }
 
-function parseTimeRangeToMinutes(raw){
-  const original = norm(raw);
-  if(!original) return { min:null, max:null };
-
-  let s = original.replace(/　/g," ").replace(/[〜~–—]/g,"-").replace(/\s+/g,"");
-  s = s.replace(/ボイセ|テキセ|どちらでも|kpレス|KPレス/gi,"");
-
-  const parts = s.split("-").filter(Boolean);
-  if(parts.length===0) return { min:null, max:null };
-
-  const vals = parts.map(parseSingleDurationToMinutes).filter(v=>v!==null);
-  if(vals.length===0) return { min:null, max:null };
-  if(vals.length===1) return { min:vals[0], max:vals[0] };
-
-  return { min:Math.min(...vals), max:Math.max(...vals) };
-}
 function parseSingleDurationToMinutes(token){
   const t = String(token ?? "").toLowerCase();
   if(!t) return null;
-
   let m = t.match(/(\d+(?:\.\d+)?)\s*(m|min|分)/);
   if(m) return Math.round(parseFloat(m[1]));
-
   m = t.match(/(\d+(?:\.\d+)?)\s*(h|hr|hrs|時間)/);
-  if(m) return Math.round(parseFloat(m[1])*60);
-
+  if(m) return Math.round(parseFloat(m[1]) * 60);
   return null;
+}
+function parseTimeRangeToMinutes(raw){
+  const original = norm(raw);
+  if(!original) return { min:null, max:null };
+  let s = original.replace(/　/g," ").replace(/[〜~–—]/g,"-").replace(/\s+/g,"");
+  s = s.replace(/ボイセ|テキセ|どちらでも|kpレス|KPレス/gi,"");
+  const parts = s.split("-").filter(Boolean);
+  if(parts.length===0) return { min:null, max:null };
+  const vals = parts.map(parseSingleDurationToMinutes).filter(v=>v!==null);
+  if(vals.length===0) return { min:null, max:null };
+  if(vals.length===1) return { min:vals[0], max:vals[0] };
+  return { min:Math.min(...vals), max:Math.max(...vals) };
+}
+function timePresetMatch(row, preset){
+  if(!preset) return true;
+  if(preset==="unknown") return row.timeMin===null && row.timeMax===null;
+  const v = (row.timeMax ?? row.timeMin);
+  if(v===null) return false;
+  if(preset==="lt120") return v < 120;
+  if(preset==="120_360") return v >= 120 && v <= 360;
+  if(preset==="360_720") return v > 360 && v <= 720;
+  if(preset==="gt720") return v > 720;
+  return true;
 }
 
 function parsePlayers(raw){
   const original = norm(raw);
   if(!original) return { min:null, max:null };
-
   const s = original.replace(/[〜~–—]/g,"-").replace(/\s+/g,"");
-
   let m = s.match(/(\d+)\D*-\D*(\d+)/);
   if(m){
-    const a = parseInt(m[1],10);
-    const b = parseInt(m[2],10);
+    const a = parseInt(m[1],10), b = parseInt(m[2],10);
     return { min:Math.min(a,b), max:Math.max(a,b) };
   }
-
   m = s.match(/kpc\+(\d+)pl/i);
   if(m){
     const n = parseInt(m[1],10);
     return { min:n+1, max:n+1 };
   }
-
   m = s.match(/(\d+)\s*pl/i);
   if(m){
     const n = parseInt(m[1],10);
     return { min:n, max:n };
   }
-
   if(s.includes("ソロ")) return { min:1, max:1 };
   return { min:null, max:null };
+}
+function playersPresetMatch(row, preset){
+  if(!preset) return true;
+  if(preset==="unknown") return row.playersMin===null && row.playersMax===null;
+  if(row.playersMin===null && row.playersMax===null) return false;
+  const vMin = row.playersMin ?? row.playersMax;
+  const vMax = row.playersMax ?? row.playersMin;
+  if(preset==="1") return vMin===1 && vMax===1;
+  if(preset==="2") return vMin===2 && vMax===2;
+  if(preset==="3") return vMin===3 && vMax===3;
+  if(preset==="4") return vMin===4 && vMax===4;
+  if(preset==="5+") return (vMax ?? 0) >= 5;
+  return true;
 }
 
 function splitTags(raw){
@@ -278,12 +305,7 @@ function splitTags(raw){
 function splitTrailerUrls(raw){
   const s = norm(raw);
   if(!s) return [];
-  // 改行区切り想定（将来カンマ区切りが混ざっても拾えるようにする）
-  return s
-    .split(/\r?\n|,/)
-    .map(x=>norm(x))
-    .filter(Boolean)
-    .filter(u=>/^https?:\/\//i.test(u));
+  return s.split(/\r?\n/).map(x=>norm(x)).filter(Boolean).filter(u=>/^https?:\/\//i.test(u));
 }
 
 function normalizeRow(input){
@@ -292,306 +314,181 @@ function normalizeRow(input){
     r[String(k).toLowerCase()] = input[k];
   }
 
-  const loss = normalizeLoss(r.loss_rate);
-  const r18Key = normalizeR18(r.r18);
-
   const timeRange = parseTimeRangeToMinutes(r.time);
   const playersRange = parsePlayers(r.players);
 
   return {
     id: norm(r.id),
     name: norm(r.name),
-    system: norm(r.system),
     author: norm(r.author),
+    system: norm(r.system),
     players: norm(r.players),
     format: norm(r.format),
     time: norm(r.time),
-
-    r18Key,
-    lossKey: loss.key,
-
-    timeMin: timeRange.min,
-    timeMax: timeRange.max,
-    playersMin: playersRange.min,
-    playersMax: playersRange.max,
 
     tags: splitTags(r.tags),
     memo: norm(r.memo),
     url: norm(r.url),
 
-    trailers: splitTrailerUrls(r.trailer_urls || r.trailer_url),
+    trailerUrls: splitTrailerUrls(r.trailer_url || r.trailer_urls),
 
+    r18Key: normalizeR18(r.r18),
+    lossKey: normalizeLossRate(r.lossrate || r.loss_rate || r.loss),
+
+    favCount: Number(r.favcount || r.fav_count || 0) || 0,
     updatedAt: norm(r.updatedat || r.updated_at || r.updated),
+
+    timeMin: timeRange.min,
+    timeMax: timeRange.max,
+    playersMin: playersRange.min,
+    playersMax: playersRange.max,
   };
 }
 
-/* ---------------- Options / chips ---------------- */
+function readCache(){
+  try{
+    const ts = Number(lsGet(LS.CACHE_TS, "0")) || 0;
+    const raw = lsGet(LS.CACHE, "");
+    if(!raw) return null;
+    if(Date.now() - ts > LS.CACHE_TTL_MS) return null;
+    const obj = JSON.parse(raw);
+    if(!Array.isArray(obj)) return null;
+    return obj;
+  }catch{
+    return null;
+  }
+}
+function writeCache(rows){
+  try{
+    lsSet(LS.CACHE_TS, String(Date.now()));
+    lsSet(LS.CACHE, JSON.stringify(rows));
+  }catch{}
+}
+
+async function fetchJSON(url){
+  const res = await fetch(url, { cache: "no-store" });
+  if(!res.ok) throw new Error("HTTP " + res.status);
+  return await res.json();
+}
+
+async function loadData(force=false){
+  try{
+    setStatus("取得中…");
+
+    if(!force){
+      const cached = readCache();
+      if(cached){
+        state.raw = cached;
+        state.rows = cached.map(normalizeRow);
+        hydrateOptionsAndTags();
+        setStatus(`OK：${state.rows.length}件（キャッシュ）`);
+        renderAll();
+        openFromHash();
+        return;
+      }
+    }
+
+    const data = await fetchJSON(API_URL);
+    if(!data || data.ok===false) throw new Error(data?.error || "API error");
+
+    const rows = Array.isArray(data.rows) ? data.rows : [];
+    writeCache(rows);
+
+    state.raw = rows;
+    state.rows = rows.map(normalizeRow);
+
+    hydrateOptionsAndTags();
+    setStatus(`OK：${state.rows.length}件`);
+    renderAll();
+    openFromHash();
+  }catch{
+    const cached = readCache();
+    if(cached){
+      state.raw = cached;
+      state.rows = cached.map(normalizeRow);
+      hydrateOptionsAndTags();
+      setStatus(`取得失敗（キャッシュ表示）：${state.rows.length}件`);
+      renderAll();
+      openFromHash();
+    }else{
+      setStatus("取得失敗：API URL / 公開設定を確認");
+      toast("取得に失敗しました");
+    }
+  }
+}
 
 function uniqSorted(arr){
   return Array.from(new Set(arr.filter(Boolean))).sort((a,b)=>a.localeCompare(b,"ja"));
 }
-
 function buildSelectOptions(selectEl, values, placeholder="指定なし"){
   if(!selectEl) return;
   const list = uniqSorted(values);
-  selectEl.innerHTML =
-    `<option value="">${escapeHtml(placeholder)}</option>` +
-    list.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("");
+  const cur = selectEl.value;
+  selectEl.innerHTML = `<option value="">${esc(placeholder)}</option>` +
+    list.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join("");
+  if(cur && list.includes(cur)) selectEl.value = cur;
 }
 
-function rebuildTagChips(){
-  if(!els.tagsChips || !els.tagsSelected) return;
-
-  const all = state._allTags || [];
-  const q = lower(els.tagsSearchInput?.value || "");
-  const visible = all.filter(t => !q || lower(t).includes(q)).slice(0, 90);
-
-  els.tagsChips.innerHTML = visible.map(t=>{
-    const selected = state.selectedTags.has(t);
-    return `<button type="button" class="sc-pill sc-tag ${selected ? "is-selected" : ""}" data-tag="${escapeHtml(t)}">${escapeHtml(t)}</button>`;
-  }).join("");
-
-  els.tagsSelected.innerHTML = Array.from(state.selectedTags).map(t=>{
-    return `<button type="button" class="sc-pill sc-tag is-selected" data-tag="${escapeHtml(t)}" data-selected="1">${escapeHtml(t)} ✕</button>`;
-  }).join("");
-}
-
-/* ---------------- Filtering ---------------- */
-
-function timePresetMatch(row, preset){
-  if(!preset) return true;
-  if(preset==="unknown") return row.timeMin===null && row.timeMax===null;
-
-  const v = (row.timeMax ?? row.timeMin);
-  if(v===null) return false;
-
-  if(preset==="lt120") return v < 120;
-  if(preset==="120_360") return v >= 120 && v <= 360;
-  if(preset==="360_720") return v > 360 && v <= 720;
-  if(preset==="gt720") return v > 720;
-  return true;
-}
-
-function playersPresetMatch(row, preset){
-  if(!preset) return true;
-  if(preset==="unknown") return row.playersMin===null && row.playersMax===null;
-
-  const min = row.playersMin;
-  const max = row.playersMax;
-  if(preset==="solo") return min===1 && max===1;
-
-  if(min===null && max===null) return false;
-  const vMin = min ?? max;
-  const vMax = max ?? min;
-
-  if(preset==="2_3") return vMin >= 2 && vMax <= 3;
-  if(preset==="4_5") return vMin >= 4 && vMax <= 5;
-  if(preset==="6_8") return vMin >= 6 && vMax <= 8;
-  if(preset==="gt8") return (vMax ?? 0) >= 9;
-  return true;
-}
-
-function r18Match(row, filterVal){
-  if(!filterVal) return true;
-  if(filterVal==="none") return row.r18Key==="none";
-  if(filterVal==="unknown") return row.r18Key==="unknown";
-  if(filterVal==="any") return isR18Key(row.r18Key);
-  return true;
-}
-
-function lossMatch(row, filterVal){
-  if(!filterVal) return true;
-  if(filterVal==="unknown") return row.lossKey==="unknown";
-  return row.lossKey === filterVal;
-}
-
-function tagsMatch(row){
-  if(state.selectedTags.size===0) return true;
-  const rowTags = new Set(row.tags);
-
-  if(state.tagsMode==="and"){
-    for(const t of state.selectedTags){
-      if(!rowTags.has(t)) return false;
+function buildTagFrequency(rows){
+  const map = new Map();
+  for(const r of rows){
+    for(const t of r.tags){
+      map.set(t, (map.get(t) || 0) + 1);
     }
-    return true;
   }
-
-  for(const t of state.selectedTags){
-    if(rowTags.has(t)) return true;
-  }
-  return false;
+  return map;
 }
 
-function searchMatch(row, q){
-  const query = norm(q);
-  if(!query) return true;
+function hydrateOptionsAndTags(){
+  buildSelectOptions(els.systemSelect, state.rows.map(r=>r.system), "指定なし");
+  buildSelectOptions(els.formatSelect, state.rows.map(r=>r.format), "指定なし");
 
-  const tokens = query.split(/\s+/).filter(Boolean).map(lower);
+  const freq = buildTagFrequency(state.rows);
+  const allTags = uniqSorted(Array.from(freq.keys()));
+  state._allTags = allTags;
+  state._tagFreq = freq;
 
-  const hay = lower([
-    row.id, row.name, row.system, row.author,
-    row.players, row.format, row.time,
-    row.r18Key, row.lossKey,
-    row.tags.join(" "),
-    row.memo
-  ].join(" / "));
-
-  return tokens.every(t => hay.includes(t));
+  renderTagTop();
+  renderSelectedTags();
+  renderTagModalList();
 }
 
-function parseIdNumber(id){
-  const m = String(id || "").match(/(\d+)/);
-  if(!m) return 0;
-  const n = Number(m[1]);
-  return Number.isFinite(n) ? n : 0;
+function getViewLimit(view){
+  if(view==="table") return 30;
+  if(view==="compact") return 40;
+  return 15;
 }
 
-function applySort(){
-  const key = norm(els.sortSelect?.value || "id_desc");
-  const byName = (a,b)=>a.name.localeCompare(b.name,"ja");
-  const byId = (a,b)=>parseIdNumber(a.id)-parseIdNumber(b.id);
-  const byUpdated = (a,b)=>{
-    const ta = Date.parse(a.updatedAt || "") || 0;
-    const tb = Date.parse(b.updatedAt || "") || 0;
-    if(ta===tb) return byId(a,b);
-    return ta - tb;
-  };
-
-  const cmp = {
-    id_asc: byId,
-    id_desc: (a,b)=>-byId(a,b),
-    name_asc: byName,
-    name_desc: (a,b)=>-byName(a,b),
-    updated_asc: byUpdated,
-    updated_desc: (a,b)=>-byUpdated(a,b),
-  }[key] || ((a,b)=>-byId(a,b));
-
-  state.filtered.sort(cmp);
-}
-
-function applyFilters(){
-  const q = els.searchInput?.value || "";
-  const system = norm(els.filterSystem?.value);
-  const format = norm(els.filterFormat?.value);
-  const playersPreset = norm(els.filterPlayersPreset?.value);
-  const timePreset = norm(els.filterTimePreset?.value);
-  const r18 = norm(els.filterR18?.value);
-  const loss = norm(els.filterLoss?.value);
-
-  state.filtered = state.rows.filter(row=>{
-    if(system && row.system !== system) return false;
-    if(format && row.format !== format) return false;
-    if(!playersPresetMatch(row, playersPreset)) return false;
-    if(!timePresetMatch(row, timePreset)) return false;
-    if(!r18Match(row, r18)) return false;
-    if(!lossMatch(row, loss)) return false;
-    if(!tagsMatch(row)) return false;
-    if(!searchMatch(row, q)) return false;
-    return true;
-  });
-
-  applySort();
-}
-
-/* ---------------- Rendering ---------------- */
-
-function render(){
-  applyFilters();
-
-  if(els.resultInfo){
-    els.resultInfo.textContent = `表示: ${state.filtered.length} 件 / 全体: ${state.rows.length} 件`;
-  }
-  if(els.metaRow){
-    els.metaRow.textContent = `最終取得: ${nowLocal()} / 表示 ${state.filtered.length}件`;
-  }
-
-  if(state.view==="cards"){
-    renderCards();
-  }else{
-    renderTable();
+function getFavSet(){
+  try{
+    const raw = lsGet(LS.FAV_IDS, "[]");
+    const arr = JSON.parse(raw);
+    return new Set(Array.isArray(arr) ? arr : []);
+  }catch{
+    return new Set();
   }
 }
-
-function renderCards(){
-  if(!els.scenarioGrid) return;
-
-  els.scenarioGrid.innerHTML = state.filtered.map(r=>{
-    const r18 = isR18Key(r.r18Key);
-    const lossCls = lossClassFromKey(r.lossKey);
-
-    const pills = [];
-    if(r.system) pills.push(`<span class="sc-pill">${escapeHtml(r.system)}</span>`);
-    if(r.players) pills.push(`<span class="sc-pill">${escapeHtml(r.players)}</span>`);
-    if(r.format) pills.push(`<span class="sc-pill">${escapeHtml(r.format)}</span>`);
-    if(r.time) pills.push(`<span class="sc-pill">${escapeHtml(r.time)}</span>`);
-    if(r.lossKey) pills.push(`<span class="sc-pill ${escapeHtml(lossCls)}">ロスト:${escapeHtml(r.lossKey==="unknown"?"不明":r.lossKey)}</span>`);
-    if(r18) pills.push(`<span class="sc-pill sc-r18">🔞 ${escapeHtml(r18Label(r.r18Key))}</span>`);
-
-    const tagsHtml = r.tags.slice(0,10).map(t=>{
-      return `<button type="button" class="sc-pill sc-tag" data-tag="${escapeHtml(t)}">${escapeHtml(t)}</button>`;
-    }).join("");
-
-    const actions = [];
-    if(r.url){
-      actions.push(`<button type="button" class="sc-icon" data-action="open-url" data-url="${escapeHtml(r.url)}" data-r18="${r18?"1":"0"}" aria-label="外部リンク">🔗</button>`);
-      actions.push(`<button type="button" class="sc-icon" data-action="copy-url" data-url="${escapeHtml(r.url)}" aria-label="URLコピー">📋</button>`);
-    }
-
-    return `
-      <article class="sc-card" data-action="open-detail" data-id="${escapeHtml(r.id)}">
-        ${r.id ? `<div class="sc-id">${escapeHtml(r.id)}</div>` : ""}
-        <div class="sc-title">${escapeHtml(r.name || "(no title)")}</div>
-
-        <div class="sc-pillRow">${pills.join("")}</div>
-        ${tagsHtml ? `<div class="sc-pillRow" style="margin-top:8px;">${tagsHtml}</div>` : ""}
-
-        ${(!state.compact && r.memo) ? `<div class="sc-note">${escapeHtml(r.memo)}</div>` : ""}
-
-        <div class="sc-actions">${actions.join("")}</div>
-      </article>
-    `;
-  }).join("");
-
-  if(els.tableWrap) els.tableWrap.style.display = "none";
+function saveFavSet(set){
+  try{
+    lsSet(LS.FAV_IDS, JSON.stringify(Array.from(set)));
+  }catch{}
+}
+function hasFav(id){
+  return getFavSet().has(id);
 }
 
-function renderTable(){
-  if(!els.tableBody) return;
-
-  els.tableBody.innerHTML = state.filtered.map(r=>{
-    const r18 = isR18Key(r.r18Key);
-    const urlCell = r.url ? `
-      <button type="button" class="sc-link-btn" data-action="open-url" data-url="${escapeHtml(r.url)}" data-r18="${r18?"1":"0"}">open</button>
-      <button type="button" class="sc-link-btn" data-action="copy-url" data-url="${escapeHtml(r.url)}">copy</button>
-    ` : "";
-
-    return `
-      <tr data-action="open-detail" data-id="${escapeHtml(r.id)}">
-        <td>${escapeHtml(r.id)}</td>
-        <td>${escapeHtml(r.name)}</td>
-        <td>${escapeHtml(r.system)}</td>
-        <td>${escapeHtml(r.players)}</td>
-        <td>${escapeHtml(r.format)}</td>
-        <td>${escapeHtml(r.time)}</td>
-        <td>${escapeHtml(r18Label(r.r18Key))}</td>
-        <td>${escapeHtml(r.lossKey==="unknown"?"不明":r.lossKey)}</td>
-        <td>${urlCell}</td>
-      </tr>
-    `;
-  }).join("");
-
-  if(els.tableWrap) els.tableWrap.style.display = "";
-  if(els.scenarioGrid) els.scenarioGrid.innerHTML = "";
+function shouldSkipConfirm(){
+  return lsGet(LS.SKIP_CONFIRM, "0") === "1";
 }
-
-/* ---------------- Modals ---------------- */
+function setSkipConfirm(v){
+  lsSet(LS.SKIP_CONFIRM, v ? "1" : "0");
+}
 
 function openModal(modalEl){
   if(!modalEl) return;
   modalEl.classList.add("is-show");
   modalEl.setAttribute("aria-hidden","false");
   document.body.style.overflow = "hidden";
-
   const panel = modalEl.querySelector(".modal-panel");
   if(panel){
     panel.setAttribute("tabindex","-1");
@@ -605,65 +502,27 @@ function closeModal(modalEl){
   document.body.style.overflow = "";
 }
 
-function openZoom(src){
-  if(!els.zoomModal || !els.zoomImage) return;
-  els.zoomImage.src = src;
-  openModal(els.zoomModal);
-}
-
-function initModalCloseHandlers(){
-  document.addEventListener("click", (e)=>{
-    const closeTarget = e.target.closest("[data-close]");
-    if(!closeTarget) return;
-
-    const modal = e.target.closest(".modal") || e.target.closest(".confirm");
-    if(!modal) return;
-
-    if(modal.classList.contains("modal")) closeModal(modal);
-    else closeConfirm();
-  });
-
-  window.addEventListener("keydown", (e)=>{
-    if(e.key!=="Escape") return;
-    if(els.zoomModal?.classList.contains("is-show")) closeModal(els.zoomModal);
-    else if(els.detailModal?.classList.contains("is-show")) closeModal(els.detailModal);
-    else if(els.confirmModal?.classList.contains("is-show")) closeConfirm();
-  });
-}
-
-/* ---------------- Confirm ---------------- */
-
-function shouldSkipConfirm(){
-  return lsGet(LS.SKIP_CONFIRM, "0") === "1";
-}
-function setSkipConfirm(v){
-  lsSet(LS.SKIP_CONFIRM, v ? "1" : "0");
-}
-
 function openConfirm(url, isR18){
-  state.pendingOpenUrl = url;
-  state.pendingOpenIsR18 = !!isR18;
+  state.pendingUrl = url;
+  state.pendingIsR18 = !!isR18;
 
-  if(!state.pendingOpenIsR18 && shouldSkipConfirm()){
+  if(!state.pendingIsR18 && shouldSkipConfirm()){
     window.open(url, "_blank", "noopener,noreferrer");
-    state.pendingOpenUrl = null;
-    state.pendingOpenIsR18 = false;
+    state.pendingUrl = null;
+    state.pendingIsR18 = false;
     return;
   }
 
   if(!els.confirmModal || !els.confirmMessage || !els.confirmOk || !els.confirmCancel || !els.confirmDontAsk){
-    const ok = window.confirm(state.pendingOpenIsR18
-      ? "【R18注意】外部サイトへ移動しますか？"
-      : "外部サイトへ移動しますか？");
+    const ok = window.confirm(state.pendingIsR18 ? "【R18注意】外部サイトへ移動しますか？" : "外部サイトへ移動しますか？");
     if(ok) window.open(url, "_blank", "noopener,noreferrer");
-    state.pendingOpenUrl = null;
-    state.pendingOpenIsR18 = false;
+    state.pendingUrl = null;
+    state.pendingIsR18 = false;
     return;
   }
 
   if(els.confirmTitle) els.confirmTitle.textContent = "確認";
-
-  if(state.pendingOpenIsR18){
+  if(state.pendingIsR18){
     els.confirmMessage.innerHTML = "⚠️ <b>R18（成人向け）に関連するリンクです。</b><br>外部サイトへ移動しますか？";
     els.confirmDontAsk.checked = false;
     els.confirmDontAsk.disabled = true;
@@ -685,116 +544,534 @@ function closeConfirm(){
   els.confirmModal.classList.remove("is-show");
   els.confirmModal.setAttribute("aria-hidden","true");
   document.body.style.overflow = "";
-  state.pendingOpenUrl = null;
-  state.pendingOpenIsR18 = false;
+  state.pendingUrl = null;
+  state.pendingIsR18 = false;
 }
 
-function bindConfirmButtons(){
-  els.confirmOk?.addEventListener("click", ()=>{
-    const url = state.pendingOpenUrl;
-    if(!url) return closeConfirm();
+function openHelp(key){
+  if(!els.helpPop || !els.helpPopTitle || !els.helpPopText) return;
+  const dict = {
+    search: {
+      t: "検索",
+      d: "スペース区切りでAND検索。タイトル/作者/タグ/メモなどを対象に検索します。"
+    },
+    sort: {
+      t: "並び替え",
+      d: "更新日・⭐・タイトル・IDで並べ替え。⭐はローカルで即反映されます。"
+    },
+    view: {
+      t: "表示",
+      d: "カード=15件、表=30件、コンパクト=40件。『もっと見る』で追加表示します。"
+    },
+    tags: {
+      t: "タグ",
+      d: "上位タグをすぐ押せます。タグ一覧で検索/複数選択も可能。条件はOR/AND切替できます。"
+    },
+    r18: {
+      t: "R18",
+      d: "表示は控えめですが、絞り込みは可能。外部リンクはR18の場合は常に警告が出ます。"
+    },
+    loss: {
+      t: "ロスト率",
+      d: "参考情報として控えめ表示。必要なときだけ絞り込めます。"
+    },
+  };
+  const item = dict[key] || { t:"ヘルプ", d:"" };
+  els.helpPopTitle.textContent = item.t;
+  els.helpPopText.textContent = item.d;
+  els.helpPop.classList.add("is-show");
+  els.helpPop.setAttribute("aria-hidden","false");
+  document.body.style.overflow = "hidden";
+}
+function closeHelp(){
+  if(!els.helpPop) return;
+  els.helpPop.classList.remove("is-show");
+  els.helpPop.setAttribute("aria-hidden","true");
+  document.body.style.overflow = "";
+}
 
-    if(!state.pendingOpenIsR18 && els.confirmDontAsk){
-      setSkipConfirm(!!els.confirmDontAsk.checked);
+function setTheme(next){
+  document.documentElement.setAttribute("data-theme", next);
+  lsSet(LS.THEME, next);
+  toast(`テーマ：${next}`);
+}
+
+function getFilters(){
+  const q = norm(els.searchInput?.value);
+  const system = norm(els.systemSelect?.value);
+  const format = norm(els.formatSelect?.value);
+  const players = norm(els.playersSelect?.value);
+  const time = norm(els.timeSelect?.value);
+  const r18 = norm(els.r18Select?.value);
+  const loss = norm(els.lossSelect?.value);
+  const sort = norm(els.sortSelect?.value || "updated_desc");
+  const view = norm(els.viewSelect?.value || "cards");
+  return { q, system, format, players, time, r18, loss, sort, view };
+}
+
+function tagsMatch(row){
+  if(state.selectedTags.size===0) return true;
+  const rowTags = new Set(row.tags);
+  if(state.tagMode==="and"){
+    for(const t of state.selectedTags){
+      if(!rowTags.has(t)) return false;
     }
-    window.open(url, "_blank", "noopener,noreferrer");
-    closeConfirm();
-  });
-  els.confirmCancel?.addEventListener("click", closeConfirm);
+    return true;
+  }
+  for(const t of state.selectedTags){
+    if(rowTags.has(t)) return true;
+  }
+  return false;
 }
 
-/* ---------------- Detail + Trailer ---------------- */
+function searchMatch(row, q){
+  const query = norm(q);
+  if(!query) return true;
+  const tokens = query.split(/\s+/).filter(Boolean).map(lower);
+  const hay = lower([
+    row.id, row.name, row.author, row.system, row.players, row.format, row.time,
+    row.r18Key, row.lossKey, row.tags.join(" "), row.memo
+  ].join(" / "));
+  return tokens.every(t => hay.includes(t));
+}
 
-function findById(id){
-  return state.rows.find(r=>r.id===id) || null;
+function r18Match(row, filterVal){
+  if(!filterVal) return true;
+  if(filterVal==="none") return row.r18Key==="none";
+  if(filterVal==="unknown") return row.r18Key==="unknown";
+  if(filterVal==="any") return isR18Key(row.r18Key);
+  return true;
+}
+function lossMatch(row, filterVal){
+  if(!filterVal) return true;
+  if(filterVal==="unknown") return row.lossKey==="unknown";
+  return row.lossKey === filterVal;
+}
+
+function formatMatch(row, filterVal){
+  if(!filterVal) return true;
+  if(filterVal==="どちらでも"){
+    const rf = norm(row.format);
+    return !!rf && (rf.includes("どちら") || rf.includes("ボイセ") || rf.includes("テキセ"));
+  }
+  return norm(row.format) === filterVal;
+}
+
+function applyFilters(){
+  const f = getFilters();
+  let arr = state.rows.filter(row=>{
+    if(f.system && row.system !== f.system) return false;
+    if(f.format && !formatMatch(row, f.format)) return false;
+    if(!playersPresetMatch(row, f.players)) return false;
+    if(!timePresetMatch(row, f.time)) return false;
+    if(!r18Match(row, f.r18)) return false;
+    if(!lossMatch(row, f.loss)) return false;
+    if(!tagsMatch(row)) return false;
+    if(!searchMatch(row, f.q)) return false;
+    return true;
+  });
+
+  const byName = (a,b)=>a.name.localeCompare(b.name,"ja");
+  const byId = (a,b)=>parseIdNumber(a.id) - parseIdNumber(b.id);
+  const byFav = (a,b)=>(a.favCount||0) - (b.favCount||0);
+  const byUpdated = (a,b)=>{
+    const ta = Date.parse(a.updatedAt || "") || 0;
+    const tb = Date.parse(b.updatedAt || "") || 0;
+    if(ta===tb) return byId(a,b);
+    return ta - tb;
+  };
+
+  const sort = f.sort || "updated_desc";
+  const cmp = ({
+    updated_desc:(a,b)=>-byUpdated(a,b),
+    updated_asc: byUpdated,
+    fav_desc:(a,b)=>-byFav(a,b),
+    fav_asc: byFav,
+    title_asc: byName,
+    title_desc:(a,b)=>-byName(a,b),
+    id_asc: byId,
+    id_desc:(a,b)=>-byId(a,b),
+  })[sort] || ((a,b)=>-byUpdated(a,b));
+
+  arr.sort(cmp);
+  return arr;
+}
+
+function setView(view){
+  state.view = view;
+  state.limit = getViewLimit(view);
+
+  if(els.cardView) els.cardView.hidden = (view !== "cards");
+  if(els.tableView) els.tableView.hidden = (view !== "table");
+  if(els.compactView) els.compactView.hidden = (view !== "compact");
+}
+
+function renderTagTop(){
+  if(!els.tagTop) return;
+  const freq = state._tagFreq || new Map();
+  const list = Array.from(freq.entries())
+    .sort((a,b)=> b[1]-a[1] || a[0].localeCompare(b[0],"ja"))
+    .slice(0, 8)
+    .map(([t,count])=>({ t, count }));
+
+  els.tagTop.innerHTML = list.map(x=>{
+    const sel = state.selectedTags.has(x.t);
+    return `<button type="button" class="sc-pill ${sel?"is-selected":""}" data-action="tag-toggle" data-tag="${esc(x.t)}">${esc(x.t)}</button>`;
+  }).join("");
+}
+
+function renderSelectedTags(){
+  if(!els.selectedTagsWrap || !els.selectedTags) return;
+  const arr = Array.from(state.selectedTags);
+  if(arr.length===0){
+    els.selectedTagsWrap.hidden = true;
+    els.selectedTags.innerHTML = "";
+    return;
+  }
+  els.selectedTagsWrap.hidden = false;
+  els.selectedTags.innerHTML = arr.map(t=>{
+    return `<button type="button" class="sc-pill is-selected" data-action="tag-toggle" data-tag="${esc(t)}">${esc(t)} ✕</button>`;
+  }).join("");
+}
+
+function renderTagModalList(){
+  if(!els.tagModalBody) return;
+  const q = lower(els.tagSearchInput?.value || "");
+  const freq = state._tagFreq || new Map();
+  const all = (state._allTags || []).slice();
+  const items = all
+    .filter(t => !q || lower(t).includes(q))
+    .sort((a,b)=> (freq.get(b)||0)-(freq.get(a)||0) || a.localeCompare(b,"ja"))
+    .slice(0, 400);
+
+  els.tagModalBody.innerHTML = items.map(t=>{
+    const sel = state.selectedTags.has(t);
+    const c = freq.get(t) || 0;
+    return `<button type="button" class="sc-pill ${sel?"is-selected":""}" data-action="tag-toggle" data-tag="${esc(t)}">${esc(t)} <span style="opacity:.6;">(${c})</span></button>`;
+  }).join("");
+}
+
+function summarizeFiltersForChips(filteredCount){
+  const f = getFilters();
+  const chips = [];
+
+  if(f.q) chips.push({ k:"q", label:`検索: ${f.q}` });
+  if(f.system) chips.push({ k:"system", label:`System: ${f.system}` });
+  if(f.format) chips.push({ k:"format", label:`形式: ${f.format}` });
+  if(f.players) chips.push({ k:"players", label:`人数: ${f.players}` });
+  if(f.time) chips.push({ k:"time", label:`時間: ${f.time}` });
+  if(f.r18) chips.push({ k:"r18", label:`R18: ${f.r18}` });
+  if(f.loss) chips.push({ k:"loss", label:`ロスト: ${f.loss}` });
+  if(state.selectedTags.size>0) chips.push({ k:"tags", label:`タグ: ${Array.from(state.selectedTags).slice(0,4).join(", ")}${state.selectedTags.size>4?"…":""}` });
+
+  if(!els.activeFilters) return;
+
+  els.activeFilters.innerHTML = chips.map(c=>{
+    return `<span class="sc-filterChip">${esc(c.label)}<button type="button" data-action="chip-clear" data-chip="${esc(c.k)}" aria-label="解除">×</button></span>`;
+  }).join("");
+
+  if(els.resultInfo){
+    els.resultInfo.textContent = `表示: ${filteredCount} 件 / 全体: ${state.rows.length} 件`;
+  }
+
+  const favTotal = state.rows.reduce((a,r)=>a+(r.favCount||0),0);
+  if(els.favTotalInfo) els.favTotalInfo.textContent = `⭐合計: ${favTotal}`;
+  if(els.metaInfo) els.metaInfo.textContent = `最終取得: ${new Date(Number(lsGet(LS.CACHE_TS,"0"))||Date.now()).toLocaleString()}`;
+
+  if(els.footerCount) els.footerCount.textContent = `所持: ${state.rows.length}本`;
+  if(els.footerFavTotal) els.footerFavTotal.textContent = `⭐合計: ${favTotal}`;
+  if(els.footerUpdated){
+    const latest = state.rows.reduce((max,r)=>{
+      const t = Date.parse(r.updatedAt||"") || 0;
+      return Math.max(max, t);
+    }, 0);
+    els.footerUpdated.textContent = `更新: ${latest ? new Date(latest).toLocaleDateString() : "—"}`;
+  }
+}
+
+function popularBadge(row){
+  const n = row.favCount || 0;
+  if(n >= 20) return "人気";
+  if(n >= 10) return "注目";
+  if(n >= 5) return "気になる";
+  return "";
+}
+
+function renderCards(list){
+  if(!els.cardView) return;
+  const favSet = getFavSet();
+
+  const slice = list.slice(0, state.limit);
+
+  els.cardView.innerHTML = slice.map(r=>{
+    const r18 = r18Label(r.r18Key);
+    const loss = r.lossKey === "unknown" ? "unknown" : r.lossKey;
+    const lossCls = lossClass(r.lossKey);
+    const pop = popularBadge(r);
+    const isFav = favSet.has(r.id);
+
+    const pills = [];
+    if(r.system) pills.push(`<span class="sc-pillMeta">${esc(r.system)}</span>`);
+    if(r.players) pills.push(`<span class="sc-pillMeta">${esc(r.players)}</span>`);
+    if(r.format) pills.push(`<span class="sc-pillMeta">${esc(r.format)}</span>`);
+    if(r.time) pills.push(`<span class="sc-pillMeta">${esc(r.time)}</span>`);
+    if(pop) pills.push(`<span class="sc-pillMeta popular">${esc(pop)}</span>`);
+    pills.push(`<span class="sc-miniBadge r18">R18:${esc(r18)}</span>`);
+    pills.push(`<span class="sc-miniBadge loss ${esc(lossCls)}">ロスト:${esc(loss)}</span>`);
+
+    const tags = r.tags.slice(0, 10).map(t=>{
+      const sel = state.selectedTags.has(t);
+      return `<button type="button" class="sc-pill ${sel?"is-selected":""}" data-action="tag-toggle" data-tag="${esc(t)}">${esc(t)}</button>`;
+    }).join("");
+
+    const urlBtns = r.url ? `
+      <button type="button" class="sc-icon" data-action="open-url" data-url="${esc(r.url)}" data-r18="${isR18Key(r.r18Key)?"1":"0"}" aria-label="外部リンク">🔗</button>
+      <button type="button" class="sc-icon" data-action="copy-url" data-url="${esc(r.url)}" aria-label="URLコピー">📋</button>
+    ` : "";
+
+    const trailerBtn = r.trailerUrls.length ? `
+      <button type="button" class="sc-icon" data-action="open-detail" data-id="${esc(r.id)}" aria-label="詳細（トレーラーあり）">🎞</button>
+    ` : "";
+
+    return `
+      <article class="sc-card" data-action="open-detail" data-id="${esc(r.id)}">
+        ${r.id ? `<div class="sc-id">${esc(r.id)}</div>` : ""}
+        <div class="sc-title">${esc(r.name || "(no title)")}</div>
+        <div class="sc-author">${esc(r.author || "")}</div>
+
+        <div class="sc-pillRow">${pills.join("")}</div>
+
+        ${tags ? `<div class="sc-pillRow" style="margin-top:8px;">${tags}</div>` : ""}
+
+        ${r.memo ? `<div class="sc-note">${esc(r.memo)}</div>` : ""}
+
+        <div class="sc-actions">
+          ${trailerBtn}
+          ${urlBtns}
+          <button type="button" class="sc-icon sc-favBtn ${isFav?"is-on":""}" data-action="fav" data-id="${esc(r.id)}" aria-label="お気に入り">
+            <span class="sc-favStar">⭐</span><span>${esc(r.favCount || 0)}</span>
+          </button>
+        </div>
+      </article>
+    `;
+  }).join("");
+}
+
+function renderTable(list){
+  if(!els.tableBody) return;
+  const favSet = getFavSet();
+  const slice = list.slice(0, state.limit);
+
+  els.tableBody.innerHTML = slice.map(r=>{
+    const isFav = favSet.has(r.id);
+    const urlCell = r.url ? `
+      <button type="button" class="sc-linkBtn" data-action="open-url" data-url="${esc(r.url)}" data-r18="${isR18Key(r.r18Key)?"1":"0"}">open</button>
+      <button type="button" class="sc-linkBtn" data-action="copy-url" data-url="${esc(r.url)}">copy</button>
+    ` : "";
+
+    return `
+      <tr data-action="open-detail" data-id="${esc(r.id)}">
+        <td>${esc(r.id)}</td>
+        <td>${esc(r.name)}</td>
+        <td>${esc(r.author)}</td>
+        <td>${esc(r.system)}</td>
+        <td>${esc(r.players)}</td>
+        <td>${esc(r.format)}</td>
+        <td>${esc(r.time)}</td>
+        <td>
+          <span style="font-weight:900;">⭐ ${esc(r.favCount || 0)}</span>
+          ${isFav ? `<span style="opacity:.6;">(済)</span>` : ``}
+        </td>
+        <td>${urlCell}</td>
+      </tr>
+    `;
+  }).join("");
+}
+
+function renderCompact(list){
+  if(!els.compactView) return;
+  const favSet = getFavSet();
+  const slice = list.slice(0, state.limit);
+
+  els.compactView.innerHTML = slice.map(r=>{
+    const isFav = favSet.has(r.id);
+    const sub = [r.id, r.system].filter(Boolean).join(" / ");
+    return `
+      <div class="sc-compactRow" data-action="open-detail" data-id="${esc(r.id)}">
+        <div class="sc-compactLeft">
+          <div class="sc-compactTitle">${esc(r.name || "(no title)")}</div>
+          <div class="sc-compactSub">${esc(sub)}</div>
+        </div>
+        <div class="sc-compactRight">
+          ${r.url ? `<button type="button" class="sc-icon" data-action="open-url" data-url="${esc(r.url)}" data-r18="${isR18Key(r.r18Key)?"1":"0"}" aria-label="外部リンク">🔗</button>` : ""}
+          ${r.url ? `<button type="button" class="sc-icon" data-action="copy-url" data-url="${esc(r.url)}" aria-label="URLコピー">📋</button>` : ""}
+          <div class="sc-compactFav">⭐ ${esc(r.favCount || 0)}${isFav?" ✓":""}</div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderAll(){
+  const f = getFilters();
+  setView(f.view || "cards");
+  state.limit = state.limit || getViewLimit(state.view);
+
+  const filtered = applyFilters();
+  summarizeFiltersForChips(filtered.length);
+
+  const total = filtered.length;
+  const shown = Math.min(total, state.limit);
+  if(els.btnMore){
+    els.btnMore.disabled = shown >= total;
+    els.btnMore.classList.toggle("is-disabled", shown >= total);
+    els.btnMore.textContent = shown >= total ? "ここまで" : "もっと見る";
+  }
+
+  if(state.view==="cards"){
+    renderCards(filtered);
+  }else if(state.view==="table"){
+    renderTable(filtered);
+  }else{
+    renderCompact(filtered);
+  }
+}
+
+function resetFilters(){
+  if(els.searchInput) els.searchInput.value = "";
+  if(els.sortSelect) els.sortSelect.value = "updated_desc";
+  if(els.viewSelect) els.viewSelect.value = "cards";
+  if(els.systemSelect) els.systemSelect.value = "";
+  if(els.formatSelect) els.formatSelect.value = "";
+  if(els.playersSelect) els.playersSelect.value = "";
+  if(els.timeSelect) els.timeSelect.value = "";
+  if(els.r18Select) els.r18Select.value = "";
+  if(els.lossSelect) els.lossSelect.value = "";
+
+  state.selectedTags.clear();
+  renderTagTop();
+  renderSelectedTags();
+  renderTagModalList();
+
+  state.view = "cards";
+  state.limit = getViewLimit("cards");
+  renderAll();
+  toast("条件をリセット");
+}
+
+function clearChip(key){
+  if(key==="q" && els.searchInput) els.searchInput.value = "";
+  if(key==="system" && els.systemSelect) els.systemSelect.value = "";
+  if(key==="format" && els.formatSelect) els.formatSelect.value = "";
+  if(key==="players" && els.playersSelect) els.playersSelect.value = "";
+  if(key==="time" && els.timeSelect) els.timeSelect.value = "";
+  if(key==="r18" && els.r18Select) els.r18Select.value = "";
+  if(key==="loss" && els.lossSelect) els.lossSelect.value = "";
+  if(key==="tags") state.selectedTags.clear();
+
+  renderTagTop();
+  renderSelectedTags();
+  renderTagModalList();
+  renderAll();
+}
+
+function openZoom(src){
+  if(!els.zoomModal || !els.zoomImage) return;
+  els.zoomImage.src = src;
+  openModal(els.zoomModal);
 }
 
 function buildTrailerBlock(trailers){
-  if(!state.trailersEnabled){
-    return `
-      <div class="detail-block" style="grid-column: 1 / -1;">
-        <h3>トレーラー</h3>
-        <div class="detail-val"><span class="muted">非表示</span></div>
-      </div>
-    `;
-  }
-
   if(!trailers || trailers.length===0){
     return `
       <div class="detail-block" style="grid-column: 1 / -1;">
         <h3>トレーラー</h3>
-        <div class="detail-val"><span class="muted">なし</span></div>
+        <div class="detail-val"><span style="color: var(--sc-muted);">なし</span></div>
       </div>
     `;
   }
+
+  const thumbs = trailers.map((u,i)=>{
+    return `
+      <button type="button" class="trailer-thumb ${i===0?"is-active":""}" data-action="trailer-jump" data-index="${i}" aria-label="画像 ${i+1}">
+        <img src="${esc(u)}" loading="lazy" alt="">
+      </button>
+    `;
+  }).join("");
 
   return `
     <div class="detail-block" style="grid-column: 1 / -1;">
       <h3>トレーラー</h3>
       <div class="detail-val trailer">
         <div class="trailer-viewport" id="trailerViewport">
-          <img id="trailerImg" alt="trailer" draggable="false">
+          <img id="trailerImg" alt="trailer" loading="lazy">
           <div class="trailer-nav">
-            <button type="button" class="trailer-btn" id="trailerPrev" aria-label="前へ">‹</button>
-            <button type="button" class="trailer-btn" id="trailerNext" aria-label="次へ">›</button>
+            <button type="button" class="trailer-btn" id="trailerPrev" data-action="trailer-prev" aria-label="前へ">‹</button>
+            <button type="button" class="trailer-btn" id="trailerNext" data-action="trailer-next" aria-label="次へ">›</button>
           </div>
         </div>
-        <div class="trailer-dots" id="trailerDots"></div>
-        <div class="muted" style="margin-top:8px;font-size:12px;opacity:.85;">
-          画像クリックで拡大 / スワイプで切替
-        </div>
+        <div class="trailer-thumbs" id="trailerThumbs">${thumbs}</div>
       </div>
     </div>
   `;
 }
 
-function openDetail(id){
+function findById(id){
+  return state.rows.find(r=>r.id===id) || null;
+}
+
+function openDetail(id, pushHash=true){
   const row = findById(id);
-  if(!row || !els.detailModal || !els.detailBody) return;
+  if(!row || !els.detailModal || !els.detailBody || !els.detailTitle || !els.detailSub) return;
 
   state.activeId = id;
+  if(pushHash) setHash(id);
 
-  const r18 = isR18Key(row.r18Key);
-  const lossCls = lossClassFromKey(row.lossKey);
+  const favSet = getFavSet();
+  const isFav = favSet.has(row.id);
+  const r18 = r18Label(row.r18Key);
+  const loss = row.lossKey === "unknown" ? "unknown" : row.lossKey;
+  const lossCls = lossClass(row.lossKey);
 
-  if(els.detailTitle) els.detailTitle.textContent = row.name || "詳細";
-  if(els.detailSub) els.detailSub.textContent = `${row.id}${row.author ? ` ・作者: ${row.author}` : ""}`;
+  els.detailTitle.textContent = row.name || "詳細";
+  els.detailSub.textContent = `${row.id}${row.author ? ` ・作者: ${row.author}` : ""}`;
 
   const tagsHtml = row.tags.length
-    ? row.tags.map(t=>`<button type="button" class="sc-pill sc-tag" data-tag="${escapeHtml(t)}">${escapeHtml(t)}</button>`).join("")
-    : `<span class="muted">なし</span>`;
+    ? row.tags.map(t=>`<button type="button" class="sc-pill ${state.selectedTags.has(t)?"is-selected":""}" data-action="tag-toggle" data-tag="${esc(t)}">${esc(t)}</button>`).join("")
+    : `<span style="color: var(--sc-muted);">なし</span>`;
 
   const urlHtml = row.url ? `
     <div class="detail-actions">
-      <button type="button" class="sc-icon" data-action="open-url" data-url="${escapeHtml(row.url)}" data-r18="${r18?"1":"0"}" aria-label="外部リンク">🔗</button>
-      <button type="button" class="sc-icon" data-action="copy-url" data-url="${escapeHtml(row.url)}" aria-label="URLコピー">📋</button>
+      <button type="button" class="sc-icon" data-action="open-url" data-url="${esc(row.url)}" data-r18="${isR18Key(row.r18Key)?"1":"0"}" aria-label="外部リンク">🔗</button>
+      <button type="button" class="sc-icon" data-action="copy-url" data-url="${esc(row.url)}" aria-label="URLコピー">📋</button>
+      <button type="button" class="sc-icon sc-favBtn ${isFav?"is-on":""}" data-action="fav" data-id="${esc(row.id)}" aria-label="お気に入り">
+        <span class="sc-favStar">⭐</span><span>${esc(row.favCount || 0)}</span>
+      </button>
     </div>
-  ` : `<span class="muted">URLなし</span>`;
+  ` : `<span style="color: var(--sc-muted);">URLなし</span>`;
 
-  const trailerBlock = buildTrailerBlock(row.trailers);
+  const trailerBlock = buildTrailerBlock(row.trailerUrls);
 
   els.detailBody.innerHTML = `
     <div class="detail-grid">
       <div class="detail-block">
         <h3>基本</h3>
         <div class="detail-val">
-          ${row.system ? `<div>System: <strong>${escapeHtml(row.system)}</strong></div>` : ""}
-          ${row.format ? `<div>形式: <strong>${escapeHtml(row.format)}</strong></div>` : ""}
-          ${row.players ? `<div>人数: <strong>${escapeHtml(row.players)}</strong></div>` : ""}
-          ${row.time ? `<div>時間: <strong>${escapeHtml(row.time)}</strong></div>` : ""}
+          ${row.system ? `<div>System: <strong>${esc(row.system)}</strong></div>` : ""}
+          ${row.format ? `<div>形式: <strong>${esc(row.format)}</strong></div>` : ""}
+          ${row.players ? `<div>人数: <strong>${esc(row.players)}</strong></div>` : ""}
+          ${row.time ? `<div>時間: <strong>${esc(row.time)}</strong></div>` : ""}
         </div>
       </div>
 
       <div class="detail-block">
-        <h3>危険度</h3>
+        <h3>目安</h3>
         <div class="detail-val">
-          <div>R18: <strong class="${r18 ? "sc-r18" : ""}" style="padding:2px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.12);display:inline-block;">
-            ${escapeHtml(r18Label(row.r18Key))}
-          </strong></div>
-          <div style="margin-top:6px;">ロスト率:
-            <strong class="${escapeHtml(lossCls)}" style="padding:2px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.12);display:inline-block;">
-              ${escapeHtml(row.lossKey==="unknown" ? "不明" : row.lossKey)}
-            </strong>
+          <div>R18:
+            <strong class="sc-miniBadge r18" style="margin-left:6px;">${esc(r18)}</strong>
+          </div>
+          <div style="margin-top:8px;">ロスト率:
+            <strong class="sc-miniBadge loss ${esc(lossCls)}" style="margin-left:6px;">${esc(loss)}</strong>
           </div>
         </div>
       </div>
@@ -811,7 +1088,7 @@ function openDetail(id){
 
       <div class="detail-block" style="grid-column: 1 / -1;">
         <h3>メモ</h3>
-        <div class="detail-val detail-memo">${row.memo ? escapeHtml(row.memo) : "—"}</div>
+        <div class="detail-val detail-memo">${row.memo ? esc(row.memo) : "—"}</div>
       </div>
 
       ${trailerBlock}
@@ -820,174 +1097,165 @@ function openDetail(id){
 
   openModal(els.detailModal);
 
-  // init trailer state
-  state.trailerList = (row.trailers || []).slice();
+  state.trailerList = (row.trailerUrls || []).slice();
   state.trailerIndex = 0;
-  updateTrailerUI();
+  state.trailerBound = false;
+  renderTrailer();
 }
 
-function updateTrailerUI(){
+function renderTrailer(){
+  const list = state.trailerList || [];
   const img = document.getElementById("trailerImg");
-  const dots = document.getElementById("trailerDots");
+  const thumbs = document.getElementById("trailerThumbs");
+  const viewport = document.getElementById("trailerViewport");
   const prev = document.getElementById("trailerPrev");
   const next = document.getElementById("trailerNext");
+  if(!img || !thumbs || !viewport || list.length===0) return;
 
-  const list = state.trailerList || [];
-  if(!img || !dots) return;
-
-  if(list.length === 0){
-    img.removeAttribute("src");
-    img.dataset.src = "";
-    dots.innerHTML = "";
-    if(prev) prev.style.display = "none";
-    if(next) next.style.display = "none";
-    return;
-  }
-
-  state.trailerIndex = clampInt(state.trailerIndex, 0, list.length - 1);
-
+  state.trailerIndex = clampInt(state.trailerIndex, 0, list.length-1);
   const src = list[state.trailerIndex];
   img.src = src;
   img.dataset.src = src;
 
-  dots.innerHTML = list.map((_, i)=>(
-    `<button type="button" class="trailer-dot ${i===state.trailerIndex?"is-active":""}" data-index="${i}" aria-label="画像 ${i+1}"></button>`
-  )).join("");
+  thumbs.querySelectorAll(".trailer-thumb").forEach((b, i)=>{
+    b.classList.toggle("is-active", i===state.trailerIndex);
+  });
 
   const showNav = list.length > 1;
   if(prev) prev.style.display = showNav ? "" : "none";
   if(next) next.style.display = showNav ? "" : "none";
-}
 
-/* ✅ 핵: モーダル内トレーラーはイベント委譲で常に動く */
-function bindDetailModalTrailerDelegation(){
-  if(!els.detailModal) return;
+  if(state.trailerBound) return;
+  state.trailerBound = true;
 
-  els.detailModal.addEventListener("click", (e)=>{
-    const prev = e.target.closest("#trailerPrev");
-    if(prev){
-      e.stopPropagation();
-      const len = state.trailerList?.length || 0;
-      if(len > 1){
-        state.trailerIndex = (state.trailerIndex - 1 + len) % len;
-        updateTrailerUI();
-      }
-      return;
-    }
-
-    const next = e.target.closest("#trailerNext");
-    if(next){
-      e.stopPropagation();
-      const len = state.trailerList?.length || 0;
-      if(len > 1){
-        state.trailerIndex = (state.trailerIndex + 1) % len;
-        updateTrailerUI();
-      }
-      return;
-    }
-
-    const dot = e.target.closest(".trailer-dot");
-    if(dot){
-      const i = parseInt(dot.dataset.index, 10);
-      if(Number.isFinite(i)){
-        state.trailerIndex = i;
-        updateTrailerUI();
-      }
-      return;
-    }
-
-    const img = e.target.closest("#trailerImg");
-    if(img){
-      const src = img.dataset.src || img.getAttribute("src");
-      if(src) openZoom(src);
-      return;
-    }
+  img.addEventListener("click", ()=>{
+    if(img.dataset.src) openZoom(img.dataset.src);
   });
 
-  // swipe (pointer)
-  els.detailModal.addEventListener("pointerdown", (e)=>{
-    const vp = e.target.closest("#trailerViewport");
-    if(!vp) return;
-    state.trailerSwipeStartX = e.clientX;
+  let startX = null;
+  viewport.addEventListener("pointerdown", (e)=>{
+    startX = e.clientX;
+    viewport.setPointerCapture?.(e.pointerId);
   });
-
-  els.detailModal.addEventListener("pointerup", (e)=>{
-    const vp = e.target.closest("#trailerViewport");
-    if(!vp) return;
-    if(state.trailerSwipeStartX === null) return;
-
-    const dx = e.clientX - state.trailerSwipeStartX;
-    state.trailerSwipeStartX = null;
-
+  viewport.addEventListener("pointerup", (e)=>{
+    if(startX===null) return;
+    const dx = e.clientX - startX;
+    startX = null;
     if(Math.abs(dx) < 40) return;
-    const len = state.trailerList?.length || 0;
-    if(len <= 1) return;
-
-    if(dx < 0) state.trailerIndex = (state.trailerIndex + 1) % len;
-    else state.trailerIndex = (state.trailerIndex - 1 + len) % len;
-
-    updateTrailerUI();
+    if(dx < 0) state.trailerIndex = (state.trailerIndex + 1) % state.trailerList.length;
+    else state.trailerIndex = (state.trailerIndex - 1 + state.trailerList.length) % state.trailerList.length;
+    renderTrailer();
   });
 }
 
-/* ---------------- View / prefs ---------------- */
-
-function setView(view){
-  state.view = view;
-  document.querySelectorAll(".sc-tab").forEach(t=>{
-    t.classList.toggle("is-active", t.dataset.view === view);
-  });
-  render();
-}
-
-function applyUiPrefsToDom(){
-  document.body.classList.toggle("is-compact", !!state.compact);
-  if(els.toggleCompact) els.toggleCompact.checked = !!state.compact;
-  if(els.toggleShowTrailers) els.toggleShowTrailers.checked = !!state.trailersEnabled;
-  if(els.tagsModeBtn) els.tagsModeBtn.textContent = `条件：${state.tagsMode.toUpperCase()}`;
-}
-
-function loadUiPrefs(){
-  state.tagsMode = (lsGet(LS.TAG_MODE, "or")==="and") ? "and" : "or";
-  state.compact = lsGet(LS.COMPACT, "0")==="1";
-  state.trailersEnabled = lsGet(LS.SHOW_TRAILERS, "1")!=="0";
-  applyUiPrefsToDom();
-}
-function saveUiPrefs(){
-  lsSet(LS.TAG_MODE, state.tagsMode);
-  lsSet(LS.COMPACT, state.compact ? "1" : "0");
-  lsSet(LS.SHOW_TRAILERS, state.trailersEnabled ? "1" : "0");
-}
-
-/* ---------------- Data load ---------------- */
-
-async function loadData(isReload=false){
+function setHash(id){
   try{
-    setStatus("取得中…");
-    const data = await fetchJSON(API_URL);
-    if(!data || data.ok===false) throw new Error(data?.error || "API error");
+    if(!id){
+      history.replaceState(null, "", location.pathname + location.search);
+      return;
+    }
+    history.replaceState(null, "", "#" + encodeURIComponent(id));
+  }catch{}
+}
 
-    state.rawRows = Array.isArray(data.rows) ? data.rows : [];
-    state.rows = state.rawRows.map(normalizeRow);
-
-    buildSelectOptions(els.filterSystem, state.rows.map(r=>r.system), "指定なし");
-    buildSelectOptions(els.filterFormat, state.rows.map(r=>r.format), "指定なし");
-
-    state._allTags = uniqSorted(state.rows.flatMap(r=>r.tags));
-    rebuildTagChips();
-
-    setStatus(`OK：${state.rows.length}件 取得`);
-    if(isReload) toast("再取得しました");
-
-    render();
-  }catch(err){
-    console.error(err);
-    setStatus("取得失敗：API URL / 公開設定を確認");
-    toast("取得に失敗しました");
+function openFromHash(){
+  const h = decodeURIComponent((location.hash || "").replace(/^#/, ""));
+  if(!h) return;
+  const id = norm(h);
+  const row = findById(id);
+  if(row){
+    openDetail(id, false);
   }
 }
 
-/* ---------------- Events ---------------- */
+async function sendFavToServer(id){
+  try{
+    await fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify({ type:"fav", id }),
+    });
+  }catch{}
+}
+
+function incFavLocal(id){
+  const row = findById(id);
+  if(row) row.favCount = (row.favCount || 0) + 1;
+}
+
+function handleFav(id){
+  if(!id) return;
+  const set = getFavSet();
+  if(set.has(id)){
+    toast("⭐は1回まで");
+    return;
+  }
+  set.add(id);
+  saveFavSet(set);
+  incFavLocal(id);
+  toast("⭐しました");
+  renderAll();
+  sendFavToServer(id);
+}
+
+function handleMore(){
+  const view = state.view;
+  const step = getViewLimit(view);
+  state.limit += step;
+  renderAll();
+}
+
+function updateScrollProgress(){
+  if(!els.scrollProgress) return;
+  const doc = document.documentElement;
+  const max = (doc.scrollHeight - doc.clientHeight) || 1;
+  const p = (doc.scrollTop / max) * 100;
+  els.scrollProgress.style.width = `${Math.max(0, Math.min(100, p))}%`;
+}
+
+function setTagMode(mode){
+  state.tagMode = (mode==="and") ? "and" : "or";
+  lsSet(LS.TAG_MODE, state.tagMode);
+  if(els.tagModeBtn) els.tagModeBtn.textContent = `条件：${state.tagMode.toUpperCase()}`;
+}
+
+function initTagMode(){
+  const m = lsGet(LS.TAG_MODE, "or");
+  setTagMode(m==="and" ? "and" : "or");
+}
+
+function initModalCloseHandlers(){
+  document.addEventListener("click", (e)=>{
+    const closeTarget = e.target.closest("[data-close]");
+    if(!closeTarget) return;
+
+    const modal = e.target.closest(".modal");
+    const confirm = e.target.closest(".confirm");
+    if(modal) closeModal(modal);
+    if(confirm) closeConfirm();
+  });
+
+  window.addEventListener("keydown", (e)=>{
+    if(e.key!=="Escape") return;
+    if(els.helpPop?.classList.contains("is-show")) return closeHelp();
+    if(els.zoomModal?.classList.contains("is-show")) return closeModal(els.zoomModal);
+    if(els.detailModal?.classList.contains("is-show")) return closeModal(els.detailModal);
+    if(els.tagModal?.classList.contains("is-show")) return closeModal(els.tagModal);
+    if(els.confirmModal?.classList.contains("is-show")) return closeConfirm();
+  });
+}
+
+function bindConfirmButtons(){
+  els.confirmOk?.addEventListener("click", ()=>{
+    const url = state.pendingUrl;
+    if(!url) return closeConfirm();
+    if(!state.pendingIsR18 && els.confirmDontAsk){
+      setSkipConfirm(!!els.confirmDontAsk.checked);
+    }
+    window.open(url, "_blank", "noopener,noreferrer");
+    closeConfirm();
+  });
+  els.confirmCancel?.addEventListener("click", closeConfirm);
+}
 
 function debounce(fn, wait){
   let t = null;
@@ -997,142 +1265,219 @@ function debounce(fn, wait){
   };
 }
 
-function resetFilters(){
-  if(els.searchInput) els.searchInput.value = "";
-  if(els.sortSelect) els.sortSelect.value = "id_desc";
-  if(els.filterSystem) els.filterSystem.value = "";
-  if(els.filterFormat) els.filterFormat.value = "";
-  if(els.filterPlayersPreset) els.filterPlayersPreset.value = "";
-  if(els.filterTimePreset) els.filterTimePreset.value = "";
-  if(els.filterR18) els.filterR18.value = "";
-  if(els.filterLoss) els.filterLoss.value = "";
-
-  state.selectedTags.clear();
-  rebuildTagChips();
-  render();
-  toast("条件をリセット");
-}
-
 function bindEvents(){
-  // theme toggle
+  window.addEventListener("scroll", updateScrollProgress, { passive:true });
+  updateScrollProgress();
+
   els.themeToggle?.addEventListener("click", ()=>{
-    const now = document.documentElement.getAttribute("data-theme");
+    const now = document.documentElement.getAttribute("data-theme") || "dark";
     const next = now==="light" ? "dark" : "light";
-    document.documentElement.setAttribute("data-theme", next);
-    lsSet(LS.THEME, next);
-    toast(`テーマ：${next}`);
+    setTheme(next);
   });
 
-  // top actions
-  els.refreshBtn?.addEventListener("click", ()=>loadData(true));
-  els.resetFiltersBtn?.addEventListener("click", resetFilters);
-
-  // controls
-  els.searchInput?.addEventListener("input", debounce(render, 80));
-  els.sortSelect?.addEventListener("change", render);
-
-  els.filterSystem?.addEventListener("change", render);
-  els.filterFormat?.addEventListener("change", render);
-  els.filterPlayersPreset?.addEventListener("change", render);
-  els.filterTimePreset?.addEventListener("change", render);
-  els.filterR18?.addEventListener("change", render);
-  els.filterLoss?.addEventListener("change", render);
-
-  // toggles
-  els.toggleCompact?.addEventListener("change", ()=>{
-    state.compact = !!els.toggleCompact.checked;
-    saveUiPrefs();
-    applyUiPrefsToDom();
-    render();
-  });
-  els.toggleShowTrailers?.addEventListener("change", ()=>{
-    state.trailersEnabled = !!els.toggleShowTrailers.checked;
-    saveUiPrefs();
-    applyUiPrefsToDom();
-    render();
+  els.btnReload?.addEventListener("click", ()=>{
+    lsDel(LS.CACHE);
+    lsDel(LS.CACHE_TS);
+    loadData(true);
+    toast("再取得");
   });
 
-  // tags
-  els.tagsSearchInput?.addEventListener("input", debounce(rebuildTagChips, 80));
+  els.btnReset?.addEventListener("click", resetFilters);
 
-  els.tagsClearBtn?.addEventListener("click", ()=>{
+  els.btnCopyFilters?.addEventListener("click", ()=>{
+    const f = getFilters();
+    const tags = Array.from(state.selectedTags);
+    const txt =
+`条件:
+q="${f.q || ""}"
+system=${f.system || ""}
+format=${f.format || ""}
+players=${f.players || ""}
+time=${f.time || ""}
+r18=${f.r18 || ""}
+loss=${f.loss || ""}
+tags(${state.tagMode})=${tags.join(", ") || ""}
+sort=${f.sort || ""}
+view=${f.view || ""}
+`;
+    copyText(txt);
+  });
+
+  els.btnCopyCount?.addEventListener("click", ()=>{
+    const filtered = applyFilters();
+    copyText(String(filtered.length));
+  });
+
+  els.btnMore?.addEventListener("click", handleMore);
+
+  els.btnToTop?.addEventListener("click", ()=>{
+    window.scrollTo({ top:0, behavior: prefersReducedMotion() ? "auto" : "smooth" });
+  });
+
+  const rerender = debounce(renderAll, 80);
+  els.searchInput?.addEventListener("input", rerender);
+  els.sortSelect?.addEventListener("change", renderAll);
+  els.viewSelect?.addEventListener("change", ()=>{
+    state.limit = getViewLimit(els.viewSelect.value || "cards");
+    renderAll();
+  });
+  els.systemSelect?.addEventListener("change", renderAll);
+  els.formatSelect?.addEventListener("change", renderAll);
+  els.playersSelect?.addEventListener("change", renderAll);
+  els.timeSelect?.addEventListener("change", renderAll);
+  els.r18Select?.addEventListener("change", renderAll);
+  els.lossSelect?.addEventListener("change", renderAll);
+
+  els.btnOpenTagModal?.addEventListener("click", ()=>{
+    renderTagModalList();
+    openModal(els.tagModal);
+  });
+
+  els.btnClearTags?.addEventListener("click", ()=>{
     state.selectedTags.clear();
-    rebuildTagChips();
-    render();
-    toast("タグをクリア");
+    renderTagTop();
+    renderSelectedTags();
+    renderTagModalList();
+    renderAll();
+    toast("タグ解除");
   });
 
-  els.tagsModeBtn?.addEventListener("click", ()=>{
-    state.tagsMode = state.tagsMode==="or" ? "and" : "or";
-    saveUiPrefs();
-    applyUiPrefsToDom();
-    render();
-    toast(`タグ条件：${state.tagsMode.toUpperCase()}`);
+  els.tagSearchInput?.addEventListener("input", debounce(renderTagModalList, 80));
+
+  els.tagModeBtn?.addEventListener("click", ()=>{
+    setTagMode(state.tagMode==="or" ? "and" : "or");
+    renderAll();
+    toast(`タグ条件：${state.tagMode.toUpperCase()}`);
   });
 
-  // view tabs
-  document.querySelectorAll(".sc-tab").forEach(btn=>{
-    btn.addEventListener("click", ()=>setView(btn.dataset.view));
+  els.tagModalClearBtn?.addEventListener("click", ()=>{
+    state.selectedTags.clear();
+    renderTagTop();
+    renderSelectedTags();
+    renderTagModalList();
+    renderAll();
+    toast("タグ解除");
   });
 
-  // delegation
+  els.helpPopClose?.addEventListener("click", closeHelp);
+
   document.addEventListener("click", (e)=>{
-    // tag click (candidate or selected)
-    const tagBtn = e.target.closest("[data-tag]");
+    const help = e.target.closest("[data-help]");
+    if(help){
+      openHelp(help.dataset.help);
+      return;
+    }
+
+    const chip = e.target.closest('[data-action="chip-clear"]');
+    if(chip){
+      clearChip(chip.dataset.chip);
+      return;
+    }
+
+    const tagBtn = e.target.closest('[data-action="tag-toggle"]');
     if(tagBtn){
-      const t = tagBtn.dataset.tag;
+      const t = norm(tagBtn.dataset.tag);
       if(!t) return;
+      if(state.selectedTags.has(t)) state.selectedTags.delete(t);
+      else state.selectedTags.add(t);
 
-      if(tagBtn.dataset.selected==="1"){
-        state.selectedTags.delete(t);
-      }else{
-        if(state.selectedTags.has(t)) state.selectedTags.delete(t);
-        else state.selectedTags.add(t);
-      }
-      rebuildTagChips();
-      render();
+      renderTagTop();
+      renderSelectedTags();
+      renderTagModalList();
+      renderAll();
       return;
     }
 
-    // open detail (avoid catching icon buttons)
-    const detailEl = e.target.closest('[data-action="open-detail"]');
-    if(detailEl){
-      if(e.target.closest('[data-action="open-url"], [data-action="copy-url"]')) return;
-      const id = detailEl.dataset.id;
-      if(id) openDetail(id);
+    const openUrlBtn = e.target.closest('[data-action="open-url"]');
+    if(openUrlBtn){
+      const url = norm(openUrlBtn.dataset.url);
+      if(!url) return;
+      const isR18 = openUrlBtn.dataset.r18 === "1";
+      openConfirm(url, isR18);
       return;
     }
 
-    // copy/open url
-    const copyBtn = e.target.closest('[data-action="copy-url"]');
-    if(copyBtn){
-      const url = copyBtn.dataset.url || "";
+    const copyUrlBtn = e.target.closest('[data-action="copy-url"]');
+    if(copyUrlBtn){
+      const url = norm(copyUrlBtn.dataset.url);
       if(url) copyText(url);
       return;
     }
 
-    const openBtn = e.target.closest('[data-action="open-url"]');
-    if(openBtn){
-      const url = openBtn.dataset.url || "";
-      const isR18 = openBtn.dataset.r18 === "1";
-      if(url) openConfirm(url, isR18);
+    const favBtn = e.target.closest('[data-action="fav"]');
+    if(favBtn){
+      e.preventDefault();
+      e.stopPropagation();
+      handleFav(norm(favBtn.dataset.id));
+      return;
+    }
+
+    const detailEl = e.target.closest('[data-action="open-detail"]');
+    if(detailEl){
+      if(e.target.closest('[data-action="open-url"], [data-action="copy-url"], [data-action="fav"]')) return;
+      const id = norm(detailEl.dataset.id);
+      if(id) openDetail(id, true);
+      return;
+    }
+
+    const trailerPrev = e.target.closest('[data-action="trailer-prev"]');
+    if(trailerPrev){
+      e.preventDefault();
+      e.stopPropagation();
+      if(state.trailerList.length){
+        state.trailerIndex = (state.trailerIndex - 1 + state.trailerList.length) % state.trailerList.length;
+        renderTrailer();
+      }
+      return;
+    }
+
+    const trailerNext = e.target.closest('[data-action="trailer-next"]');
+    if(trailerNext){
+      e.preventDefault();
+      e.stopPropagation();
+      if(state.trailerList.length){
+        state.trailerIndex = (state.trailerIndex + 1) % state.trailerList.length;
+        renderTrailer();
+      }
+      return;
+    }
+
+    const jump = e.target.closest('[data-action="trailer-jump"]');
+    if(jump){
+      e.preventDefault();
+      e.stopPropagation();
+      const i = parseInt(jump.dataset.index, 10);
+      if(Number.isFinite(i)){
+        state.trailerIndex = clampInt(i, 0, state.trailerList.length-1);
+        renderTrailer();
+      }
       return;
     }
   });
+
+  window.addEventListener("hashchange", ()=>{
+    if(!location.hash){
+      if(els.detailModal?.classList.contains("is-show")) closeModal(els.detailModal);
+      state.activeId = null;
+      return;
+    }
+    openFromHash();
+  });
 }
 
-/* ---------------- Boot ---------------- */
-
 function boot(){
-  loadUiPrefs();
+  initTagMode();
+  if(els.tagModeBtn) els.tagModeBtn.textContent = `条件：${state.tagMode.toUpperCase()}`;
+
   initModalCloseHandlers();
   bindConfirmButtons();
   bindEvents();
 
-  // ✅ trailer/zoom works always
-  bindDetailModalTrailerDelegation();
+  const view = els.viewSelect?.value || "cards";
+  state.view = view;
+  state.limit = getViewLimit(view);
+  setView(view);
 
-  setView("cards");
   loadData(false);
 }
 
