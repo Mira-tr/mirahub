@@ -1,180 +1,75 @@
-/* ===============================
-   Scenarios page
-================================= */
-
-.scenarios-layout{ display:block; }
-.sc-aside{ display:none; }
-
-@media (min-width: 980px){
-  .scenarios-layout{
-    display:grid;
-    grid-template-columns: 1fr 320px;
-    gap:18px;
-    align-items:start;
-  }
-  .sc-aside{
-    display:block;
-    position: sticky;
-    top: 86px;
-    height: max-content;
-  }
-}
-
-.sc-status{ margin-top:12px; font-size:13px; }
-
-.sc-controls{ display:grid; gap:14px; }
-
-.sc-search{ display:grid; gap:6px; }
-
-.sc-label{
-  font-size:12px;
-  letter-spacing:.12em;
-  color: var(--muted);
-}
-
-.sc-input, .sc-select{
-  width:100%;
-  padding:12px 12px;
-  border-radius:12px;
-  border:1px solid var(--line);
-  background: rgba(255,255,255,.02);
-  color: var(--text);
-  outline:none;
-}
-
-.sc-input:focus, .sc-select:focus{
-  border-color: rgba(90,167,255,.25);
-  box-shadow: 0 0 0 4px rgba(90,167,255,.08);
-}
-
-/* selectの白問題 */
-.sc-select option{
-  background:#0f1624;
-  color:#e8eefc;
-}
-
-.sc-hint{ font-size:13px; }
-
-.sc-filters{
-  display:grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap:10px;
-}
-@media (max-width: 900px){
-  .sc-filters{ grid-template-columns: 1fr 1fr; }
-}
-@media (max-width: 520px){
-  .sc-filters{ grid-template-columns: 1fr; }
-}
-
-.sc-field{ display:grid; gap:6px; }
-
-.sc-utils{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-}
-
-.btn-mini{ padding:10px 12px; font-size:13px; }
-
-.sc-headrow{
-  display:flex;
-  align-items:baseline;
-  justify-content:space-between;
-  gap:12px;
-}
-
-.sc-list{
-  display:grid;
-  gap:12px;
-  margin-top:12px;
-}
+/* ===== UI UPGRADE v2 ===== */
 
 .sc-card{
+  position:relative;
   border:1px solid var(--line);
-  background: rgba(255,255,255,.02);
-  border-radius:16px;
-  padding:14px 16px;
-  overflow:hidden;
-  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+  background: rgba(17,24,38,.85);
+  border-radius:18px;
+  padding:16px;
+  transition:.25s ease;
 }
+
 .sc-card:hover{
-  transform: translateY(-2px);
-  border-color: rgba(90,167,255,.20);
-  box-shadow: 0 14px 30px rgba(0,0,0,.25);
+  transform:translateY(-3px);
+  border-color:rgba(90,167,255,.4);
+  box-shadow:0 15px 40px rgba(0,0,0,.45);
 }
 
-.sc-top{
-  display:flex;
-  gap:12px;
-  align-items:flex-start;
-  justify-content:space-between;
-}
-
+/* タイトル強化 */
 .sc-title{
-  font-weight:900;
-  font-size:16px;
-  line-height:1.35;
+  font-size:18px;
+  font-weight:800;
+  margin-bottom:6px;
 }
 
-.sc-sub{
-  margin-top:6px;
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-  color: var(--muted);
-  font-size:13px;
-}
-
-.sc-badges{
-  display:flex;
-  flex-wrap:wrap;
-  gap:6px;
-  margin-top:10px;
-}
-
-.sc-badge{
+/* ID右上固定 */
+.sc-id{
+  position:absolute;
+  top:12px;
+  right:12px;
   font-size:11px;
-  padding:3px 9px;
-  border-radius:999px;
-  border:1px solid rgba(255,255,255,.08);
-  background: rgba(255,255,255,.02);
-  color: var(--muted);
+  opacity:.6;
 }
 
-.sc-note{
-  margin-top:10px;
-  color: var(--muted);
-  font-size:13px;
-  line-height:1.7;
-}
-
-.sc-actions{
-  display:flex;
-  gap:8px;
-  flex-wrap:wrap;
-  justify-content:flex-end;
-}
-
-.sc-btn{
-  border:1px solid var(--line);
-  background: rgba(255,255,255,.02);
-  color: var(--text);
-  border-radius:12px;
-  padding:10px 10px;
-  font-size:12px;
-  cursor:pointer;
-}
-.sc-btn:hover{
-  border-color: rgba(90,167,255,.25);
-}
-
-.sc-pillrow{ margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; }
+/* バッジ色分け */
 .sc-pill{
   font-size:11px;
-  padding:3px 9px;
+  padding:4px 10px;
   border-radius:999px;
+  background:rgba(255,255,255,.05);
   border:1px solid rgba(255,255,255,.08);
-  background: rgba(255,255,255,.02);
-  color: var(--muted);
+}
+
+/* ロスト率カラー */
+.sc-pill.loss-low{ background:rgba(60,200,120,.2); color:#6ef2a0; }
+.sc-pill.loss-mid{ background:rgba(255,210,90,.2); color:#ffd86e; }
+.sc-pill.loss-high{ background:rgba(255,120,60,.2); color:#ff9e6e; }
+.sc-pill.loss-very{ background:rgba(255,60,60,.2); color:#ff7a7a; }
+.sc-pill.loss-unknown{ opacity:.5; }
+
+/* R18 */
+.sc-r18{
+  background:rgba(255,0,0,.2);
+  color:#ff6e6e;
+  font-weight:700;
+}
+
+/* タグクリック可能 */
+.sc-tag{
+  cursor:pointer;
+  transition:.15s;
+}
+.sc-tag:hover{
+  border-color:rgba(90,167,255,.4);
+  color:white;
+}
+
+/* コピーアイコン */
+.sc-icon{
+  cursor:pointer;
+  opacity:.6;
+  font-size:13px;
+}
+.sc-icon:hover{
+  opacity:1;
 }

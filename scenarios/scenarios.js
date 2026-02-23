@@ -1,381 +1,425 @@
-/* ===============================
-   MIRAHUB Scenarios (Full)
-   - Fetch from GAS JSON
-   - Fallback to /data/scenarios.json
-   - Search + filters
-   - Copy buttons
-================================= */
+/* scenarios.js (FINAL) */
 
-const GAS_URL = "https://script.google.com/macros/s/AKfycbxXucWg9ATHVEM8jm45pD8gCxkyA5Q1wWeG6ruoR3ujyJ4LV8JZwJCFh7tHeLZEfHzfuQ/exec";
-const FALLBACK_JSON = "../data/scenarios.json";
+const API_URL = "https://script.google.com/macros/s/AKfycbxXucWg9ATHVEM8jm45pD8gCxkyA5Q1wWeG6ruoR3ujyJ4LV8JZwJCFh7tHeLZEfHzfuQ/exec";
 
-const $ = (id) => document.getElementById(id);
+const els = {
+  status: document.getElementById("status"),
+  metaRow: document.getElementById("metaRow"),
 
-const state = {
-  items: [],
-  filtered: [],
-  source: "loading", // gas | fallback | error
+  q: document.getElementById("q"),
+  system: document.getElementById("system"),
+  format: document.getElementById("format"),
+  players: document.getElementById("players"),
+  time: document.getElementById("time"),
+  r18: document.getElementById("r18"),
+  loss_rate: document.getElementById("loss_rate"),
+
+  btnClear: document.getElementById("btnClear"),
+  btnCopyQuery: document.getElementById("btnCopyQuery"),
+  btnCopyResult: document.getElementById("btnCopyResult"),
+
+  cards: document.getElementById("cards"),
+  tableWrap: document.getElementById("tableWrap"),
+  tableBody: document.getElementById("tableBody"),
+
+  resultInfo: document.getElementById("resultInfo"),
+  toast: document.getElementById("toast"),
 };
 
+let RAW = [];
+let VIEW = "cards";
+
 function norm(s){
-  return (s ?? "").toString().trim();
+  return String(s ?? "").trim();
 }
 
-function timeBucket(text){
-  // 例: "ボイセ10時間~40時間" "テキセ10~35時間" "20-30" 等をざっくり分類
-  const t = norm(text);
-  if (!t) return "";
-  const nums = t.match(/\d+/g)?.map(n => parseInt(n,10)) ?? [];
-  const max = nums.length ? Math.max(...nums) : null;
-
-  if (max === null) return "";
-  if (max <= 10) return "~10h";
-  if (max <= 20) return "10-20h";
-  if (max <= 30) return "20-30h";
-  if (max <= 40) return "30-40h";
-  return "40h+";
+function lower(s){
+  return norm(s).toLowerCase();
 }
 
-function playersNormalize(p){
-  const v = norm(p);
-  if (!v) return "";
-  // 表記ゆれ吸収（好きに増やせる）
-  if (/kp\s*レス/i.test(v) || v.includes("KPレス")) return "KPレス";
-  if (v.includes("KPC+1") || v.includes("KPC＋1") || v.includes("KPC+1PL")) return "KPC+1PL";
-  if (v.includes("1PL") || v === "1") return "1PL";
-  if (v.includes("2PL") || v === "2") return "2PL";
-  if (v.includes("3PL") || v === "3") return "3PL";
-  if (v.includes("4PL") || v === "4") return "4PL";
-  if (v.includes("何人") || v.includes("自由") || v.includes("無制限")) return "PL何人でも";
-  return v; // そのまま（その他扱いでもOK）
-}
-
-function formatNormalize(f){
-  const v = norm(f);
-  if (!v) return "";
-  if (v.includes("ボイ")) return "ボイセ";
-  if (v.includes("テキ")) return "テキセ";
-  if (v.includes("どちら")) return "どちらでも";
-  return v;
-}
-
-function buildIndex(item){
-  return [
-    item.id,
-    item.name,
-    item.system,
-    item.author,
-    item.players,
-    item.format,
-    item.time_text,
-    item.tags?.join(" "),
-    item.memo,
-    item.url
-  ].filter(Boolean).join(" ").toLowerCase();
-}
-
-async function fetchJson(url){
-  const res = await fetch(url, { cache: "no-store" });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return await res.json();
-}
-
-async function loadData(){
-  $("status").textContent = "読み込み中…";
-  $("srcMode").textContent = "source: loading";
-
-  try{
-    const data = await fetchJson(GAS_URL);
-    const items = normalizeData(data);
-    state.items = items;
-    state.source = "gas";
-    $("srcMode").textContent = "source: GAS";
-    $("status").textContent = `取得OK（${items.length}件）`;
-    initUI();
-    applyFilters();
-    return;
-  }catch(e){
-    console.warn("GAS failed:", e);
-  }
-
-  try{
-    const data = await fetchJson(FALLBACK_JSON);
-    const items = normalizeData(data);
-    state.items = items;
-    state.source = "fallback";
-    $("srcMode").textContent = "source: fallback JSON";
-    $("status").textContent = `GAS取得失敗 → 予備データで表示（${items.length}件）`;
-    initUI();
-    applyFilters();
-    return;
-  }catch(e){
-    console.error("Fallback failed:", e);
-    state.source = "error";
-    $("srcMode").textContent = "source: error";
-    $("status").textContent = "データ取得に失敗。GAS/予備JSONのどちらも読めません。";
-  }
-}
-
-function normalizeData(raw){
-  // GASの戻りが {items:[...]} でも [...] でも対応
-  const arr = Array.isArray(raw) ? raw : (raw.rows ?? raw.items ?? []);
-  return arr.map((r, idx) => {
-    const id = norm(r.id) || `S${String(idx+1).padStart(4,"0")}`;
-    const name = norm(r.name || r.title);
-    const system = norm(r.system || r.sys) || "未設定";
-    const author = norm(r.author);
-    const playersRaw = norm(r.players);
-    const players = playersNormalize(playersRaw);
-    const format = formatNormalize(r.format);
-    const timeText = norm(r.time || r.time_text);
-    const tags = (norm(r.tags).split(",").map(s=>s.trim()).filter(Boolean));
-    const memo = norm(r.memo || r.note);
-    const url = norm(r.url);
-
-    const item = {
-      id,
-      name,
-      system,
-      author,
-      players,
-      format,
-      time_text: timeText,
-      time_bucket: timeBucket(timeText),
-      tags,
-      memo,
-      url,
-    };
-    item.__index = buildIndex(item);
-    return item;
-  }).filter(x => x.name); // 名前なしは除外
-}
-
-function initUI(){
-  // system select populate
-  const systems = [...new Set(state.items.map(x => x.system))].sort((a,b)=>a.localeCompare(b,"ja"));
-  const sel = $("system");
-  // 初期化
-  while(sel.options.length > 1) sel.remove(1);
-  systems.forEach(s => {
-    const opt = document.createElement("option");
-    opt.value = s;
-    opt.textContent = s;
-    sel.appendChild(opt);
-  });
-}
-
-function getQuery(){
-  return {
-    q: norm($("q").value).toLowerCase(),
-    system: $("system").value,
-    format: $("format").value,
-    players: $("players").value,
-    time: $("time").value,
-  };
-}
-
-function match(item, query){
-  if (query.system && item.system !== query.system) return false;
-  if (query.format && item.format !== query.format) return false;
-
-  if (query.players){
-    if (query.players === "その他"){
-      // 定義済み以外をざっくり
-      const known = ["KPレス","1PL","KPC+1PL","2PL","3PL","4PL","PL何人でも"];
-      if (known.includes(item.players)) return false;
-    }else{
-      if (item.players !== query.players) return false;
-    }
-  }
-
-  if (query.time && item.time_bucket !== query.time) return false;
-
-  if (query.q){
-    if (!item.__index.includes(query.q)) return false;
-  }
-  return true;
-}
-
-function applyFilters(){
-  const query = getQuery();
-  const list = state.items.filter(x => match(x, query));
-  state.filtered = list;
-
-  render(list);
-  $("count").textContent = `${list.length}件`;
-}
-
-function badge(text){
-  const span = document.createElement("span");
-  span.className = "sc-badge";
-  span.textContent = text;
-  return span;
-}
-
-function btn(label, onClick){
-  const b = document.createElement("button");
-  b.className = "sc-btn";
-  b.type = "button";
-  b.textContent = label;
-  b.addEventListener("click", onClick);
-  return b;
+function showToast(msg){
+  const t = els.toast;
+  if (!t) return;
+  t.textContent = msg;
+  t.classList.add("is-show");
+  clearTimeout(showToast._tm);
+  showToast._tm = setTimeout(() => t.classList.remove("is-show"), 1600);
 }
 
 async function copyText(text){
   try{
     await navigator.clipboard.writeText(text);
-    toast("コピーしました");
+    showToast("コピーしました");
   }catch(e){
     // fallback
     const ta = document.createElement("textarea");
     ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
     document.body.appendChild(ta);
     ta.select();
     document.execCommand("copy");
     ta.remove();
-    toast("コピーしました");
+    showToast("コピーしました");
   }
 }
 
-let toastTimer = null;
-function toast(msg){
-  let el = document.getElementById("toast");
-  if (!el){
-    el = document.createElement("div");
-    el.id = "toast";
-    el.style.position = "fixed";
-    el.style.left = "50%";
-    el.style.bottom = "18px";
-    el.style.transform = "translateX(-50%)";
-    el.style.padding = "10px 12px";
-    el.style.borderRadius = "12px";
-    el.style.border = "1px solid rgba(255,255,255,.12)";
-    el.style.background = "rgba(17,24,38,.95)";
-    el.style.color = "white";
-    el.style.fontSize = "13px";
-    el.style.zIndex = "9999";
-    document.body.appendChild(el);
-  }
-  el.textContent = msg;
-  el.style.opacity = "1";
-
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => {
-    el.style.opacity = "0";
-  }, 1200);
+async function fetchJSON(url){
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return await res.json(); // ★改行バグ修正
 }
 
-function render(items){
-  const root = $("list");
-  root.innerHTML = "";
+function buildSystemOptions(rows){
+  const set = new Set();
+  rows.forEach(r => {
+    const v = norm(r.system);
+    if (v) set.add(v);
+  });
+  const list = Array.from(set).sort((a,b)=>a.localeCompare(b,"ja"));
+  // reset
+  els.system.innerHTML = `<option value="">すべて</option>` +
+    list.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("");
+}
 
-  if (!items.length){
-    const empty = document.createElement("div");
-    empty.className = "text-muted";
-    empty.style.padding = "10px 0";
-    empty.textContent = "該当なし。条件を変えてみて。";
-    root.appendChild(empty);
-    return;
-  }
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, (c)=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
+  }[c]));
+}
 
-  items.forEach(item => {
-    const card = document.createElement("div");
-    card.className = "sc-card";
+function timeBucket(t){
+  const s = lower(t);
+  if (!s) return "";
+  if (s.includes("40") && (s.includes("+") || s.includes("以上") || s.includes("40h+"))) return "40h+";
+  if (s.includes("30") && s.includes("40")) return "30-40h";
+  if (s.includes("20") && s.includes("30")) return "20-30h";
+  if (s.includes("10") && s.includes("20")) return "10-20h";
+  if (s.includes("~10") || s.includes("〜10") || s.includes("10時間未満")) return "~10h";
+  // ざっくり fallback
+  return "";
+}
 
-    const top = document.createElement("div");
-    top.className = "sc-top";
+function matchToken(hay, needle){
+  return lower(hay).includes(lower(needle));
+}
 
-    const left = document.createElement("div");
+function rowText(r){
+  // 検索対象の全文（増えてもここに足せばOK）
+  return [
+    r.id, r.name, r.system, r.author, r.players, r.format, r.time,
+    r.r18, r.loss_rate, r.tags, r.memo, r.url
+  ].map(norm).join(" / ");
+}
 
-    const title = document.createElement("div");
-    title.className = "sc-title";
-    title.textContent = item.name;
+function applyFilters(rows){
+  const q = norm(els.q.value);
+  const system = norm(els.system.value);
+  const format = norm(els.format.value);
+  const players = norm(els.players.value);
+  const time = norm(els.time.value);
+  const r18 = norm(els.r18.value);
+  const loss = norm(els.loss_rate.value);
 
-    const sub = document.createElement("div");
-    sub.className = "sc-sub";
-    sub.textContent = [
-      item.system,
-      item.author ? `作者: ${item.author}` : null,
-      item.players ? `人数: ${item.players}` : null,
-      item.format ? `形式: ${item.format}` : null,
-      item.time_text ? `時間: ${item.time_text}` : null
-    ].filter(Boolean).join(" / ");
+  return rows.filter(r => {
+    if (system && norm(r.system) !== system) return false;
 
-    left.appendChild(title);
-    left.appendChild(sub);
-
-    const actions = document.createElement("div");
-    actions.className = "sc-actions";
-
-    actions.appendChild(btn("IDコピー", () => copyText(item.id)));
-    actions.appendChild(btn("名前コピー", () => copyText(item.name)));
-
-    if (item.url){
-      actions.appendChild(btn("URLコピー", () => copyText(item.url)));
-      actions.appendChild(btn("開く", () => window.open(item.url, "_blank", "noreferrer")));
+    if (format){
+      // format欄が「どちらでも」ならボイセ/テキセ両方に寄せる
+      const rf = norm(r.format);
+      if (format === "どちらでも"){
+        if (!rf) return false;
+        if (!(rf.includes("どちら") || rf.includes("ボイセ") || rf.includes("テキセ"))) return false;
+      }else{
+        if (!rf.includes(format)) return false;
+      }
     }
 
-    top.appendChild(left);
-    top.appendChild(actions);
-
-    const badges = document.createElement("div");
-    badges.className = "sc-badges";
-    badges.appendChild(badge(item.id));
-    badges.appendChild(badge(item.system));
-    if (item.players) badges.appendChild(badge(item.players));
-    if (item.format) badges.appendChild(badge(item.format));
-    if (item.time_bucket) badges.appendChild(badge(item.time_bucket));
-    (item.tags ?? []).slice(0, 8).forEach(t => badges.appendChild(badge(t)));
-
-    card.appendChild(top);
-    card.appendChild(badges);
-
-    if (item.memo){
-      const note = document.createElement("div");
-      note.className = "sc-note";
-      note.textContent = item.memo;
-      card.appendChild(note);
+    if (players){
+      const rp = norm(r.players);
+      if (!rp.includes(players)) return false;
     }
 
-    root.appendChild(card);
+    if (time){
+      const bucket = timeBucket(r.time);
+      if (bucket !== time) return false;
+    }
+
+    if (r18){
+      const rr = norm(r.r18) || "不明";
+      if (rr !== r18) return false;
+    }
+
+    if (loss){
+      const rl = norm(r.loss_rate) || "不明";
+      if (rl !== loss) return false;
+    }
+
+    if (q){
+      const t = rowText(r);
+      // スペース区切りAND検索
+      const parts = q.split(/\s+/).filter(Boolean);
+      for (const p of parts){
+        if (!matchToken(t, p)) return false;
+      }
+    }
+
+    return true;
   });
 }
 
-function buildQueryText(){
-  const q = getQuery();
+function lossClass(v){
+  const s = String(v || "");
+  if (!s || s==="不明") return "loss-unknown";
+
+  const m = s.match(/(\d+)-(\d+)/);
+  if (!m) return "loss-unknown";
+
+  const avg = (parseInt(m[1])+parseInt(m[2]))/2;
+  if (avg <= 30) return "loss-low";
+  if (avg <= 50) return "loss-mid";
+  if (avg <= 70) return "loss-high";
+  return "loss-very";
+}
+
+function renderCard(r){
+  const id = norm(r.id);
+  const name = norm(r.name);
+  const system = norm(r.system);
+  const players = norm(r.players);
+  const format = norm(r.format);
+  const time = norm(r.time);
+  const r18 = norm(r.r18);
+  const loss = norm(r.loss_rate) || "不明";
+  const tags = norm(r.tags);
+  const memo = norm(r.memo);
+  const url = norm(r.url);
+
+  const lossCls = lossClass(loss);
+
+  const tagHtml = tags
+    ? tags.split(/[,\s]+/)
+        .filter(Boolean)
+        .map(t=>`<span class="sc-pill sc-tag" data-tag="${escapeHtml(t)}">${escapeHtml(t)}</span>`)
+        .join("")
+    : "";
+
+  return `
+  <div class="sc-card">
+    ${id?`<div class="sc-id">${escapeHtml(id)}</div>`:""}
+    <div class="sc-title">${escapeHtml(name)}</div>
+
+    <div class="sc-pillRow">
+      ${system?`<span class="sc-pill">${escapeHtml(system)}</span>`:""}
+      ${players?`<span class="sc-pill">${escapeHtml(players)}</span>`:""}
+      ${format?`<span class="sc-pill">${escapeHtml(format)}</span>`:""}
+      ${time?`<span class="sc-pill">${escapeHtml(time)}</span>`:""}
+      <span class="sc-pill ${lossCls}">ロスト:${escapeHtml(loss)}</span>
+      ${r18==="あり"?`<span class="sc-pill sc-r18">🔞 R18</span>`:""}
+    </div>
+
+    ${tagHtml?`<div class="sc-pillRow" style="margin-top:8px;">${tagHtml}</div>`:""}
+
+    ${memo?`<div class="sc-note">${escapeHtml(memo)}</div>`:""}
+
+    <div class="sc-actions">
+      ${url?`<span class="sc-icon" data-copy="${escapeHtml(url)}">🔗</span>`:""}
+      ${memo?`<span class="sc-icon" data-copy="${escapeHtml(memo)}">📋</span>`:""}
+    </div>
+  </div>
+  `;
+}
+
+function buildLineCopy(r){
+  // 1行で共有しやすい形式（Discord貼り向き）
+  const name = norm(r.name);
+  const id = norm(r.id);
+  const system = norm(r.system);
+  const players = norm(r.players);
+  const format = norm(r.format);
+  const time = norm(r.time);
+  const r18 = norm(r.r18) || "不明";
+  const loss = norm(r.loss_rate) || "不明";
+  const url = norm(r.url);
+
+  const left = [
+    id && `[${id}]`,
+    name,
+    system && `(${system})`,
+  ].filter(Boolean).join(" ");
+
+  const right = [
+    players && `人数:${players}`,
+    format && `形式:${format}`,
+    time && `時間:${time}`,
+    `R18:${r18}`,
+    `ロスト:${loss}`,
+    url && `URL:${url}`
+  ].filter(Boolean).join(" / ");
+
+  return `${left}\n${right}`;
+}
+
+function renderTableRow(r){
+  const id = norm(r.id);
+  const name = norm(r.name);
+  const system = norm(r.system);
+  const players = norm(r.players);
+  const format = norm(r.format);
+  const time = norm(r.time);
+  const r18 = norm(r.r18) || "不明";
+  const loss = norm(r.loss_rate) || "不明";
+  const tags = norm(r.tags);
+  const url = norm(r.url);
+
+  return `
+  <tr>
+    <td>${escapeHtml(id)}</td>
+    <td>${escapeHtml(name)}</td>
+    <td>${escapeHtml(system)}</td>
+    <td>${escapeHtml(players)}</td>
+    <td>${escapeHtml(format)}</td>
+    <td>${escapeHtml(time)}</td>
+    <td>${escapeHtml(r18)}</td>
+    <td>${escapeHtml(loss)}</td>
+    <td>${escapeHtml(tags)}</td>
+    <td>${url ? `<a class="sc-link" href="${escapeHtml(url)}" target="_blank" rel="noreferrer">open</a>` : ""}</td>
+  </tr>`;
+}
+
+function setView(view){
+  VIEW = view;
+  const tabs = document.querySelectorAll(".sc-tab");
+  tabs.forEach(t => t.classList.toggle("is-active", t.dataset.view === view));
+
+  if (view === "cards"){
+    els.cards.style.display = "";
+    els.tableWrap.style.display = "none";
+  }else{
+    els.cards.style.display = "none";
+    els.tableWrap.style.display = "";
+  }
+}
+
+function currentQueryText(count){
   const parts = [];
-  if (q.q) parts.push(`q=${q.q}`);
-  if (q.system) parts.push(`system=${q.system}`);
-  if (q.format) parts.push(`format=${q.format}`);
-  if (q.players) parts.push(`players=${q.players}`);
-  if (q.time) parts.push(`time=${q.time}`);
-  return parts.join(" / ") || "条件なし";
+  const q = norm(els.q.value);
+  if (q) parts.push(`q="${q}"`);
+  if (els.system.value) parts.push(`system=${els.system.value}`);
+  if (els.format.value) parts.push(`format=${els.format.value}`);
+  if (els.players.value) parts.push(`players=${els.players.value}`);
+  if (els.time.value) parts.push(`time=${els.time.value}`);
+  if (els.r18.value) parts.push(`r18=${els.r18.value}`);
+  if (els.loss_rate.value) parts.push(`loss=${els.loss_rate.value}`);
+  return `条件: ${parts.join(" / ") || "なし"}\n件数: ${count}`;
 }
 
-function wire(){
-  ["q","system","format","players","time"].forEach(id => {
-    $(id).addEventListener(id==="q" ? "input" : "change", applyFilters);
+function render(){
+  const filtered = applyFilters(RAW);
+
+  els.resultInfo.textContent = `表示: ${filtered.length} 件 / 全体: ${RAW.length} 件`;
+  els.cards.innerHTML = filtered.map(renderCard).join("");
+
+  els.tableBody.innerHTML = filtered.map(renderTableRow).join("");
+
+  // meta
+  if (els.metaRow){
+    els.metaRow.style.display = "";
+    els.metaRow.textContent = `最終取得: ${new Date().toLocaleString()} / 表示 ${filtered.length}件`;
+  }
+
+  return filtered.length;
+}
+
+function bindEvents(){
+  // filter inputs
+  ["input","change"].forEach(ev=>{
+    els.q.addEventListener(ev, ()=>render());
+  });
+  [els.system, els.format, els.players, els.time, els.r18, els.loss_rate].forEach(el=>{
+    el.addEventListener("change", ()=>render());
   });
 
-  $("btnClear").addEventListener("click", () => {
-    $("q").value = "";
-    $("system").value = "";
-    $("format").value = "";
-    $("players").value = "";
-    $("time").value = "";
-    applyFilters();
+  els.btnClear.addEventListener("click", ()=>{
+    els.q.value = "";
+    els.system.value = "";
+    els.format.value = "";
+    els.players.value = "";
+    els.time.value = "";
+    els.r18.value = "";
+    els.loss_rate.value = "";
+    render();
+    showToast("条件をクリア");
   });
 
-  $("btnReload").addEventListener("click", loadData);
-
-  $("btnCopyQuery").addEventListener("click", () => {
-    copyText(buildQueryText());
+  els.btnCopyQuery.addEventListener("click", ()=>{
+    const count = applyFilters(RAW).length;
+    copyText(currentQueryText(count));
   });
 
-  $("btnCopyShare").addEventListener("click", () => {
-    copyText(location.href);
+  els.btnCopyResult.addEventListener("click", ()=>{
+    const count = applyFilters(RAW).length;
+    copyText(String(count));
+  });
+
+  // view tabs
+  document.querySelectorAll(".sc-tab").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      setView(btn.dataset.view);
+    });
+  });
+
+  // copy button delegation
+  document.addEventListener("click", (e)=>{
+    const btn = e.target.closest(".sc-copy");
+    if (!btn) return;
+    const text = btn.getAttribute("data-copy") || "";
+    if (text) copyText(text);
+  });
+
+  document.addEventListener("click", e=>{
+    const tag = e.target.closest(".sc-tag");
+    if(tag){
+      els.q.value = tag.dataset.tag;
+      render();
+    }
   });
 }
 
-wire();
-loadData();
+function normalizeRows(rows){
+  // GASはヘッダを小文字化して返す想定。もし混ざってても吸収。
+  return rows.map(r=>{
+    const obj = {};
+    Object.keys(r).forEach(k=>{
+      obj[String(k).toLowerCase()] = r[k];
+    });
+
+    // 不明補完（表示側）
+    if (!norm(obj.r18)) obj.r18 = "不明";
+    if (!norm(obj.loss_rate)) obj.loss_rate = "不明";
+
+    return obj;
+  });
+}
+
+async function main(){
+  try{
+    els.status.textContent = "取得中…";
+    const data = await fetchJSON(API_URL);
+    if (!data.ok) throw new Error(data.error || "API error");
+
+    RAW = normalizeRows(data.rows || []);
+    buildSystemOptions(RAW);
+
+    els.status.textContent = `OK：${RAW.length}件 取得`;
+    bindEvents();
+    setView("cards");
+    render();
+
+  }catch(err){
+    els.status.textContent = "取得失敗：API設定/公開設定/URL を確認";
+    console.error(err);
+  }
+}
+
+main();
