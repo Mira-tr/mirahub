@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>シナリオ一覧 | MIRAHUB</title>
+  <meta name="description" content="所持シナリオ一覧：検索・絞り込み・URLコピー" />
 
   <link rel="stylesheet" href="../style.css" />
   <link rel="stylesheet" href="./scenarios.css" />
@@ -13,7 +14,6 @@
 
 <header class="layout-header">
   <div class="layout-wrap layout-header-inner">
-
     <div class="brand">
       <span class="brand-dot"></span>
       <a href="../">MIRAHUB</a>
@@ -21,49 +21,82 @@
       <span>シナリオ一覧</span>
     </div>
 
-    <nav>
-      <a class="nav-link" href="../">トップ</a>
-      <a class="nav-link nav-cta" href="../shinji/">しんじ卓</a>
+    <nav class="nav">
+      <a class="nav-link" href="../shinji/">しんじ卓</a>
+      <a class="nav-link nav-link-active" href="./">シナリオ</a>
     </nav>
-
   </div>
 </header>
 
-<main class="layout-wrap" id="top">
+<main class="layout-wrap sc-layout" id="top">
 
-  <section class="section-hero">
-    <p class="text-tag">SCENARIOS</p>
-    <h1 class="text-hero">所持シナリオ一覧</h1>
-    <p class="text-lead text-muted">
-      Google Sheetsの内容を読み込み、検索・絞り込みできます。<br>
-      ※個人用リスト（配布ではない）
-    </p>
+  <!-- 左：本文 -->
+  <div class="sc-main">
+    <section class="section-hero">
+      <p class="text-tag">SCENARIO / SEARCH</p>
+      <h1 class="text-hero">シナリオ一覧</h1>
+      <p class="text-lead text-muted">
+        100本以上の所持シナリオを検索・絞り込み。<br>
+        URLコピー／外部リンク確認／R18強調表示つき。
+      </p>
 
-    <div class="btn-row">
-      <a class="btn btn-ghost" href="../">MIRAHUBへ</a>
-      <a class="btn btn-ghost" href="#list" onclick="window.scrollTo({top:document.getElementById('list').offsetTop-80, behavior:'smooth'}); return false;">一覧へ</a>
-    </div>
-  </section>
-
-  <section class="section-card sc-meta">
-    <h2>ステータス</h2>
-    <div class="sc-status text-muted" id="status">読み込み中…</div>
-    <div class="sc-metaRow text-muted" id="metaRow" style="display:none;"></div>
-  </section>
-
-  <section class="section-card">
-    <h2>検索・絞り込み</h2>
-
-    <div class="sc-controls">
-      <div class="sc-search">
-        <label class="sc-label" for="q">キーワード</label>
-        <input id="q" class="sc-input" type="search" placeholder="シナリオ名 / 作者 / メモ / システム / タグ など" autocomplete="off">
-        <div class="sc-hint text-muted">例：CoC6 / KPレス / KPC / 20-30h / 40-70 / R18</div>
+      <div class="btn-row">
+        <a class="btn btn-ghost" href="../">MIRAHUBトップへ</a>
+        <button class="btn btn-ghost" id="btnReload" type="button">再取得</button>
+        <span class="text-muted" id="status" style="align-self:center;">待機中</span>
       </div>
 
-      <div class="sc-filters">
+      <div class="sc-metaRow text-muted" id="metaRow" style="display:none;"></div>
+    </section>
+
+    <section class="section-card">
+      <h2>表示</h2>
+      <div class="sc-tabs">
+        <button type="button" class="sc-tab is-active" data-view="cards">カード</button>
+        <button type="button" class="sc-tab" data-view="table">表</button>
+      </div>
+
+      <div class="sc-tools">
+        <button type="button" class="btn btn-ghost" id="btnClear">条件クリア</button>
+        <button type="button" class="btn btn-ghost" id="btnCopyQuery">条件をコピー</button>
+        <button type="button" class="btn btn-ghost" id="btnCopyResult">件数をコピー</button>
+      </div>
+
+      <div class="text-muted" id="resultInfo" style="margin-top:10px;"></div>
+    </section>
+
+    <section class="section-card">
+      <h2>結果</h2>
+      <div id="cards" class="sc-cards"></div>
+
+      <div id="tableWrap" style="display:none;">
+        <div class="sc-tableWrap">
+          <table class="sc-table">
+            <thead>
+              <tr>
+                <th>ID</th><th>名前</th><th>System</th><th>人数</th><th>形式</th><th>時間</th><th>R18</th><th>ロスト</th><th>タグ</th><th>URL</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- 右：フィルタ -->
+  <aside class="sc-aside">
+    <section class="section-card">
+      <h2>検索・絞り込み</h2>
+
+      <div class="sc-field">
+        <label class="sc-label" for="q">キーワード（スペースでAND）</label>
+        <input id="q" class="sc-input" type="text" placeholder="例：CoC6 ボイセ 1PL など" />
+      </div>
+
+      <div class="sc-grid">
         <div class="sc-field">
-          <label class="sc-label" for="system">システム</label>
+          <label class="sc-label" for="system">System</label>
           <select id="system" class="sc-select">
             <option value="">すべて</option>
           </select>
@@ -76,8 +109,6 @@
             <option value="ボイセ">ボイセ</option>
             <option value="テキセ">テキセ</option>
             <option value="どちらでも">どちらでも</option>
-            <option value="KPレス">KPレス</option>
-            <option value="ソロ">ソロ</option>
           </select>
         </div>
 
@@ -85,14 +116,25 @@
           <label class="sc-label" for="players">人数</label>
           <select id="players" class="sc-select">
             <option value="">すべて</option>
-            <option value="KPレス">KPレス</option>
             <option value="1PL">1PL</option>
             <option value="KPC+1PL">KPC+1PL</option>
             <option value="2PL">2PL</option>
             <option value="3PL">3PL</option>
             <option value="4PL">4PL</option>
-            <option value="PL何人でも">PL何人でも</option>
-            <option value="その他">その他</option>
+            <option value="何人でも">何人でも</option>
+            <option value="KPレス">KPレス</option>
+          </select>
+        </div>
+
+        <div class="sc-field">
+          <label class="sc-label" for="time">時間</label>
+          <select id="time" class="sc-select">
+            <option value="">すべて</option>
+            <option value="~10h">~10h</option>
+            <option value="10-20h">10-20h</option>
+            <option value="20-30h">20-30h</option>
+            <option value="30-40h">30-40h</option>
+            <option value="40h+">40h+</option>
           </select>
         </div>
 
@@ -100,8 +142,8 @@
           <label class="sc-label" for="r18">R18</label>
           <select id="r18" class="sc-select">
             <option value="">すべて</option>
+            <option value="あり">あり（soft/hard含む）</option>
             <option value="なし">なし</option>
-            <option value="あり">あり</option>
             <option value="不明">不明</option>
           </select>
         </div>
@@ -114,104 +156,45 @@
             <option value="0-10">0-10</option>
             <option value="10-30">10-30</option>
             <option value="30-50">30-50</option>
-            <option value="40-70">40-70</option>
             <option value="50-70">50-70</option>
-            <option value="70-90">70-90</option>
-            <option value="90-100">90-100</option>
-          </select>
-        </div>
-
-        <div class="sc-field">
-          <label class="sc-label" for="time">時間（目安）</label>
-          <select id="time" class="sc-select">
-            <option value="">すべて</option>
-            <option value="~10h">〜10時間</option>
-            <option value="10-20h">10〜20時間</option>
-            <option value="20-30h">20〜30時間</option>
-            <option value="30-40h">30〜40時間</option>
-            <option value="40h+">40時間以上</option>
-            <option value="不明">不明</option>
+            <option value="70-100">70-100</option>
           </select>
         </div>
       </div>
 
-      <div class="sc-utils">
-        <button class="btn btn-ghost btn-mini" id="btnClear" type="button">条件クリア</button>
-        <button class="btn btn-ghost btn-mini" id="btnCopyQuery" type="button">検索条件をコピー</button>
-        <button class="btn btn-ghost btn-mini" id="btnCopyResult" type="button">結果件数をコピー</button>
-      </div>
-    </div>
-  </section>
-
-  <section class="section-card" id="list">
-    <div class="sc-headrow">
-      <h2>一覧</h2>
-      <div class="sc-view">
-        <button class="sc-tab is-active" data-view="cards" type="button">カード</button>
-        <button class="sc-tab" data-view="table" type="button">表</button>
-      </div>
-    </div>
-
-    <div class="sc-result text-muted" id="resultInfo">—</div>
-
-    <div id="cards" class="sc-cards"></div>
-
-    <div id="tableWrap" class="sc-tableWrap" style="display:none;">
-      <table class="sc-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>名前</th>
-            <th>システム</th>
-            <th>人数</th>
-            <th>形式</th>
-            <th>時間</th>
-            <th>R18</th>
-            <th>ロスト率</th>
-            <th>タグ</th>
-            <th>URL</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-      </table>
-    </div>
-
-  </section>
-
-  <section class="section-card">
-    <div class="btn-row">
-      <a class="btn btn-ghost" href="#top" onclick="window.scrollTo({top:0, behavior:'smooth'}); return false;">上に戻る</a>
-      <a class="btn btn-ghost" href="../">MIRAHUBへ</a>
-    </div>
-  </section>
+      <p class="text-muted" style="margin-top:12px; line-height:1.7;">
+        📌 タグをクリックすると検索欄に入ります。<br>
+        📋 はURLコピー、🔗 は確認して外部移動。
+      </p>
+    </section>
+  </aside>
 
 </main>
 
 <footer class="layout-footer">© MIRAHUB</footer>
 
-<div class="toast" id="toast" aria-live="polite" aria-atomic="true"></div>
+<!-- Toast -->
+<div id="toast" class="toast" aria-live="polite"></div>
 
-<script src="./scenarios.js"></script>
+<!-- Confirm Modal（これが無いと「出ない」） -->
+<div class="confirm" id="confirmModal" aria-hidden="true">
+  <div class="confirm__backdrop" data-close></div>
+  <div class="confirm__panel" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <div class="confirm__title" id="confirmTitle">確認</div>
+    <div class="confirm__text" id="modalText">外部サイトへ移動しますか？</div>
 
-<!-- Confirm Modal -->
-<div class="modal" id="confirmModal" aria-hidden="true">
-  <div class="modal__backdrop" data-close></div>
-
-  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modalText">
-    <p id="modalText">外部サイトへ移動しますか？</p>
-
-    <!-- ✅ 今後表示しない（R18は常に出すので、このチェックは通常リンクだけに効く） -->
-    <label class="modal-check">
-      <input type="checkbox" id="modalDontAsk">
-      今後この確認を表示しない（通常リンクのみ）
+    <label class="confirm__check">
+      <input type="checkbox" id="modalDontAsk" />
+      今後（通常リンクは）確認しない
     </label>
 
-    <div class="modal-actions">
-      <button id="modalCancel" class="btn btn-ghost btn-mini" type="button">キャンセル</button>
-      <button id="modalOk" class="btn btn-primary btn-mini" type="button">移動する</button>
+    <div class="confirm__actions">
+      <button type="button" class="btn btn-ghost" id="modalCancel">キャンセル</button>
+      <button type="button" class="btn btn-primary" id="modalOk">移動する</button>
     </div>
   </div>
 </div>
 
+<script src="./scenarios.js"></script>
 </body>
 </html>

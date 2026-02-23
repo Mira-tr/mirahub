@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>MIRAHUB</title>
+  <meta name="description" content="TRPG用まとめ拠点：卓案内・シナリオ管理・リンク集" />
   <link rel="stylesheet" href="./style.css" />
 </head>
 
@@ -11,95 +12,104 @@
 
 <header class="layout-header">
   <div class="layout-wrap layout-header-inner">
-
     <div class="brand">
       <span class="brand-dot"></span>
       <a href="./">MIRAHUB</a>
     </div>
 
-    <nav>
+    <nav class="nav">
       <a class="nav-link" href="./scenarios/">シナリオ一覧</a>
       <a class="nav-link nav-cta" href="./shinji/">しんじ卓</a>
     </nav>
-
   </div>
 </header>
 
 <main class="layout-wrap">
 
-  <!-- HERO -->
-  <section class="section-hero">
-    <p class="text-tag">OFFICIAL / PERSONAL HUB</p>
+  <section class="section-hero hero-split">
+    <div class="hero-left">
+      <p class="text-tag">OFFICIAL / PERSONAL HUB</p>
 
-    <h1 class="text-hero">
-      This is<span>MIRAHUB</span><br>
-      見てってやー
-    </h1>
+      <h1 class="text-hero">
+        ここは<span>MIRAHUB</span>。<br>
+        TRPGの案内と管理の拠点。
+      </h1>
 
-    <p class="text-lead">
-      しんじ卓の案内のほか<br>
-      所持シナリオの一覧を検索可能
-    </p>
+      <p class="text-lead">
+        ミラが運営してる個人HUB。<br>
+        卓案内・ルール・シナリオ管理を「迷わない」形にまとめる。
+      </p>
 
-    <div class="btn-row">
-      <a class="btn btn-primary" href="./scenarios/">シナリオ一覧へ</a>
-      <a class="btn btn-ghost" href="./shinji/">しんじ卓へ</a>
-    </div>
-
-    <div class="hero-kv">
-      <div class="kv-card">
-        <div class="kv-title">できること</div>
-        <ul class="kv-list text-muted">
-          <li>Sheets → 自動同期 → シナリオ一覧に反映</li>
-          <li>人数/形式/時間/システムで即フィルタ</li>
-          <li>シナリオID・URLなどをワンクリでコピー</li>
-          <li>100本超えても軽く検索</li>
-        </ul>
+      <div class="btn-row">
+        <a class="btn btn-primary" href="./scenarios/">シナリオ一覧を見る</a>
+        <a class="btn btn-ghost" href="./shinji/">しんじ卓へ</a>
       </div>
 
-      <div class="kv-card">
-        <div class="kv-title">運用の流れ</div>
-        <ol class="kv-list text-muted">
-          <li>Google Sheetsに追加</li>
-          <li>GASがJSONを返す</li>
-          <li>MIRAHUBが読み込み</li>
-          <li>検索/フィルタで探す</li>
-        </ol>
+      <div class="hero-kpis">
+        <div class="kpi">
+          <div class="kpi-num">100+</div>
+          <div class="kpi-label">所持シナリオ</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-num">CoC6</div>
+          <div class="kpi-label">メイン</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-num">検索</div>
+          <div class="kpi-label">絞り込み対応</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-right">
+      <!-- 画像を置きたいなら /assets/hero.jpg を入れるだけでOK（なくても表示崩れない） -->
+      <div class="hero-media">
+        <img src="./assets/hero.jpg" alt="" loading="lazy" onerror="this.style.display='none'">
+        <div class="hero-media-fallback">
+          <div class="hero-media-title">MIRAHUB</div>
+          <div class="hero-media-sub">TRPG / Discord / Scenarios</div>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- QUICK LINKS -->
   <section class="section-card">
-    <h2>クイック</h2>
-    <div class="hub-grid">
-      <a class="hub-tile" href="./scenarios/">
-        <div class="hub-tile__title">シナリオ一覧</div>
-        <div class="hub-tile__desc text-muted">検索・フィルタ・コピー対応</div>
-      </a>
+    <h2>できること</h2>
+    <div class="grid-2">
+      <div class="mini">
+        <h3>シナリオ管理（検索）</h3>
+        <p class="text-muted">
+          人数・形式・時間・R18・ロスト率で絞り込み。<br>
+          URLコピーや外部リンク確認もできる。
+        </p>
+        <div class="btn-row">
+          <a class="btn btn-ghost" href="./scenarios/">シナリオ一覧へ</a>
+        </div>
+      </div>
 
-      <a class="hub-tile" href="./shinji/">
-        <div class="hub-tile__title">しんじ卓</div>
-        <div class="hub-tile__desc text-muted">案内 / ルール / Q&A / 運営</div>
-      </a>
+      <div class="mini">
+        <h3>卓案内（しんじ卓）</h3>
+        <p class="text-muted">
+          参加案内・ルール・Q&A・運営プロフィール。
+        </p>
+        <div class="btn-row">
+          <a class="btn btn-ghost" href="./shinji/">しんじ卓へ</a>
+        </div>
+      </div>
     </div>
   </section>
 
-  <!-- NOTE -->
   <section class="section-card card-compact">
-    <h2>メモ</h2>
+    <h2>今後の拡張（予定）</h2>
     <ul class="text-muted">
-      <li>あくまでHUBとして運用</li>
-      <li>拡張可能にする</li>
-      <li>シナリオは個人管理</li>
+      <li>トレーラー画像URL（クリックでプレビュー）</li>
+      <li>所持シナリオの「ステータス」追加（未読/準備中/回した/回す予定）</li>
+      <li>タグ辞書（タグゆれ防止）</li>
     </ul>
   </section>
 
 </main>
 
-<footer class="layout-footer">
-  © MIRAHUB
-</footer>
-
+<footer class="layout-footer">© MIRAHUB</footer>
 </body>
 </html>
